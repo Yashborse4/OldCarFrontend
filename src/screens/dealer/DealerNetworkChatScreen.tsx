@@ -1,0 +1,763 @@
+import React, { useState, useEffect, useContext } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  Alert,
+  Image,
+  ScrollView,
+} from 'react-native';
+import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
+import { ThemeContext } from '../../theme/ThemeContext';
+import AuthContext from '../../context/AuthContext';
+
+interface DealerContact {
+  id: string;
+  dealerName: string;
+  showroomName: string;
+  avatar?: string;
+  isOnline: boolean;
+  lastSeen: Date;
+  location: string;
+  specializations: string[];
+  rating: number;
+  totalDeals: number;
+  isVerified: boolean;
+  businessType: 'premium' | 'standard' | 'basic';
+}
+
+interface NetworkMessage {
+  id: string;
+  type: 'inventory_share' | 'bulk_inquiry' | 'partnership' | 'financing' | 'general';
+  title: string;
+  content: string;
+  senderId: string;
+  senderName: string;
+  timestamp: Date;
+  priority: 'high' | 'medium' | 'low';
+  attachments?: {
+    type: 'inventory' | 'document' | 'image';
+    data: any;
+  }[];
+  responses: number;
+  isRead: boolean;
+}
+
+interface InventoryItem {
+  id: string;
+  title: string;
+  make: string;
+  model: string;
+  year: number;
+  price: string;
+  image: string;
+  availability: number;
+  dealerId: string;
+}
+
+const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
+  const { theme } = useContext(ThemeContext);
+  const { user } = useContext(AuthContext);
+  
+  const [dealers, setDealers] = useState<DealerContact[]>([]);
+  const [networkMessages, setNetworkMessages] = useState<NetworkMessage[]>([]);
+  const [selectedTab, setSelectedTab] = useState<'dealers' | 'network' | 'inventory'>('network');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showBulkMessageModal, setShowBulkMessageModal] = useState(false);
+  const [showInventoryShareModal, setShowInventoryShareModal] = useState(false);
+  const [selectedDealers, setSelectedDealers] = useState<string[]>([]);
+  const [bulkMessage, setBulkMessage] = useState('');
+  const [sharedInventory, setSharedInventory] = useState<InventoryItem[]>([]);
+
+  // Mock data
+  const mockDealers: DealerContact[] = [
+    {
+      id: 'dealer1',
+      dealerName: 'Rajesh Motors',
+      showroomName: 'Rajesh Premium Cars',
+      avatar: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?w=100&h=100&fit=crop',
+      isOnline: true,
+      lastSeen: new Date(),
+      location: 'Mumbai, Maharashtra',
+      specializations: ['Luxury Cars', 'SUVs'],
+      rating: 4.8,
+      totalDeals: 1250,
+      isVerified: true,
+      businessType: 'premium'
+    },
+    {
+      id: 'dealer2',
+      dealerName: 'AutoWorld Delhi',
+      showroomName: 'AutoWorld Premium',
+      avatar: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=100&h=100&fit=crop',
+      isOnline: false,
+      lastSeen: new Date(Date.now() - 30 * 60 * 1000),
+      location: 'Delhi, India',
+      specializations: ['Sedans', 'Hatchbacks'],
+      rating: 4.6,
+      totalDeals: 890,
+      isVerified: true,
+      businessType: 'standard'
+    },
+    {
+      id: 'dealer3',
+      dealerName: 'Bangalore Motors',
+      showroomName: 'BLR Car Hub',
+      isOnline: true,
+      lastSeen: new Date(),
+      location: 'Bangalore, Karnataka',
+      specializations: ['Electric Cars', 'Hybrids'],
+      rating: 4.9,
+      totalDeals: 650,
+      isVerified: true,
+      businessType: 'premium'
+    }
+  ];
+
+  const mockNetworkMessages: NetworkMessage[] = [
+    {
+      id: 'msg1',
+      type: 'bulk_inquiry',
+      title: 'Bulk Purchase: 10 Maruti Swift',
+      content: 'Looking for 10 units of Maruti Swift Dzire for corporate fleet. Immediate requirement. Best rates appreciated.',
+      senderId: 'dealer1',
+      senderName: 'Rajesh Motors',
+      timestamp: new Date(Date.now() - 30 * 60 * 1000),
+      priority: 'high',
+      responses: 7,
+      isRead: false
+    },
+    {
+      id: 'msg2',
+      type: 'inventory_share',
+      title: 'Premium Inventory Available',
+      content: 'Sharing latest luxury car inventory. BMW, Audi, Mercedes models available at competitive rates.',
+      senderId: 'dealer2',
+      senderName: 'AutoWorld Delhi',
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      priority: 'medium',
+      attachments: [
+        {
+          type: 'inventory',
+          data: { count: 15, categories: ['BMW', 'Audi', 'Mercedes'] }
+        }
+      ],
+      responses: 3,
+      isRead: true
+    },
+    {
+      id: 'msg3',
+      type: 'partnership',
+      title: 'Partnership Opportunity',
+      content: 'Looking for dealers in South India for strategic partnership. Mutual inventory sharing and customer referrals.',
+      senderId: 'dealer3',
+      senderName: 'Bangalore Motors',
+      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      priority: 'medium',
+      responses: 12,
+      isRead: true
+    }
+  ];
+
+  const mockInventory: InventoryItem[] = [
+    {
+      id: 'inv1',
+      title: '2022 BMW X5 xDrive40i',
+      make: 'BMW',
+      model: 'X5',
+      year: 2022,
+      price: '₹85,00,000',
+      image: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=300&h=200&fit=crop',
+      availability: 2,
+      dealerId: 'dealer1'
+    },
+    {
+      id: 'inv2',
+      title: '2021 Audi Q7 Technology',
+      make: 'Audi',
+      model: 'Q7',
+      year: 2021,
+      price: '₹75,00,000',
+      image: 'https://images.unsplash.com/photo-1544829099-b9a0c5303bea?w=300&h=200&fit=crop',
+      availability: 1,
+      dealerId: 'dealer2'
+    }
+  ];
+
+  useEffect(() => {
+    setDealers(mockDealers);
+    setNetworkMessages(mockNetworkMessages);
+    setSharedInventory(mockInventory);
+  }, []);
+
+  const sendBulkMessage = () => {
+    if (!bulkMessage.trim() || selectedDealers.length === 0) {
+      Alert.alert('Error', 'Please select dealers and enter a message.');
+      return;
+    }
+
+    const newMessage: NetworkMessage = {
+      id: Date.now().toString(),
+      type: 'general',
+      title: 'Bulk Message',
+      content: bulkMessage,
+      senderId: user?.id || 'current_user',
+      senderName: user?.name || 'You',
+      timestamp: new Date(),
+      priority: 'medium',
+      responses: 0,
+      isRead: false
+    };
+
+    setNetworkMessages(prev => [newMessage, ...prev]);
+    setBulkMessage('');
+    setSelectedDealers([]);
+    setShowBulkMessageModal(false);
+    
+    Alert.alert('Success', `Message sent to ${selectedDealers.length} dealers.`);
+  };
+
+  const renderTabButton = (tab: 'dealers' | 'network' | 'inventory', label: string, icon: string) => (
+    <TouchableOpacity
+      style={[
+        styles.tabButton,
+        {
+          backgroundColor: selectedTab === tab ? theme.primary : 'transparent',
+          borderBottomColor: selectedTab === tab ? theme.primary : 'transparent'
+        }
+      ]}
+      onPress={() => setSelectedTab(tab)}
+    >
+      <MaterialCommunityIcons
+        name={icon as any}
+        size={20}
+        color={selectedTab === tab ? '#FFFFFF' : theme.text}
+      />
+      <Text style={[
+        styles.tabButtonText,
+        { color: selectedTab === tab ? '#FFFFFF' : theme.text }
+      ]}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  const renderDealerItem = ({ item }: { item: DealerContact }) => (
+    <TouchableOpacity
+      style={[styles.dealerItem, { backgroundColor: theme.cardBackground }]}
+      onPress={() => navigation.navigate('ChatConversation', {
+        participantId: item.id,
+        participantName: item.dealerName,
+        participantType: 'dealer'
+      })}
+    >
+      <View style={styles.dealerAvatarContainer}>
+        {item.avatar ? (
+          <Image source={{ uri: item.avatar }} style={styles.dealerAvatar} />
+        ) : (
+          <View style={[styles.dealerAvatarPlaceholder, { backgroundColor: theme.primary }]}>
+            <MaterialCommunityIcons name="store" size={24} color="#FFFFFF" />
+          </View>
+        )}
+        
+        {item.isOnline && <View style={styles.onlineIndicator} />}
+        
+        {item.isVerified && (
+          <View style={styles.verifiedBadge}>
+            <MaterialCommunityIcons name="check-decagram" size={16} color="#4CAF50" />
+          </View>
+        )}
+      </View>
+
+      <View style={styles.dealerInfo}>
+        <View style={styles.dealerHeader}>
+          <Text style={[styles.dealerName, { color: theme.text }]}>
+            {item.dealerName}
+          </Text>
+          <View style={[
+            styles.businessTypeBadge,
+            { backgroundColor: item.businessType === 'premium' ? '#FFD700' : item.businessType === 'standard' ? '#87CEEB' : '#C0C0C0' }
+          ]}>
+            <Text style={styles.businessTypeText}>
+              {item.businessType.toUpperCase()}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={[styles.showroomName, { color: theme.secondaryText }]}>
+          {item.showroomName}
+        </Text>
+        
+        <Text style={[styles.dealerLocation, { color: theme.secondaryText }]}>
+          📍 {item.location}
+        </Text>
+
+        <View style={styles.dealerStats}>
+          <View style={styles.statItem}>
+            <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
+            <Text style={[styles.statText, { color: theme.text }]}>
+              {item.rating}
+            </Text>
+          </View>
+          <View style={styles.statItem}>
+            <MaterialCommunityIcons name="handshake" size={16} color={theme.primary} />
+            <Text style={[styles.statText, { color: theme.text }]}>
+              {item.totalDeals} deals
+            </Text>
+          </View>
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.specializationsContainer}>
+          {item.specializations.map((spec, index) => (
+            <View key={index} style={[styles.specializationTag, { backgroundColor: theme.primary }]}>
+              <Text style={styles.specializationText}>{spec}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderNetworkMessage = ({ item }: { item: NetworkMessage }) => (
+    <TouchableOpacity
+      style={[
+        styles.networkMessageItem,
+        {
+          backgroundColor: theme.cardBackground,
+          borderLeftColor: item.priority === 'high' ? '#FF3B30' : item.priority === 'medium' ? '#FF9800' : '#4CAF50'
+        }
+      ]}
+    >
+      <View style={styles.messageHeader}>
+        <View style={styles.messageTypeContainer}>
+          <MaterialCommunityIcons
+            name={
+              item.type === 'bulk_inquiry' ? 'cart-multiple' :
+              item.type === 'inventory_share' ? 'car-multiple' :
+              item.type === 'partnership' ? 'handshake' :
+              item.type === 'financing' ? 'bank' : 'message'
+            }
+            size={20}
+            color={theme.primary}
+          />
+          <Text style={[styles.messageType, { color: theme.primary }]}>
+            {item.type.replace('_', ' ').toUpperCase()}
+          </Text>
+        </View>
+        
+        <Text style={[styles.messageTimestamp, { color: theme.secondaryText }]}>
+          {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </Text>
+      </View>
+
+      <Text style={[styles.messageTitle, { color: theme.text }]}>
+        {item.title}
+      </Text>
+      
+      <Text style={[styles.messageContent, { color: theme.secondaryText }]} numberOfLines={2}>
+        {item.content}
+      </Text>
+
+      <View style={styles.messageFooter}>
+        <Text style={[styles.messageSender, { color: theme.secondaryText }]}>
+          By {item.senderName}
+        </Text>
+        
+        <View style={styles.messageStats}>
+          <MaterialCommunityIcons name="reply" size={16} color={theme.secondaryText} />
+          <Text style={[styles.responseCount, { color: theme.secondaryText }]}>
+            {item.responses} responses
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderInventoryItem = ({ item }: { item: InventoryItem }) => (
+    <TouchableOpacity style={[styles.inventoryItem, { backgroundColor: theme.cardBackground }]}>
+      <Image source={{ uri: item.image }} style={styles.inventoryImage} />
+      
+      <View style={styles.inventoryDetails}>
+        <Text style={[styles.inventoryTitle, { color: theme.text }]}>
+          {item.title}
+        </Text>
+        
+        <Text style={[styles.inventoryPrice, { color: theme.primary }]}>
+          {item.price}
+        </Text>
+        
+        <Text style={[styles.inventoryAvailability, { color: theme.secondaryText }]}>
+          {item.availability} units available
+        </Text>
+        
+        <View style={styles.inventoryActions}>
+          <TouchableOpacity style={[styles.inventoryButton, { backgroundColor: theme.primary }]}>
+            <MaterialCommunityIcons name="eye" size={16} color="#FFFFFF" />
+            <Text style={styles.inventoryButtonText}>View</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={[styles.inventoryButton, { backgroundColor: '#4CAF50' }]}>
+            <MaterialCommunityIcons name="share" size={16} color="#FFFFFF" />
+            <Text style={styles.inventoryButtonText}>Share</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    header: {
+      padding: 16,
+      backgroundColor: theme.cardBackground,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    headerTitle: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: theme.text,
+      marginBottom: 16,
+    },
+    searchContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.background,
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    searchInput: {
+      flex: 1,
+      height: 40,
+      color: theme.text,
+      fontSize: 16,
+      marginLeft: 8,
+    },
+    tabsContainer: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    tabButton: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      gap: 8,
+      borderBottomWidth: 2,
+    },
+    tabButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    content: {
+      flex: 1,
+    },
+    dealerItem: {
+      flexDirection: 'row',
+      padding: 16,
+      marginHorizontal: 16,
+      marginVertical: 8,
+      borderRadius: 12,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+    },
+    dealerAvatarContainer: {
+      position: 'relative',
+      marginRight: 12,
+    },
+    dealerAvatar: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+    },
+    dealerAvatarPlaceholder: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    onlineIndicator: {
+      position: 'absolute',
+      bottom: 2,
+      right: 2,
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: '#4CAF50',
+      borderWidth: 2,
+      borderColor: theme.cardBackground,
+    },
+    verifiedBadge: {
+      position: 'absolute',
+      top: -2,
+      right: -2,
+      backgroundColor: theme.cardBackground,
+      borderRadius: 12,
+      padding: 2,
+    },
+    dealerInfo: {
+      flex: 1,
+    },
+    dealerHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    dealerName: {
+      fontSize: 16,
+      fontWeight: '600',
+      flex: 1,
+    },
+    businessTypeBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 10,
+    },
+    businessTypeText: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: '#000',
+    },
+    showroomName: {
+      fontSize: 14,
+      marginBottom: 4,
+    },
+    dealerLocation: {
+      fontSize: 12,
+      marginBottom: 8,
+    },
+    dealerStats: {
+      flexDirection: 'row',
+      gap: 16,
+      marginBottom: 8,
+    },
+    statItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    statText: {
+      fontSize: 12,
+      fontWeight: '500',
+    },
+    specializationsContainer: {
+      maxHeight: 24,
+    },
+    specializationTag: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+      marginRight: 8,
+    },
+    specializationText: {
+      fontSize: 10,
+      fontWeight: '500',
+      color: '#FFFFFF',
+    },
+    networkMessageItem: {
+      backgroundColor: theme.cardBackground,
+      marginHorizontal: 16,
+      marginVertical: 8,
+      borderRadius: 12,
+      padding: 16,
+      borderLeftWidth: 4,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+    },
+    messageHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    messageTypeContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    messageType: {
+      fontSize: 10,
+      fontWeight: '700',
+    },
+    messageTimestamp: {
+      fontSize: 12,
+    },
+    messageTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    messageContent: {
+      fontSize: 14,
+      lineHeight: 20,
+      marginBottom: 12,
+    },
+    messageFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    messageSender: {
+      fontSize: 12,
+      fontStyle: 'italic',
+    },
+    messageStats: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    responseCount: {
+      fontSize: 12,
+    },
+    inventoryItem: {
+      flexDirection: 'row',
+      marginHorizontal: 16,
+      marginVertical: 8,
+      borderRadius: 12,
+      overflow: 'hidden',
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+    },
+    inventoryImage: {
+      width: 120,
+      height: 90,
+    },
+    inventoryDetails: {
+      flex: 1,
+      padding: 12,
+    },
+    inventoryTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: 4,
+    },
+    inventoryPrice: {
+      fontSize: 16,
+      fontWeight: '700',
+      marginBottom: 4,
+    },
+    inventoryAvailability: {
+      fontSize: 12,
+      marginBottom: 8,
+    },
+    inventoryActions: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    inventoryButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      gap: 4,
+    },
+    inventoryButtonText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: '#FFFFFF',
+    },
+    fab: {
+      position: 'absolute',
+      bottom: 20,
+      right: 20,
+      backgroundColor: theme.primary,
+      borderRadius: 28,
+      width: 56,
+      height: 56,
+      justifyContent: 'center',
+      alignItems: 'center',
+      elevation: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+    },
+  });
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Dealer Network</Text>
+        
+        <View style={styles.searchContainer}>
+          <MaterialCommunityIcons name="magnify" size={20} color={theme.secondaryText} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search dealers, messages, inventory..."
+            placeholderTextColor={theme.secondaryText}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+      </View>
+
+      <View style={styles.tabsContainer}>
+        {renderTabButton('network', 'Network', 'forum')}
+        {renderTabButton('dealers', 'Dealers', 'account-group')}
+        {renderTabButton('inventory', 'Inventory', 'car-multiple')}
+      </View>
+
+      <View style={styles.content}>
+        {selectedTab === 'dealers' && (
+          <FlatList
+            data={dealers}
+            keyExtractor={(item) => item.id}
+            renderItem={renderDealerItem}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+
+        {selectedTab === 'network' && (
+          <FlatList
+            data={networkMessages}
+            keyExtractor={(item) => item.id}
+            renderItem={renderNetworkMessage}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+
+        {selectedTab === 'inventory' && (
+          <FlatList
+            data={sharedInventory}
+            keyExtractor={(item) => item.id}
+            renderItem={renderInventoryItem}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setShowBulkMessageModal(true)}
+      >
+        <MaterialCommunityIcons name="plus" size={28} color="#FFFFFF" />
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export default DealerNetworkChatScreen;

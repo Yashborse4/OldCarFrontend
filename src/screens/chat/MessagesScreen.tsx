@@ -1,0 +1,470 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+  TextInput,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { MessagesNavigationProp, RootStackParamList } from '../../navigation/types';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+// import { MessagesNavigationProp, ChatMessage } from '../../navigation/types'; // Update this path based on your project structure
+// import { Input } from '../../components/UI/Input'; // Update this path based on your project structure
+
+// Temporary interface until proper types are available
+interface ChatMessage {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  message: string;
+  timestamp: string;
+  status: 'sent' | 'delivered' | 'read';
+  type: 'text' | 'vehicle' | 'quote' | 'image';
+}
+
+interface Conversation {
+  id: string;
+  dealerId: string;
+  dealerName: string;
+  dealership: string;
+  lastMessage: ChatMessage;
+  unreadCount: number;
+  isOnline: boolean;
+}
+
+const MessagesScreen: React.FC = () => {
+  const navigation = useNavigation<MessagesNavigationProp>();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [searchText, setSearchText] = useState('');
+  const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Mock data - replace with API calls later
+  const mockConversations: Conversation[] = [
+    {
+      id: '1',
+      dealerId: 'dealer2',
+      dealerName: 'Sarah Johnson',
+      dealership: 'Elite Cars',
+      lastMessage: {
+        id: 'msg1',
+        senderId: 'dealer2',
+        receiverId: 'current-user',
+        message: 'I have a customer interested in your BMW X5. Can we discuss pricing?',
+        timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 minutes ago
+        status: 'delivered',
+        type: 'text',
+      },
+      unreadCount: 2,
+      isOnline: true,
+    },
+    {
+      id: '2',
+      dealerId: 'dealer3',
+      dealerName: 'Mike Wilson',
+      dealership: 'Luxury Auto Group',
+      lastMessage: {
+        id: 'msg2',
+        senderId: 'current-user',
+        receiverId: 'dealer3',
+        message: 'Thanks for the vehicle details. Let me review and get back to you.',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+        status: 'read',
+        type: 'text',
+      },
+      unreadCount: 0,
+      isOnline: false,
+    },
+    {
+      id: '3',
+      dealerId: 'dealer4',
+      dealerName: 'Lisa Garcia',
+      dealership: 'Speed Motors',
+      lastMessage: {
+        id: 'msg3',
+        senderId: 'dealer4',
+        receiverId: 'current-user',
+        message: 'Shared vehicle: 2023 Porsche 911 - $125,000',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(), // 6 hours ago
+        status: 'delivered',
+        type: 'vehicle',
+      },
+      unreadCount: 1,
+      isOnline: true,
+    },
+    {
+      id: '4',
+      dealerId: 'dealer5',
+      dealerName: 'Tom Anderson',
+      dealership: 'Performance Plus',
+      lastMessage: {
+        id: 'msg4',
+        senderId: 'current-user',
+        receiverId: 'dealer5',
+        message: 'Perfect! When can we schedule the vehicle inspection?',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+        status: 'read',
+        type: 'text',
+      },
+      unreadCount: 0,
+      isOnline: false,
+    },
+    {
+      id: '5',
+      dealerId: 'dealer6',
+      dealerName: 'Chris Lee',
+      dealership: 'Turbo Cars',
+      lastMessage: {
+        id: 'msg5',
+        senderId: 'dealer6',
+        receiverId: 'current-user',
+        message: 'Quote updated: $89,500 (Final offer)',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago
+        status: 'delivered',
+        type: 'quote',
+      },
+      unreadCount: 1,
+      isOnline: false,
+    },
+  ];
+
+  useEffect(() => {
+    loadConversations();
+  }, []);
+
+  useEffect(() => {
+    filterConversations();
+  }, [searchText, conversations]);
+
+  const loadConversations = async () => {
+    try {
+      setLoading(true);
+      // Simulate API call
+      setTimeout(() => {
+        setConversations(mockConversations);
+        setLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      setLoading(false);
+    }
+  };
+
+  const filterConversations = () => {
+    if (!searchText.trim()) {
+      setFilteredConversations(conversations);
+      return;
+    }
+
+    const filtered = conversations.filter(conv =>
+      conv.dealerName.toLowerCase().includes(searchText.toLowerCase()) ||
+      conv.dealership.toLowerCase().includes(searchText.toLowerCase()) ||
+      conv.lastMessage.message.toLowerCase().includes(searchText.toLowerCase())
+    );
+    setFilteredConversations(filtered);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadConversations();
+    setRefreshing(false);
+  };
+
+  const handleConversationPress = (conversation: Conversation) => {
+    navigation.navigate('Chat', {
+      dealerId: conversation.dealerId,
+      dealerName: conversation.dealerName,
+    });
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    const now = new Date();
+    const messageTime = new Date(timestamp);
+    const diffInMinutes = Math.floor((now.getTime() - messageTime.getTime()) / (1000 * 60));
+
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+    if (diffInMinutes < 24 * 60) return `${Math.floor(diffInMinutes / 60)}h`;
+    if (diffInMinutes < 7 * 24 * 60) return `${Math.floor(diffInMinutes / (24 * 60))}d`;
+    
+    return messageTime.toLocaleDateString();
+  };
+
+  const getMessagePreview = (message: ChatMessage) => {
+    switch (message.type) {
+      case 'image':
+        return '📷 Image';
+      case 'vehicle':
+        return '🚗 ' + message.message;
+      case 'quote':
+        return '💰 ' + message.message;
+      default:
+        return message.message;
+    }
+  };
+
+  const renderConversationItem = ({ item }: { item: Conversation }) => (
+    <TouchableOpacity
+      style={styles.conversationCard}
+      onPress={() => handleConversationPress(item)}
+      activeOpacity={0.8}
+    >
+      <View style={styles.avatarContainer}>
+        <View style={[styles.avatar, item.isOnline && styles.onlineAvatar]}>
+          <Text style={styles.avatarText}>
+            {item.dealerName.split(' ').map(n => n[0]).join('').toUpperCase()}
+          </Text>
+        </View>
+        {item.isOnline && <View style={styles.onlineIndicator} />}
+      </View>
+
+      <View style={styles.conversationInfo}>
+        <View style={styles.conversationHeader}>
+          <Text style={styles.dealerName} numberOfLines={1}>
+            {item.dealerName}
+          </Text>
+          <Text style={styles.timestamp}>
+            {formatTimestamp(item.lastMessage.timestamp)}
+          </Text>
+        </View>
+        
+        <Text style={styles.dealership} numberOfLines={1}>
+          {item.dealership}
+        </Text>
+        
+        <View style={styles.lastMessageContainer}>
+          <Text style={[
+            styles.lastMessage,
+            item.unreadCount > 0 && styles.unreadMessage
+          ]} numberOfLines={1}>
+            {item.lastMessage.senderId === 'current-user' && '✓ '}
+            {getMessagePreview(item.lastMessage)}
+          </Text>
+          
+          {item.unreadCount > 0 && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadCount}>
+                {item.unreadCount > 9 ? '9+' : item.unreadCount}
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <MaterialIcons name="chat-bubble-outline" size={80} color="#ddd" />
+      <Text style={styles.emptyStateTitle}>No Messages Yet</Text>
+      <Text style={styles.emptyStateText}>
+        Start networking with other dealers and your conversations will appear here
+      </Text>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Messages</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.headerButton}>
+            <MaterialIcons name="search" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.searchContainer}>
+        <TextInput
+          value={searchText}
+          onChangeText={setSearchText}
+          placeholder="Search conversations..."
+          style={styles.searchInput}
+        />
+      </View>
+
+      <FlatList
+        data={filteredConversations}
+        renderItem={renderConversationItem}
+        keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        contentContainerStyle={filteredConversations.length === 0 ? styles.emptyContainer : styles.listContainer}
+        ListEmptyComponent={renderEmptyState}
+        showsVerticalScrollIndicator={false}
+      />
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  headerActions: {
+    flexDirection: 'row',
+  },
+  headerButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  searchContainer: {
+    padding: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  searchInput: {
+    marginBottom: 0,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#333',
+    backgroundColor: '#f8f9fa',
+  },
+  listContainer: {
+    paddingVertical: 8,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  conversationCard: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginRight: 16,
+  },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#4ECDC4',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  onlineAvatar: {
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+  },
+  avatarText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  onlineIndicator: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#4CAF50',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  conversationInfo: {
+    flex: 1,
+  },
+  conversationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  dealerName: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginRight: 8,
+  },
+  timestamp: {
+    fontSize: 12,
+    color: '#666',
+  },
+  dealership: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 6,
+  },
+  lastMessageContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  lastMessage: {
+    flex: 1,
+    fontSize: 14,
+    color: '#888',
+    marginRight: 8,
+  },
+  unreadMessage: {
+    color: '#333',
+    fontWeight: '500',
+  },
+  unreadBadge: {
+    backgroundColor: '#4ECDC4',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  unreadCount: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  emptyState: {
+    alignItems: 'center',
+  },
+  emptyStateTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+});
+
+export default MessagesScreen;
