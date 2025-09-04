@@ -181,13 +181,6 @@ cd android
 3. Product → Archive
 4. Follow Xcode's distribution workflow
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
 ## 📝 Code Style
 
@@ -203,25 +196,6 @@ npm run lint
 yarn lint
 ```
 
-## 🐛 Known Issues
 
-- List any known issues or limitations here
-- Include workarounds if available
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- React Native community for excellent documentation
-- Contributors and testers
-- Open source libraries used in this project
-
-## 📞 Support
-
-For support, email your-email@example.com or create an issue in this repository.
-
----
 
 **Built with ❤️ using React Native**
