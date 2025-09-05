@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   StatusBar,
   Platform,
   KeyboardAvoidingView,
-  Dimensions,
   SafeAreaView,
   Keyboard,
   TouchableWithoutFeedback,
@@ -19,13 +18,27 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { AntDesign } from '@react-native-vector-icons/ant-design';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { RFValue as rf } from 'react-native-responsive-fontsize';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { FontAwesome } from '@react-native-vector-icons/fontawesome';
 import * as Animatable from 'react-native-animatable';
 import { useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import { ScreenErrorBoundary } from '../../components/ErrorBoundary';
+import { 
+  useResponsive, 
+  SPACING, 
+  FONT_SIZES, 
+  DIMENSIONS, 
+  scale, 
+  getResponsiveValue,
+  COMMON_STYLES 
+} from '../../utils/responsive';
+import { 
+  useOptimizedCallback, 
+  useDebounce, 
+  withPerformanceTracking,
+  ANIMATION_CONFIG 
+} from '../../utils/performance';
 
 
 interface Props {
@@ -38,40 +51,40 @@ const showToast = (type: 'success' | 'error', title: string, message: string) =>
   Alert.alert(title, message);
 };
 
-const LoginScreen: React.FC<Props> = ({ navigation }) => {
+const LoginScreenComponent: React.FC<Props> = ({ navigation }) => {
   const { isDark, colors } = useTheme();
   const { login, isLoading: authLoading } = useAuth();
+  const { deviceInfo, wp, hp, SPACING: spacing, FONT_SIZES: fontSize } = useResponsive();
   
-  // Animation references
+  // Animation references with optimized values
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
+  const slideAnim = useRef(new Animated.Value(scale(50))).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   
-  // Create modern dark UI color palette
+  // Responsive UI color palette
   const uiColors = {
-    // Dark theme focused colors
-    background: '#0A0A0B',
-    backgroundSecondary: '#111113',
-    card: 'rgba(18, 18, 20, 0.95)',
-    cardBorder: 'rgba(255, 255, 255, 0.08)',
-    text: '#FFFFFF',
-    textSecondary: 'rgba(255, 255, 255, 0.7)',
-    textTertiary: 'rgba(255, 255, 255, 0.5)',
-    accent: '#007AFF',
-    accentHover: '#0056CC',
-    error: '#FF453A',
-    warning: '#FF9F0A',
-    success: '#32D74B',
-    inputBg: 'rgba(28, 28, 30, 0.9)',
-    inputBorder: 'rgba(255, 255, 255, 0.12)',
-    inputBorderFocused: '#007AFF',
+    background: isDark ? '#0A0A0B' : colors.background,
+    backgroundSecondary: isDark ? '#111113' : colors.surface,
+    card: isDark ? 'rgba(18, 18, 20, 0.95)' : colors.card,
+    cardBorder: isDark ? 'rgba(255, 255, 255, 0.08)' : colors.border,
+    text: colors.text,
+    textSecondary: colors.textSecondary,
+    textTertiary: isDark ? 'rgba(255, 255, 255, 0.5)' : colors.textTertiary,
+    accent: colors.primary,
+    accentHover: colors.primaryDark,
+    error: colors.error,
+    warning: colors.warning,
+    success: colors.success,
+    inputBg: isDark ? 'rgba(28, 28, 30, 0.9)' : colors.inputBackground,
+    inputBorder: isDark ? 'rgba(255, 255, 255, 0.12)' : colors.inputBorder,
+    inputBorderFocused: colors.primary,
     shadow: 'rgba(0, 0, 0, 0.3)',
-    gradientPrimary: ['#1A1A1C', '#2A2A2E', '#1F1F23'],
-    gradientButton: ['#007AFF', '#0056CC'],
-    gradientCard: ['rgba(28, 28, 30, 0.95)', 'rgba(22, 22, 24, 0.98)'],
+    gradientPrimary: isDark ? ['#1A1A1C', '#2A2A2E', '#1F1F23'] : [colors.background, colors.surface],
+    gradientButton: [colors.primary, colors.primaryDark],
+    gradientCard: isDark ? ['rgba(28, 28, 30, 0.95)', 'rgba(22, 22, 24, 0.98)'] : [colors.card, colors.surface],
   };
 
-  // State management
+  // State management with performance optimization
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -81,30 +94,27 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [loginAttempted, setLoginAttempted] = useState(false);
 
-  // Initialize animations
+  // Initialize animations with performance optimization
   useEffect(() => {
-    // Entrance animations
+    // Entrance animations with optimized timing
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1000,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
+        ...ANIMATION_CONFIG.standard,
+        duration: getResponsiveValue({ small: 600, default: 800 }),
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 800,
-        easing: Easing.out(Easing.back(1.2)),
-        useNativeDriver: true,
+        ...ANIMATION_CONFIG.spring,
+        duration: getResponsiveValue({ small: 500, default: 700 }),
       }),
       Animated.timing(scaleAnim, {
         toValue: 1,
-        duration: 600,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
+        ...ANIMATION_CONFIG.fast,
+        duration: getResponsiveValue({ small: 400, default: 500 }),
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, slideAnim, scaleAnim]);
 
   // Keyboard visibility handling
   useEffect(() => {
@@ -137,52 +147,69 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     };
   }, []);
 
-  // Login functionality
-  const handleLogin = async () => {
+  // Optimized login handler with debouncing
+  const handleLogin = useOptimizedCallback(async () => {
     setLoginAttempted(true);
-    if (!email || !password) {
+    if (!email.trim() || !password.trim()) {
       showToast('error', 'Missing Fields', 'Please enter your email and password.');
       return;
     }
     
     try {
-      console.log('Attempting login with:', { email: email.trim() });
+      setIsLoading(true);
       await login({ 
         usernameOrEmail: email.trim(), 
-        password 
+        password: password.trim()
       });
       
-      console.log('Login successful');
-      // AuthContext shows success toast, so we just navigate
+      // Navigate with a slight delay for better UX
       setTimeout(() => {
         navigation.replace('Dashboard');
-      }, 1000);
+      }, 500);
     } catch (error: any) {
       console.error('Login error:', error);
-      // AuthContext handles error toasts, so we don't need to show them again
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [email, password, login, navigation]);
 
-  // Input focus handlers
-  const handleInputFocus = (inputName: 'email' | 'password', isFocused: boolean) => {
-    if (inputName === 'email') {
-      setEmailFocused(isFocused);
-    } else {
-      setPasswordFocused(isFocused);
-    }
-  };
+  // Debounced login for better performance
+  const debouncedHandleLogin = useDebounce(handleLogin, 300);
 
-  // Email validation
-  const isValidEmail = (email: string) => {
+  // Optimized input focus handlers
+  const handleEmailFocus = useOptimizedCallback((isFocused: boolean) => {
+    setEmailFocused(isFocused);
+  }, []);
+
+  const handlePasswordFocus = useOptimizedCallback((isFocused: boolean) => {
+    setPasswordFocused(isFocused);
+  }, []);
+
+  // Optimized email validation with memoization
+  const isValidEmail = useOptimizedCallback((email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+    return emailRegex.test(email.trim());
+  }, []);
+
+  // Optimized text input handlers
+  const handleEmailChange = useOptimizedCallback((text: string) => {
+    setEmail(text);
+  }, []);
+
+  const handlePasswordChange = useOptimizedCallback((text: string) => {
+    setPassword(text);
+  }, []);
+
+  const togglePasswordVisibility = useOptimizedCallback(() => {
+    setShowPassword(prev => !prev);
+  }, []);
 
   // Dismiss keyboard when tapping outside inputs
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
 
+  // Responsive styles using the design system
   const styles = StyleSheet.create({
     safeArea: {
       flex: 1,
@@ -196,40 +223,50 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     container: {
       flex: 1,
       justifyContent: 'center',
-      paddingHorizontal: wp('6%'),
-      paddingVertical: hp('4%'),
+      paddingHorizontal: getResponsiveValue({
+        small: spacing.md,
+        medium: spacing.lg,
+        default: spacing.xl,
+      }),
+      paddingVertical: spacing.lg,
     },
     logoSection: {
       alignItems: 'center',
-      marginBottom: hp('6%'),
+      marginBottom: getResponsiveValue({
+        small: spacing.xl,
+        default: spacing.xxl,
+      }),
     },
     logoContainer: {
-      width: wp('20%'),
-      height: wp('20%'),
-      borderRadius: wp('6%'),
+      width: scale(80),
+      height: scale(80),
+      borderRadius: scale(20),
       backgroundColor: uiColors.accent,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: hp('3%'),
+      ...COMMON_STYLES.centerContent,
+      marginBottom: spacing.lg,
+      ...COMMON_STYLES.shadow,
       shadowColor: uiColors.accent,
-      shadowOffset: { width: 0, height: hp('1%') },
-      shadowOpacity: 0.3,
-      shadowRadius: wp('5%'),
-      elevation: 10,
     },
     title: {
-      fontSize: rf(28),
+      fontSize: getResponsiveValue({
+        small: fontSize.xxl,
+        medium: fontSize.xxxl,
+        default: fontSize.display,
+      }),
       fontWeight: '800',
-      marginBottom: hp('1%'),
+      marginBottom: spacing.sm,
       letterSpacing: -0.5,
       textAlign: 'center',
       color: uiColors.text,
     },
     subtitle: {
-      fontSize: rf(16),
+      fontSize: getResponsiveValue({
+        small: fontSize.md,
+        default: fontSize.lg,
+      }),
       fontWeight: '400',
       textAlign: 'center',
-      marginBottom: hp('1%'),
+      marginBottom: spacing.sm,
       letterSpacing: 0.2,
       color: uiColors.textSecondary,
     },
@@ -646,6 +683,21 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         </LinearGradient>
       </SafeAreaView>
     </TouchableWithoutFeedback>
+  );
+};
+
+// Memoized component with performance tracking
+const OptimizedLoginScreen = memo(withPerformanceTracking(
+  LoginScreenComponent,
+  'LoginScreen'
+));
+
+// Screen with error boundary
+const LoginScreen: React.FC<Props> = (props) => {
+  return (
+    <ScreenErrorBoundary screenName="LoginScreen">
+      <OptimizedLoginScreen {...props} />
+    </ScreenErrorBoundary>
   );
 };
 

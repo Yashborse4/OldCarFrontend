@@ -17,15 +17,30 @@ import { isUserAuthorized } from './src/services/auth';
 import { RootStackParamList } from './src/navigation/types';
 import { ThemeProvider, useTheme } from './src/theme';
 import { AuthProvider } from './src/context/AuthContext';
+import { AppErrorBoundary } from './src/components/ErrorBoundary';
+import { initializePerformanceOptimizations, ResponsiveDebugger } from './src/utils/performance';
 
 
 function App() {
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
 
   useEffect(() => {
+    // Initialize performance optimizations
+    initializePerformanceOptimizations();
+    
+    // Log device info in development
+    if (__DEV__) {
+      ResponsiveDebugger.logDeviceInfo();
+    }
+    
     const checkAuthStatus = async () => {
-      const authorized = await isUserAuthorized();
-      setInitialRoute(authorized ? 'Dashboard' : 'Login');
+      try {
+        const authorized = await isUserAuthorized();
+        setInitialRoute(authorized ? 'Dashboard' : 'Login');
+      } catch (error) {
+        console.error('Auth status check failed:', error);
+        setInitialRoute('Login');
+      }
     };
 
     checkAuthStatus();
@@ -40,11 +55,13 @@ function App() {
   }
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppContent initialRoute={initialRoute} />
-      </AuthProvider>
-    </ThemeProvider>
+    <AppErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppContent initialRoute={initialRoute} />
+        </AuthProvider>
+      </ThemeProvider>
+    </AppErrorBoundary>
   );
 }
 
