@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,9 @@ import { useTheme } from '../../theme';
 import Toast from 'react-native-toast-message';
 import { AntDesign } from '@react-native-vector-icons/ant-design';
 import { useAuth } from '../../context/AuthContext';
+import { validateRegistrationForm, formatValidationErrors } from '../../utils/validation';
+import { ErrorHandler } from '../../components/ErrorHandler';
+import { getRoleName } from '../../utils/permissions';
 
 import { RegisterScreenNavigationProp } from '../../navigation/types';
 
@@ -31,9 +34,14 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('USER');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [role, setRole] = useState('VIEWER');
   const [isLoading, setIsLoading] = useState(false);
   const [isPickerVisible, setPickerVisible] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   // Adaptive color palette
   const systemColors = {
@@ -50,85 +58,56 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleRegister = async () => {
-    // Client-side validation
-    const usernameRegex = /^[a-zA-Z0-9_]+$/;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Clear previous errors
+    setError(null);
+    
+    // Validate form
+    const validationResult = validateRegistrationForm({
+      username,
+      email,
+      password,
+      confirmPassword,
+      firstName: firstName || undefined,
+      lastName: lastName || undefined,
+      phoneNumber: phoneNumber || undefined,
+    });
 
-    if (!username) {
+    if (!validationResult.isValid) {
       Toast.show({
         type: 'error',
-        text1: 'Invalid Username',
-        text2: 'Username cannot be blank.',
+        text1: 'Validation Error',
+        text2: validationResult.errors[0], // Show first error
       });
       return;
     }
-    if (username.length < 3 || username.length > 50) {
-      Toast.show({
-        type: 'error',
-        text1: 'Invalid Username',
-        text2: 'Username must be between 3 and 50 characters.',
-      });
-      return;
-    }
-    if (!usernameRegex.test(username)) {
-      Toast.show({
-        type: 'error',
-        text1: 'Invalid Username',
-        text2: 'Username can only contain letters, numbers, and underscores.',
-      });
-      return;
-    }
-    if (!email) {
-      Toast.show({
-        type: 'error',
-        text1: 'Invalid Email',
-        text2: 'Email cannot be blank.',
-      });
-      return;
-    }
-    if (email.length > 100) {
-      Toast.show({
-        type: 'error',
-        text1: 'Invalid Email',
-        text2: 'Email must not exceed 100 characters.',
-      });
-      return;
-    }
-    if (!emailRegex.test(email)) {
-      Toast.show({
-        type: 'error',
-        text1: 'Invalid Email',
-        text2: 'Please provide a valid email address.',
-      });
-      return;
-    }
-    if (!password) {
-      Toast.show({
-        type: 'error',
-        text1: 'Invalid Password',
-        text2: 'Password cannot be blank.',
-      });
-      return;
-    }
-    if (password.length < 5 || password.length > 100) {
-      Toast.show({
-        type: 'error',
-        text1: 'Invalid Password',
-        text2: 'Password must be between 5 and 100 characters.',
-      });
-      return;
-    }
+
     setIsLoading(true);
     try {
-      await register({ username, email, password, role });
-      // AuthContext handles success toast, so we just navigate
-      navigation.navigate('Login');
+      await register({ 
+        username, 
+        email, 
+        password, 
+        firstName: firstName || undefined,
+        lastName: lastName || undefined,
+        phoneNumber: phoneNumber || undefined,
+        role 
+      });
+      // AuthContext handles navigation on successful registration
     } catch (error: any) {
-      // AuthContext handles error toasts, so we don't need to show them again
+      setError(error);
       console.error('Registration error:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleRetryRegistration = () => {
+    setError(null);
+    handleRegister();
+  };
+
+  const dismissError = () => {
+    setError(null);
   };
 
   return (
@@ -150,25 +129,63 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
             <Text style={[styles.textSecondary, { color: systemColors.secondaryLabel, marginTop: 8 }]}>Join us to find your perfect car</Text>
           </View>
           <View style={[styles.card, { backgroundColor: systemColors.card, shadowColor: systemColors.shadow }]}> 
+            {/* Error Handler */}
+            <ErrorHandler 
+              error={error} 
+              onRetry={handleRetryRegistration}
+              onDismiss={dismissError}
+            />
+            
             <View style={styles.formGroup}>
               <View style={[styles.inputContainer, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}> 
                 <AntDesign name="user" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
                 <TextInput
                   style={[styles.input, { color: systemColors.label }]}
-                  placeholder="Username"
+                  placeholder="Username *"
                   placeholderTextColor={systemColors.secondaryLabel}
                   value={username}
                   onChangeText={setUsername}
+                  autoCapitalize="none"
                   returnKeyType="next"
                 />
               </View>
             </View>
+            
+            <View style={styles.formRow}>
+              <View style={[styles.formGroup, styles.formGroupHalf]}>
+                <View style={[styles.inputContainer, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}> 
+                  <AntDesign name="user" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
+                  <TextInput
+                    style={[styles.input, { color: systemColors.label }]}
+                    placeholder="First Name"
+                    placeholderTextColor={systemColors.secondaryLabel}
+                    value={firstName}
+                    onChangeText={setFirstName}
+                    returnKeyType="next"
+                  />
+                </View>
+              </View>
+              <View style={[styles.formGroup, styles.formGroupHalf]}>
+                <View style={[styles.inputContainer, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}> 
+                  <AntDesign name="user" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
+                  <TextInput
+                    style={[styles.input, { color: systemColors.label }]}
+                    placeholder="Last Name"
+                    placeholderTextColor={systemColors.secondaryLabel}
+                    value={lastName}
+                    onChangeText={setLastName}
+                    returnKeyType="next"
+                  />
+                </View>
+              </View>
+            </View>
+            
             <View style={styles.formGroup}>
               <View style={[styles.inputContainer, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}> 
                 <AntDesign name="mail" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
                 <TextInput
                   style={[styles.input, { color: systemColors.label }]}
-                  placeholder="Email"
+                  placeholder="Email Address *"
                   placeholderTextColor={systemColors.secondaryLabel}
                   value={email}
                   onChangeText={setEmail}
@@ -178,27 +195,59 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                 />
               </View>
             </View>
+            
+            <View style={styles.formGroup}>
+              <View style={[styles.inputContainer, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}> 
+                <AntDesign name="phone" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
+                <TextInput
+                  style={[styles.input, { color: systemColors.label }]}
+                  placeholder="Phone Number"
+                  placeholderTextColor={systemColors.secondaryLabel}
+                  value={phoneNumber}
+                  onChangeText={setPhoneNumber}
+                  keyboardType="phone-pad"
+                  returnKeyType="next"
+                />
+              </View>
+            </View>
+            
             <View style={styles.formGroup}>
               <View style={[styles.inputContainer, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}> 
                 <AntDesign name="lock" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
                 <TextInput
                   style={[styles.input, { color: systemColors.label }]}
-                  placeholder="Password"
+                  placeholder="Password *"
                   placeholderTextColor={systemColors.secondaryLabel}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
-                  returnKeyType="done"
+                  returnKeyType="next"
                 />
               </View>
             </View>
+            
+            <View style={styles.formGroup}>
+              <View style={[styles.inputContainer, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}> 
+                <AntDesign name="lock" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
+                <TextInput
+                  style={[styles.input, { color: systemColors.label }]}
+                  placeholder="Confirm Password *"
+                  placeholderTextColor={systemColors.secondaryLabel}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry
+                  returnKeyType="next"
+                />
+              </View>
+            </View>
+            
             <TouchableOpacity
               style={[styles.inputContainer, styles.rolePicker, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}
               onPress={() => setPickerVisible(true)}
             >
               <AntDesign name="team" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
               <Text style={[styles.input, { color: systemColors.label }]}>
-                {role === 'USER' ? 'Normal User' : 'Dealer'}
+                {getRoleName(role)}
               </Text>
               <AntDesign name="down" size={16} style={{ color: systemColors.secondaryLabel }} />
             </TouchableOpacity>
@@ -218,11 +267,22 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                 <TouchableOpacity
                   style={[styles.listItem, { borderBottomColor: systemColors.border }]}
                   onPress={() => {
-                    setRole('USER');
+                    setRole('VIEWER');
                     setPickerVisible(false);
                   }}
                 >
-                  <Text style={[styles.textBody, { color: systemColors.label }]}>Normal User</Text>
+                  <Text style={[styles.textBody, { color: systemColors.label }]}>Viewer</Text>
+                  <Text style={[styles.textCaption, { color: systemColors.secondaryLabel }]}>Browse and view cars</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.listItem, { borderBottomColor: systemColors.border }]}
+                  onPress={() => {
+                    setRole('SELLER');
+                    setPickerVisible(false);
+                  }}
+                >
+                  <Text style={[styles.textBody, { color: systemColors.label }]}>Seller</Text>
+                  <Text style={[styles.textCaption, { color: systemColors.secondaryLabel }]}>List and sell your cars</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.listItem, styles.listItemLast]}
@@ -232,6 +292,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                   }}
                 >
                   <Text style={[styles.textBody, { color: systemColors.label }]}>Dealer</Text>
+                  <Text style={[styles.textCaption, { color: systemColors.secondaryLabel }]}>Professional car dealer</Text>
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
@@ -307,6 +368,16 @@ const styles = StyleSheet.create({
   },
   formGroup: {
     marginBottom: 16,
+  },
+  formRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  formGroupHalf: {
+    flex: 1,
+    marginRight: 8,
+    marginBottom: 0,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -399,6 +470,11 @@ const styles = StyleSheet.create({
   textAccent: {
     fontWeight: '700',
     fontSize: 15,
+  },
+  textCaption: {
+    fontSize: 12,
+    marginTop: 2,
+    opacity: 0.8,
   },
 });
 
