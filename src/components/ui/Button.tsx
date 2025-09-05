@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React, { memo, useRef } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -7,26 +7,64 @@ import {
   ActivityIndicator,
   View,
   StyleSheet,
+  Animated,
+  Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../theme';
 import * as Animatable from 'react-native-animatable';
+import { 
+  scale, 
+  FONT_SIZES, 
+  DIMENSIONS, 
+  getResponsiveValue, 
+  COMMON_STYLES,
+  SPACING 
+} from '../../utils/responsive';
+import { 
+  useOptimizedCallback, 
+  withPerformanceTracking,
+  ANIMATION_CONFIG,
+  useDebounce 
+} from '../../utils/performance';
 
 export interface ButtonProps {
+  // Core props
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient';
+  
+  // Appearance
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient' | 'danger';
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  borderRadius?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  
+  // State
   disabled?: boolean;
   loading?: boolean;
+  selected?: boolean;
+  
+  // Content
+  subtitle?: string;
   icon?: React.ReactNode;
   iconPosition?: 'left' | 'right';
+  
+  // Layout
   fullWidth?: boolean;
-  borderRadius?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  shadow?: boolean;
+  
+  // Styling
   style?: ViewStyle;
   textStyle?: TextStyle;
-  animationType?: 'bounce' | 'pulse' | 'fadeIn' | 'none';
+  
+  // Animation & Interaction
+  animationType?: 'bounce' | 'pulse' | 'fadeIn' | 'scale' | 'none';
+  hapticFeedback?: boolean;
+  debounceMs?: number;
+  
+  // Accessibility
   testID?: string;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
 export const Button: React.FC<ButtonProps> = ({

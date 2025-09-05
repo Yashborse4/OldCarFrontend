@@ -11,10 +11,12 @@ import NetInfo from '@react-native-community/netinfo';
 // API Configuration
 const API_CONFIG = {
   baseURL: __DEV__ ? 'http://localhost:9000' : 'https://your-production-api.com',
-  timeout: 10000,
+  timeout: 15000, // Increased timeout for better mobile network handling
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
   },
 };
 
@@ -103,10 +105,18 @@ class ApiClient {
     reject: (error: any) => void;
   }> = [];
   private networkCheckInterval: NodeJS.Timeout | null = null;
+  private retryConfig = {
+    retries: 3,
+    retryDelay: 1000, // Base delay in milliseconds
+    retryCondition: (error: any) => {
+      return !error.response || error.response.status >= 500 || error.code === 'NETWORK_ERROR';
+    }
+  };
 
   constructor() {
     this.instance = axios.create(API_CONFIG);
     this.setupInterceptors();
+    this.setupRetryLogic();
     this.startNetworkMonitoring();
   }
 
@@ -239,42 +249,119 @@ class ApiClient {
     this.failedQueue = [];
   }
 
+  private setupRetryLogic() {
+    // Add request retry logic
+    this.instance.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const config = error.config;
+        
+        // Initialize retry count if not present
+        if (!config.__retryCount) {
+          config.__retryCount = 0;
+        }
+        
+        // Check if we should retry
+        const shouldRetry = this.retryConfig.retryCondition(error) && 
+                           config.__retryCount < this.retryConfig.retries;
+        
+        if (shouldRetry) {
+          config.__retryCount += 1;
+          
+          // Exponential backoff
+          const delay = this.retryConfig.retryDelay * Math.pow(2, config.__retryCount - 1);
+          
+          console.log(`Retrying request (attempt ${config.__retryCount}/${this.retryConfig.retries}) after ${delay}ms`);
+          
+          await new Promise(resolve => setTimeout(resolve, delay));
+          
+          return this.instance(config);
+        }
+        
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  private async retryRequest<T>(requestFn: () => Promise<T>, maxRetries = 3): Promise<T> {
+    let lastError: any;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await requestFn();
+      } catch (error: any) {
+        lastError = error;
+        
+        // Don't retry for certain error types
+        if (error.response && [400, 401, 403, 404, 422].includes(error.response.status)) {
+          throw error;
+        }
+        
+        if (attempt === maxRetries) {
+          throw error;
+        }
+        
+        // Exponential backoff
+        const delay = 1000 * Math.pow(2, attempt - 1);
+        console.log(`Request failed (attempt ${attempt}/${maxRetries}), retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    throw lastError;
+  }
+
   // Auth methods
   async login(credentials: {
     usernameOrEmail: string;
     password: string;
   }): Promise<AuthTokens> {
-    const response = await this.instance.post<ApiSuccessResponse<AuthTokens>>(
-      '/api/auth/login',
-      credentials,
-    );
-    const authData = response.data.data;
-    await this.saveAuthData(authData);
-    return authData;
+    try {
+      const response = await this.retryRequest(() => 
+        this.instance.post<ApiSuccessResponse<AuthTokens>>(
+          '/api/auth/login',
+          credentials,
+        )
+      );
+      
+      const authData = response.data.data;
+      await this.saveAuthData(authData);
+      
+      console.log('Login successful for user:', authData.username);
+      return authData;
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      throw this.handleAuthError(error, 'Login failed');
+    }
   }
 
   async register(userData: {
     username: string;
     email: string;
     password: string;
+    firstName?: string;
+    lastName?: string;
     role?: string;
-  }): Promise<{
-    userId: number;
-    username: string;
-    email: string;
-    role: string;
-    createdAt: string;
-  }> {
-    const response = await this.instance.post<
-      ApiSuccessResponse<{
-        userId: number;
-        username: string;
-        email: string;
-        role: string;
-        createdAt: string;
-      }>
-    >('/api/auth/register', userData);
-    return response.data.data;
+    location?: string;
+    phoneNumber?: string;
+  }): Promise<AuthTokens> {
+    try {
+      const response = await this.retryRequest(() =>
+        this.instance.post<ApiSuccessResponse<AuthTokens>>(
+          '/api/auth/register',
+          userData
+        )
+      );
+      
+      const authData = response.data.data;
+      await this.saveAuthData(authData);
+      
+      console.log('Registration successful for user:', authData.username);
+      return authData;
+    } catch (error: any) {
+      console.error('Registration failed:', error);
+      throw this.handleAuthError(error, 'Registration failed');
+    }
   }
 
   async forgotPassword(username: string): Promise<void> {
@@ -303,42 +390,118 @@ class ApiClient {
     valid: boolean;
     userDetails?: UserData;
   }> {
-    const response = await this.instance.post<
-      ApiSuccessResponse<{
-        valid: boolean;
-        userDetails?: UserData;
-      }>
-    >('/api/auth/validate-token');
-    return response.data.data;
+    try {
+      const response = await this.instance.post<
+        ApiSuccessResponse<{
+          valid: boolean;
+          userDetails?: UserData;
+        }>
+      >('/api/auth/validate-token');
+      return response.data.data;
+    } catch (error: any) {
+      console.error('Token validation failed:', error);
+      return {
+        valid: false,
+        userDetails: undefined
+      };
+    }
   }
 
   async logout(): Promise<void> {
-    await this.clearAuthData();
+    try {
+      // Attempt to notify server of logout (optional)
+      await this.instance.post('/api/auth/logout');
+    } catch (error) {
+      // Logout server notification is optional
+      console.warn('Server logout notification failed:', error);
+    } finally {
+      await this.clearAuthData();
+    }
+  }
+
+  private handleAuthError(error: any, defaultMessage: string): Error {
+    if (error.response?.data) {
+      const apiError = error.response.data;
+      
+      // Handle field validation errors
+      if (apiError.fieldErrors) {
+        const fieldErrors = Object.entries(apiError.fieldErrors)
+          .map(([field, message]) => `${field}: ${message}`)
+          .join(', ');
+        return new ApiError({
+          ...apiError,
+          message: fieldErrors
+        }, error.response.status);
+      }
+      
+      return new ApiError(apiError, error.response.status);
+    }
+    
+    if (error.request) {
+      return new NetworkError('Network error - please check your connection');
+    }
+    
+    return new Error(defaultMessage);
   }
 
   // Car management methods
-  async getCars(): Promise<any[]> {
-    const response = await this.instance.get<any[]>('/api/v2/cars');
-    return response.data;
+  async getCars(page = 0, size = 20, sort = 'createdAt,desc'): Promise<any> {
+    try {
+      const response = await this.retryRequest(() =>
+        this.instance.get(`/api/v2/cars?page=${page}&size=${size}&sort=${sort}`)
+      );
+      return response.data.data || response.data;
+    } catch (error: any) {
+      console.error('Error fetching cars:', error);
+      throw this.handleApiError(error, 'Failed to fetch vehicles');
+    }
   }
 
-  async getCarById(id: number): Promise<any> {
-    const response = await this.instance.get(`/api/v2/cars/${id}`);
-    return response.data;
+  async getCarById(id: string | number): Promise<any> {
+    try {
+      const response = await this.retryRequest(() =>
+        this.instance.get(`/api/v2/cars/${id}`)
+      );
+      return response.data.data || response.data;
+    } catch (error: any) {
+      console.error('Error fetching car by ID:', error);
+      throw this.handleApiError(error, 'Failed to fetch vehicle details');
+    }
   }
 
   async createCar(carData: any): Promise<any> {
-    const response = await this.instance.post('/api/v2/cars', carData);
-    return response.data;
+    try {
+      const response = await this.retryRequest(() =>
+        this.instance.post('/api/v2/cars', carData)
+      );
+      return response.data.data || response.data;
+    } catch (error: any) {
+      console.error('Error creating car:', error);
+      throw this.handleApiError(error, 'Failed to create vehicle listing');
+    }
   }
 
-  async updateCar(id: number, carData: any): Promise<any> {
-    const response = await this.instance.patch(`/api/v2/cars/${id}`, carData);
-    return response.data;
+  async updateCar(id: string | number, carData: any): Promise<any> {
+    try {
+      const response = await this.retryRequest(() =>
+        this.instance.patch(`/api/v2/cars/${id}`, carData)
+      );
+      return response.data.data || response.data;
+    } catch (error: any) {
+      console.error('Error updating car:', error);
+      throw this.handleApiError(error, 'Failed to update vehicle listing');
+    }
   }
 
-  async deleteCar(id: number, hard: boolean = false): Promise<void> {
-    await this.instance.delete(`/api/v2/cars/${id}?hard=${hard}`);
+  async deleteCar(id: string | number, hard: boolean = false): Promise<void> {
+    try {
+      await this.retryRequest(() =>
+        this.instance.delete(`/api/v2/cars/${id}?hard=${hard}`)
+      );
+    } catch (error: any) {
+      console.error('Error deleting car:', error);
+      throw this.handleApiError(error, 'Failed to delete vehicle listing');
+    }
   }
 
   async updateCarStatus(id: number, status: string): Promise<any> {
@@ -428,6 +591,23 @@ class ApiClient {
   // Method to destroy the client and clean up resources
   destroy(): void {
     this.stopNetworkMonitoring();
+  }
+
+  private handleApiError(error: any, defaultMessage: string): Error {
+    if (error instanceof ApiError || error instanceof NetworkError) {
+      return error;
+    }
+    
+    if (error.response?.data) {
+      const apiError = error.response.data;
+      return new ApiError(apiError, error.response.status);
+    }
+    
+    if (error.request) {
+      return new NetworkError('Network error - please check your connection');
+    }
+    
+    return new Error(defaultMessage);
   }
 
   // Token and storage management

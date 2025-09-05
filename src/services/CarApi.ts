@@ -2,9 +2,6 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiClient, apiClient } from './ApiClient';
 
-// IMPORTANT: Replace with your actual backend API URL
-const API_URL = 'http://192.168.152.183:9000';
-
 // Vehicle interfaces
 export interface Vehicle {
   id: string;
@@ -95,14 +92,14 @@ class CarApiService {
   private apiClient: ApiClient;
 
   constructor() {
-    this.apiClient = new ApiClient();
+    this.apiClient = apiClient; // Use the singleton instance
   }
 
   // Get all cars
-  async getAllVehicles(): Promise<Vehicle[]> {
+  async getAllVehicles(page = 0, size = 20, sort = 'createdAt,desc'): Promise<{ content: Vehicle[], totalElements: number, totalPages: number }> {
     try {
-      const response = await this.apiClient.get<Vehicle[]>('/api/cars');
-      return response.data;
+      const response = await this.apiClient.getCars(page, size, sort);
+      return response;
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       throw error;
@@ -112,8 +109,7 @@ class CarApiService {
   // Get car by ID
   async getVehicleById(id: string): Promise<Vehicle> {
     try {
-      const response = await this.apiClient.get<Vehicle>(`/api/cars/${id}`);
-      return response.data;
+      return await this.apiClient.getCarById(id);
     } catch (error) {
       console.error('Error fetching vehicle:', error);
       throw error;
@@ -123,8 +119,7 @@ class CarApiService {
   // Create new car listing
   async createVehicle(vehicleData: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'inquiries' | 'shares'>): Promise<Vehicle> {
     try {
-      const response = await this.apiClient.post<Vehicle>('/api/v2/cars', vehicleData);
-      return response.data;
+      return await this.apiClient.createCar(vehicleData);
     } catch (error) {
       console.error('Error creating vehicle:', error);
       throw error;
@@ -134,8 +129,7 @@ class CarApiService {
   // Update car listing
   async updateVehicle(id: string, updates: Partial<Vehicle>): Promise<Vehicle> {
     try {
-      const response = await this.apiClient.patch<Vehicle>(`/api/v2/cars/${id}`, updates);
-      return response.data;
+      return await this.apiClient.updateCar(id, updates);
     } catch (error) {
       console.error('Error updating vehicle:', error);
       throw error;
@@ -145,7 +139,7 @@ class CarApiService {
   // Delete car listing
   async deleteVehicle(id: string, hard: boolean = false): Promise<void> {
     try {
-      await this.apiClient.delete(`/api/v2/cars/${id}?hard=${hard}`);
+      await this.apiClient.deleteCar(id, hard);
     } catch (error) {
       console.error('Error deleting vehicle:', error);
       throw error;
