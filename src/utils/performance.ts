@@ -58,7 +58,7 @@ export const useDebounce = <T extends (...args: any[]) => any>(
   callback: T,
   delay: number
 ): T => {
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<number | null>(null);
   
   return useCallback(
     ((...args: any[]) => {
@@ -140,7 +140,7 @@ export const withPerformanceTracking = <P extends object>(
       PerformanceMonitor.countRender(name);
     });
     
-    return <Component {...props} />;
+    return React.createElement(Component, props);
   });
   
   WrappedComponent.displayName = `withPerformanceTracking(${componentName || Component.displayName || Component.name})`;
@@ -206,6 +206,11 @@ export const useOptimizedImage = (uri: string) => {
 /**
  * List performance optimization utilities
  */
+// Key extractor function to avoid circular reference
+const defaultKeyExtractor = (item: any, index: number) => {
+  return item?.id?.toString() || item?.key?.toString() || index.toString();
+};
+
 export const LIST_OPTIMIZATION = {
   // Optimal getItemLayout for uniform list items
   getItemLayout: (itemHeight: number) => (
@@ -218,9 +223,7 @@ export const LIST_OPTIMIZATION = {
   }),
   
   // Key extractor with fallback
-  keyExtractor: (item: any, index: number) => {
-    return item?.id?.toString() || item?.key?.toString() || index.toString();
-  },
+  keyExtractor: defaultKeyExtractor,
   
   // Default props for FlatList optimization
   defaultProps: {
@@ -229,7 +232,7 @@ export const LIST_OPTIMIZATION = {
     windowSize: 10,
     initialNumToRender: 8,
     getItemLayout: undefined, // Set this per list based on item height
-    keyExtractor: LIST_OPTIMIZATION.keyExtractor,
+    keyExtractor: defaultKeyExtractor,
   },
 };
 
@@ -247,7 +250,9 @@ export class MemoryManager {
     // Remove oldest entries if cache is full
     if (this.cache.size >= this.maxCacheSize) {
       const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey);
+      }
     }
     
     this.cache.set(key, {
@@ -420,9 +425,9 @@ export const DebugTools = {
     if (!__DEV__) return;
     
     // @ts-ignore - This is for debugging only
-    if (global.gc) {
+    if (typeof global !== 'undefined' && (global as any).gc) {
       // @ts-ignore
-      global.gc();
+      (global as any).gc();
       console.log('🧠 Memory cleaned up');
     }
     
@@ -435,7 +440,7 @@ export const DebugTools = {
     
     console.log('📦 Bundle platform:', Platform.OS);
     console.log('📦 Bundle version:', Platform.Version);
-    console.log('📦 Is Hermes:', !!(global as any).HermesInternal);
+    console.log('📦 Is Hermes:', typeof globalThis !== 'undefined' && !!(globalThis as any).HermesInternal);
   },
 };
 
@@ -454,3 +459,5 @@ export const initializePerformanceOptimizations = () => {
     }, 30000); // Every 30 seconds
   }
 };
+
+
