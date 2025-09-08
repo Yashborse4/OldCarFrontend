@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -70,7 +70,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
     },
     {
       title: 'Total Revenue',
-      value: 'â‚¹2.4Cr',
+      value: '₹2.4Cr',
       subtitle: 'This month',
       trend: { value: 15, isPositive: true, period: 'vs last month' },
       icon: 'wallet',
@@ -94,7 +94,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
     },
     {
       title: 'Avg. Price',
-      value: 'â‚¹8.5L',
+      value: '₹8.5L',
       subtitle: 'Per vehicle',
       trend: { value: 3, isPositive: true, period: 'vs last month' },
       icon: 'calculator',
@@ -112,7 +112,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
       year: 2020,
       price: 650000,
       originalPrice: 720000,
-      currency: 'â‚¹',
+      currency: '₹',
       images: ['https://images.pexels.com/photos/358070/pexels-photo-358070.jpeg?auto=compress&w=400'],
       status: 'active',
       specifications: {
@@ -137,7 +137,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
       year: 2019,
       price: 850000,
       originalPrice: 950000,
-      currency: 'â‚¹',
+      currency: '₹',
       images: ['https://images.pexels.com/photos/170782/pexels-photo-170782.jpeg?auto=compress&w=400'],
       status: 'active',
       specifications: {
@@ -162,7 +162,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
       year: 2018,
       price: 1200000,
       originalPrice: 1350000,
-      currency: 'â‚¹',
+      currency: '₹',
       images: ['https://images.pexels.com/photos/358070/pexels-photo-358070.jpeg?auto=compress&w=400'],
       status: 'sold',
       specifications: {
@@ -186,7 +186,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
       model: 'Innova',
       year: 2017,
       price: 1800000,
-      currency: 'â‚¹',
+      currency: '₹',
       images: ['https://images.pexels.com/photos/170782/pexels-photo-170782.jpeg?auto=compress&w=400'],
       status: 'expired',
       specifications: {
@@ -345,10 +345,10 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderQuickActions = () => (
     <View style={styles.quickActionsContainer}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
+      <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Quick Actions</Text>
       <View style={styles.quickActionsGrid}>
         <TouchableOpacity
-          style={[styles.quickActionCard, { backgroundColor: colors.surface }, shadows.sm]}
+          style={[styles.quickActionCard, { backgroundColor: themeColors.surface }, shadows.sm]}
           onPress={() => navigation.navigate('AddCar')}
         >
           <LinearGradient
@@ -357,11 +357,11 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
           >
             <AntDesign name="plus" size={20} color="#FFFFFF" />
           </LinearGradient>
-          <Text style={[styles.quickActionText, { color: colors.text }]}>Add New Car</Text>
+          <Text style={[styles.quickActionText, { color: themeColors.text }]}>Add New Car</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.quickActionCard, { backgroundColor: colors.surface }, shadows.sm]}
+          style={[styles.quickActionCard, { backgroundColor: themeColors.surface }, shadows.sm]}
           onPress={() => navigation.navigate('ManageCars')}
         >
           <LinearGradient
@@ -370,11 +370,11 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
           >
             <AntDesign name="edit" size={20} color="#FFFFFF" />
           </LinearGradient>
-          <Text style={[styles.quickActionText, { color: colors.text }]}>Manage Cars</Text>
+          <Text style={[styles.quickActionText, { color: themeColors.text }]}>Manage Cars</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.quickActionCard, { backgroundColor: colors.surface }, shadows.sm]}
+          style={[styles.quickActionCard, { backgroundColor: themeColors.surface }, shadows.sm]}
           onPress={() => navigation.navigate('Analytics')}
         >
           <LinearGradient
@@ -383,11 +383,11 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
           >
             <MaterialIcons name="analytics" size={20} color="#FFFFFF" />
           </LinearGradient>
-          <Text style={[styles.quickActionText, { color: colors.text }]}>View Analytics</Text>
+          <Text style={[styles.quickActionText, { color: themeColors.text }]}>View Analytics</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.quickActionCard, { backgroundColor: colors.surface }, shadows.sm]}
+          style={[styles.quickActionCard, { backgroundColor: themeColors.surface }, shadows.sm]}
           onPress={() => navigation.navigate('Inquiries')}
         >
           <LinearGradient
@@ -396,7 +396,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
           >
             <AntDesign name="message" size={20} color="#FFFFFF" />
           </LinearGradient>
-          <Text style={[styles.quickActionText, { color: colors.text }]}>Inquiries</Text>
+          <Text style={[styles.quickActionText, { color: themeColors.text }]}>Inquiries</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -404,7 +404,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderStatistics = () => (
     <View style={styles.statisticsContainer}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Dashboard Overview</Text>
+      <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Dashboard Overview</Text>
       <View style={styles.statisticsGrid}>
         {statisticsData.map((stat, index) => (
           <StatisticsCard
@@ -420,7 +420,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderAnalytics = () => (
     <View style={styles.analyticsContainer}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Performance Analytics</Text>
+      <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Performance Analytics</Text>
       
       <SimpleChart
         data={salesTrendData}
@@ -442,7 +442,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
         data={monthlyRevenueData}
         type="bar"
         title="Monthly Revenue"
-        subtitle="Revenue in lakhs (â‚¹)"
+        subtitle="Revenue in lakhs (₹)"
         height={180}
       />
     </View>
@@ -450,7 +450,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderListingsSection = () => (
     <View style={styles.listingsContainer}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Car Listings</Text>
+      <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Your Car Listings</Text>
       
       <FilterSystem
         filters={filters}
@@ -478,7 +478,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: themeColors.background,
     },
     headerGradient: {
       paddingTop: 50,
@@ -603,8 +603,8 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
+            colors={[themeColors.primary]}
+            tintColor={themeColors.primary}
           />
         }
       >
@@ -618,4 +618,6 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 export default DealerDashboardScreen;
+
+
 

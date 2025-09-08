@@ -205,68 +205,68 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
           <Image source={{ uri: tempProfile.profileImage }} style={styles.profileImageLarge} />
           {editMode && (
             <TouchableOpacity
-              style={[styles.editImageButton, { backgroundColor: colors.primary }]}
+              style={[styles.editImageButton, { backgroundColor: themeColors.primary }]}
               onPress={() => setShowImagePicker(true)}
             >
               <MaterialCommunityIcons name="camera" size={16} color="#111827" />
             </TouchableOpacity>
           )}
         </View>
-        <Text style={[styles.dealerNameLarge, { color: colors.text }]}>{tempProfile.dealerName}</Text>
-        <Text style={[styles.ownerNameSubtitle, { color: colors.textSecondary }]}>
+        <Text style={[styles.dealerNameLarge, { color: themeColors.text }]}>{tempProfile.dealerName}</Text>
+        <Text style={[styles.ownerNameSubtitle, { color: themeColors.textSecondary }]}>
           Owner: {tempProfile.ownerName}
         </Text>
       </View>
 
       {/* Basic Information */}
-      <View style={[styles.section, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Basic Information</Text>
+      <View style={[styles.section, { backgroundColor: themeColors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Basic Information</Text>
         
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Dealer Name</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Dealer Name</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.dealerName}
             onChangeText={(text) => setTempProfile({ ...tempProfile, dealerName: text })}
             editable={editMode}
             placeholder="Enter dealer name"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
           />
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Showroom Name</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Showroom Name</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.showroomName}
             onChangeText={(text) => setTempProfile({ ...tempProfile, showroomName: text })}
             editable={editMode}
             placeholder="Enter showroom name"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
           />
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Owner Name</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Owner Name</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.ownerName}
             onChangeText={(text) => setTempProfile({ ...tempProfile, ownerName: text })}
             editable={editMode}
             placeholder="Enter owner name"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
           />
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Description</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Description</Text>
           <TextInput
-            style={[styles.input, styles.textArea, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, styles.textArea, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.description}
             onChangeText={(text) => setTempProfile({ ...tempProfile, description: text })}
             editable={editMode}
             placeholder="Describe your dealership"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -275,52 +275,52 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       {/* Contact Information */}
-      <View style={[styles.section, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Contact Information</Text>
+      <View style={[styles.section, { backgroundColor: themeColors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Contact Information</Text>
         
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Email</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Email</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.email}
             onChangeText={(text) => setTempProfile({ ...tempProfile, email: text })}
             editable={editMode}
             placeholder="Enter email address"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
             keyboardType="email-address"
           />
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Phone Number</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Phone Number</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.phone}
             onChangeText={(text) => setTempProfile({ ...tempProfile, phone: text })}
             editable={editMode}
             placeholder="Enter phone number"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
             keyboardType="phone-pad"
           />
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>WhatsApp Number</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>WhatsApp Number</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.whatsapp}
             onChangeText={(text) => setTempProfile({ ...tempProfile, whatsapp: text })}
             editable={editMode}
             placeholder="Enter WhatsApp number"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
             keyboardType="phone-pad"
           />
         </View>
       </View>
 
       {/* Specializations */}
-      <View style={[styles.section, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Specializations</Text>
+      <View style={[styles.section, { backgroundColor: themeColors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Specializations</Text>
         <View style={styles.specializationsContainer}>
           {SPECIALIZATIONS.map((specialization) => (
             <TouchableOpacity
@@ -328,7 +328,7 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
               style={[
                 styles.specializationChip,
                 { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                tempProfile.specializations.includes(specialization) && { backgroundColor: colors.primary },
+                tempProfile.specializations.includes(specialization) && { backgroundColor: themeColors.primary },
               ]}
               onPress={() => editMode && toggleSpecialization(specialization)}
               disabled={!editMode}
@@ -336,7 +336,7 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
               <Text
                 style={[
                   styles.specializationText,
-                  { color: colors.text },
+                  { color: themeColors.text },
                   tempProfile.specializations.includes(specialization) && { color: '#111827' },
                 ]}
               >
@@ -352,60 +352,60 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
   const renderBusinessTab = () => (
     <View style={styles.tabContent}>
       {/* Business Details */}
-      <View style={[styles.section, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Business Details</Text>
+      <View style={[styles.section, { backgroundColor: themeColors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Business Details</Text>
         
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Business License Number</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Business License Number</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.businessLicense}
             onChangeText={(text) => setTempProfile({ ...tempProfile, businessLicense: text })}
             editable={editMode}
             placeholder="Enter business license number"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
           />
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>GST Number</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>GST Number</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.gstNumber}
             onChangeText={(text) => setTempProfile({ ...tempProfile, gstNumber: text })}
             editable={editMode}
             placeholder="Enter GST number"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
           />
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Established Year</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Established Year</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.established}
             onChangeText={(text) => setTempProfile({ ...tempProfile, established: text })}
             editable={editMode}
             placeholder="Enter establishment year"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
             keyboardType="number-pad"
           />
         </View>
       </View>
 
       {/* Address */}
-      <View style={[styles.section, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Address Information</Text>
+      <View style={[styles.section, { backgroundColor: themeColors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Address Information</Text>
         
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Address</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Address</Text>
           <TextInput
-            style={[styles.input, styles.textArea, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, styles.textArea, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.address}
             onChangeText={(text) => setTempProfile({ ...tempProfile, address: text })}
             editable={editMode}
             placeholder="Enter complete address"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
@@ -414,39 +414,39 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
 
         <View style={styles.rowContainer}>
           <View style={styles.halfWidth}>
-            <Text style={[styles.label, { color: colors.text }]}>City</Text>
+            <Text style={[styles.label, { color: themeColors.text }]}>City</Text>
             <TextInput
-              style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+              style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
               value={tempProfile.city}
               onChangeText={(text) => setTempProfile({ ...tempProfile, city: text })}
               editable={editMode}
               placeholder="City"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={themeColors.textSecondary}
             />
           </View>
 
           <View style={styles.halfWidth}>
-            <Text style={[styles.label, { color: colors.text }]}>State</Text>
+            <Text style={[styles.label, { color: themeColors.text }]}>State</Text>
             <TextInput
-              style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+              style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
               value={tempProfile.state}
               onChangeText={(text) => setTempProfile({ ...tempProfile, state: text })}
               editable={editMode}
               placeholder="State"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={themeColors.textSecondary}
             />
           </View>
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>PIN Code</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>PIN Code</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.pincode}
             onChangeText={(text) => setTempProfile({ ...tempProfile, pincode: text })}
             editable={editMode}
             placeholder="Enter PIN code"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
             keyboardType="number-pad"
             maxLength={6}
           />
@@ -454,13 +454,13 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       {/* Business Hours */}
-      <View style={[styles.section, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Business Hours</Text>
+      <View style={[styles.section, { backgroundColor: themeColors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Business Hours</Text>
         
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Weekdays</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Weekdays</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.businessHours.weekdays}
             onChangeText={(text) => setTempProfile({ 
               ...tempProfile, 
@@ -468,14 +468,14 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
             })}
             editable={editMode}
             placeholder="e.g., 9:00 AM - 8:00 PM"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
           />
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Weekends</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Weekends</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.businessHours.weekends}
             onChangeText={(text) => setTempProfile({ 
               ...tempProfile, 
@@ -483,32 +483,32 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
             })}
             editable={editMode}
             placeholder="e.g., 10:00 AM - 6:00 PM"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
           />
         </View>
       </View>
 
       {/* Online Presence */}
-      <View style={[styles.section, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Online Presence</Text>
+      <View style={[styles.section, { backgroundColor: themeColors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Online Presence</Text>
         
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Website</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Website</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.website}
             onChangeText={(text) => setTempProfile({ ...tempProfile, website: text })}
             editable={editMode}
             placeholder="Enter website URL"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
             keyboardType="url"
           />
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Facebook Page</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Facebook Page</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.socialMedia.facebook}
             onChangeText={(text) => setTempProfile({ 
               ...tempProfile, 
@@ -516,14 +516,14 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
             })}
             editable={editMode}
             placeholder="Facebook page name"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
           />
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Instagram Handle</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Instagram Handle</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
             value={tempProfile.socialMedia.instagram}
             onChangeText={(text) => setTempProfile({ 
               ...tempProfile, 
@@ -531,7 +531,7 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
             })}
             editable={editMode}
             placeholder="Instagram username"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
           />
         </View>
       </View>
@@ -545,14 +545,14 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
     return (
       <View style={styles.tabContent}>
         {/* Verification Status */}
-        <View style={[styles.section, { backgroundColor: colors.surface }]}>
+        <View style={[styles.section, { backgroundColor: themeColors.surface }]}>
           <View style={styles.verificationHeader}>
             <View style={[styles.verificationBadge, { backgroundColor: verification.bg }]}>
               <MaterialCommunityIcons name={verification.icon as any} size={24} color={verification.color} />
             </View>
             <View style={styles.verificationInfo}>
-              <Text style={[styles.verificationTitle, { color: colors.text }]}>{verification.text}</Text>
-              <Text style={[styles.verificationSubtitle, { color: colors.textSecondary }]}>
+              <Text style={[styles.verificationTitle, { color: themeColors.text }]}>{verification.text}</Text>
+              <Text style={[styles.verificationSubtitle, { color: themeColors.textSecondary }]}>
                 Profile Completion: {completionPercentage}%
               </Text>
             </View>
@@ -563,15 +563,15 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
             <View 
               style={[
                 styles.progressFill, 
-                { backgroundColor: colors.primary, width: `${completionPercentage}%` }
+                { backgroundColor: themeColors.primary, width: `${completionPercentage}%` }
               ]} 
             />
           </View>
         </View>
 
         {/* Document Verification */}
-        <View style={[styles.section, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Document Verification</Text>
+        <View style={[styles.section, { backgroundColor: themeColors.surface }]}>
+          <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Document Verification</Text>
           
           {Object.entries(profile.verificationDocuments).map(([key, uploaded]) => {
             const docNames = {
@@ -596,15 +596,15 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
                   <MaterialCommunityIcons 
                     name={uploaded ? 'check-circle' : 'file-upload'} 
                     size={20} 
-                    color={uploaded ? '#4CAF50' : colors.textSecondary} 
+                    color={uploaded ? '#4CAF50' : themeColors.textSecondary} 
                   />
-                  <Text style={[styles.documentName, { color: colors.text }]}>
+                  <Text style={[styles.documentName, { color: themeColors.text }]}>
                     {docNames[key as keyof typeof docNames]}
                   </Text>
                 </View>
                 <Text style={[
                   styles.documentStatus, 
-                  { color: uploaded ? '#4CAF50' : colors.textSecondary }
+                  { color: uploaded ? '#4CAF50' : themeColors.textSecondary }
                 ]}>
                   {uploaded ? 'Uploaded' : 'Required'}
                 </Text>
@@ -614,8 +614,8 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         {/* Verification Benefits */}
-        <View style={[styles.section, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Verification Benefits</Text>
+        <View style={[styles.section, { backgroundColor: themeColors.surface }]}>
+          <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Verification Benefits</Text>
           
           {[
             { icon: 'shield-check', text: 'Verified dealer badge on all listings' },
@@ -624,8 +624,8 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
             { icon: 'star', text: 'Access to premium dealer features' },
           ].map((benefit, index) => (
             <View key={index} style={styles.benefitItem}>
-              <MaterialCommunityIcons name={benefit.icon as any} size={16} color={colors.primary} />
-              <Text style={[styles.benefitText, { color: colors.text }]}>{benefit.text}</Text>
+              <MaterialCommunityIcons name={benefit.icon as any} size={16} color={themeColors.primary} />
+              <Text style={[styles.benefitText, { color: themeColors.text }]}>{benefit.text}</Text>
             </View>
           ))}
         </View>
@@ -637,7 +637,7 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
   const completionPercentage = getCompletionPercentage();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <StatusBar
         translucent
         backgroundColor="transparent"
@@ -645,11 +645,11 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
       />
 
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+      <View style={[styles.header, { backgroundColor: themeColors.surface }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <AntDesign name="arrowleft" size={24} color={colors.text} />
+          <AntDesign name="arrow-left" size={24} color={themeColors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Dealer Profile</Text>
+        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Dealer Profile</Text>
         <TouchableOpacity
           onPress={() => editMode ? handleSave() : setEditMode(true)}
           disabled={loading}
@@ -657,13 +657,13 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
           <MaterialCommunityIcons
             name={editMode ? 'check' : 'pencil'}
             size={24}
-            color={loading ? colors.textSecondary : colors.primary}
+            color={loading ? themeColors.textSecondary : themeColors.primary}
           />
         </TouchableOpacity>
       </View>
 
       {/* Tab Navigation */}
-      <View style={[styles.tabContainer, { backgroundColor: colors.surface }]}>
+      <View style={[styles.tabContainer, { backgroundColor: themeColors.surface }]}>
         {[
           { key: 'profile', label: 'Profile', icon: 'account' },
           { key: 'business', label: 'Business', icon: 'office-building' },
@@ -673,19 +673,19 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
             key={tab.key}
             style={[
               styles.tab,
-              activeTab === tab.key && [styles.activeTab, { borderBottomColor: colors.primary }],
+              activeTab === tab.key && [styles.activeTab, { borderBottomColor: themeColors.primary }],
             ]}
             onPress={() => setActiveTab(tab.key as any)}
           >
             <MaterialCommunityIcons
               name={tab.icon as any}
               size={16}
-              color={activeTab === tab.key ? colors.primary : colors.textSecondary}
+              color={activeTab === tab.key ? themeColors.primary : themeColors.textSecondary}
             />
             <Text
               style={[
                 styles.tabText,
-                { color: activeTab === tab.key ? colors.primary : colors.textSecondary },
+                { color: activeTab === tab.key ? themeColors.primary : themeColors.textSecondary },
               ]}
             >
               {tab.label}
@@ -704,15 +704,15 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Action Buttons */}
         {editMode && (
-          <View style={[styles.actionButtons, { backgroundColor: colors.surface }]}>
+          <View style={[styles.actionButtons, { backgroundColor: themeColors.surface }]}>
             <TouchableOpacity
               style={[styles.cancelButton, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}
               onPress={handleCancel}
             >
-              <Text style={[styles.cancelButtonText, { color: colors.text }]}>Cancel</Text>
+              <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.saveButton, { backgroundColor: colors.primary }]}
+              style={[styles.saveButton, { backgroundColor: themeColors.primary }]}
               onPress={handleSave}
               disabled={loading}
             >
@@ -968,3 +968,5 @@ const styles = StyleSheet.create({
 });
 
 export default DealerProfileScreen;
+
+

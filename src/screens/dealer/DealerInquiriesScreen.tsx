@@ -249,14 +249,14 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const renderStatsCard = (title: string, value: string | number, subtitle: string, icon: string, color: string) => (
-    <Animatable.View animation="fadeInUp" style={[styles.statsCard, { backgroundColor: colors.surface }]}>
+    <Animatable.View animation="fadeInUp" style={[styles.statsCard, { backgroundColor: themeColors.surface }]}>
       <View style={[styles.statsIconContainer, { backgroundColor: `${color}15` }]}>
         <MaterialCommunityIcons name={icon as any} size={20} color={color} />
       </View>
       <View style={styles.statsContent}>
-        <Text style={[styles.statsValue, { color: colors.text }]}>{value}</Text>
-        <Text style={[styles.statsTitle, { color: colors.text }]}>{title}</Text>
-        <Text style={[styles.statsSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
+        <Text style={[styles.statsValue, { color: themeColors.text }]}>{value}</Text>
+        <Text style={[styles.statsTitle, { color: themeColors.text }]}>{title}</Text>
+        <Text style={[styles.statsSubtitle, { color: themeColors.textSecondary }]}>{subtitle}</Text>
       </View>
     </Animatable.View>
   );
@@ -264,14 +264,14 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
   const renderInquiryItem = ({ item, index }: { item: Inquiry; index: number }) => (
     <Animatable.View animation="fadeInUp" delay={index * 100}>
       <TouchableOpacity
-        style={[styles.inquiryCard, { backgroundColor: colors.surface }]}
+        style={[styles.inquiryCard, { backgroundColor: themeColors.surface }]}
         onPress={() => handleInquiryPress(item)}
       >
         {/* Header */}
         <View style={styles.inquiryHeader}>
           <View style={styles.inquiryHeaderLeft}>
-            <Text style={[styles.buyerName, { color: colors.text }]}>{item.buyerName}</Text>
-            <Text style={[styles.inquiryTime, { color: colors.textSecondary }]}>
+            <Text style={[styles.buyerName, { color: themeColors.text }]}>{item.buyerName}</Text>
+            <Text style={[styles.inquiryTime, { color: themeColors.textSecondary }]}>
               {formatTime(item.createdAt)}
             </Text>
           </View>
@@ -287,14 +287,14 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
         {/* Car Info */}
         <View style={styles.carInfo}>
           <View style={styles.carDetails}>
-            <Text style={[styles.carTitle, { color: colors.text }]}>{item.carTitle}</Text>
-            <Text style={[styles.carPrice, { color: colors.primary }]}>{item.carPrice}</Text>
+            <Text style={[styles.carTitle, { color: themeColors.text }]}>{item.carTitle}</Text>
+            <Text style={[styles.carPrice, { color: themeColors.primary }]}>{item.carPrice}</Text>
           </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSecondary} />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={themeColors.textSecondary} />
         </View>
 
         {/* Message Preview */}
-        <Text style={[styles.messagePreview, { color: colors.textSecondary }]} numberOfLines={2}>
+        <Text style={[styles.messagePreview, { color: themeColors.textSecondary }]} numberOfLines={2}>
           {item.message}
         </Text>
 
@@ -329,7 +329,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Lead Score */}
         <View style={styles.leadScoreContainer}>
-          <Text style={[styles.leadScoreLabel, { color: colors.textSecondary }]}>Lead Score: </Text>
+          <Text style={[styles.leadScoreLabel, { color: themeColors.textSecondary }]}>Lead Score: </Text>
           <View style={[styles.leadScoreBar, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}>
             <View 
               style={[
@@ -341,7 +341,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
               ]} 
             />
           </View>
-          <Text style={[styles.leadScoreValue, { color: colors.text }]}>{item.leadScore}%</Text>
+          <Text style={[styles.leadScoreValue, { color: themeColors.text }]}>{item.leadScore}%</Text>
         </View>
       </TouchableOpacity>
     </Animatable.View>
@@ -350,60 +350,60 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
   const renderInquiryModal = () => (
     <Modal visible={showInquiryModal} animationType="slide" presentationStyle="pageSheet">
       {selectedInquiry && (
-        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
-          <View style={[styles.modalHeader, { backgroundColor: colors.surface }]}>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: themeColors.background }]}>
+          <View style={[styles.modalHeader, { backgroundColor: themeColors.surface }]}>
             <TouchableOpacity onPress={() => setShowInquiryModal(false)}>
-              <AntDesign name="close" size={24} color={colors.text} />
+              <AntDesign name="close" size={24} color={themeColors.text} />
             </TouchableOpacity>
-            <Text style={[styles.modalHeaderTitle, { color: colors.text }]}>Inquiry Details</Text>
+            <Text style={[styles.modalHeaderTitle, { color: themeColors.text }]}>Inquiry Details</Text>
             <TouchableOpacity onPress={() => setShowActionModal(true)}>
-              <MaterialCommunityIcons name="dots-vertical" size={24} color={colors.text} />
+              <MaterialCommunityIcons name="dots-vertical" size={24} color={themeColors.text} />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalContent}>
             {/* Buyer Information */}
-            <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Buyer Information</Text>
+            <View style={[styles.modalSection, { backgroundColor: themeColors.surface }]}>
+              <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Buyer Information</Text>
               <View style={styles.buyerInfoRow}>
-                <MaterialCommunityIcons name="account" size={20} color={colors.primary} />
-                <Text style={[styles.buyerInfoText, { color: colors.text }]}>{selectedInquiry.buyerName}</Text>
+                <MaterialCommunityIcons name="account" size={20} color={themeColors.primary} />
+                <Text style={[styles.buyerInfoText, { color: themeColors.text }]}>{selectedInquiry.buyerName}</Text>
               </View>
               <View style={styles.buyerInfoRow}>
-                <MaterialCommunityIcons name="phone" size={20} color={colors.primary} />
-                <Text style={[styles.buyerInfoText, { color: colors.text }]}>{selectedInquiry.buyerPhone}</Text>
+                <MaterialCommunityIcons name="phone" size={20} color={themeColors.primary} />
+                <Text style={[styles.buyerInfoText, { color: themeColors.text }]}>{selectedInquiry.buyerPhone}</Text>
               </View>
               {selectedInquiry.buyerEmail && (
                 <View style={styles.buyerInfoRow}>
-                  <MaterialCommunityIcons name="email" size={20} color={colors.primary} />
-                  <Text style={[styles.buyerInfoText, { color: colors.text }]}>{selectedInquiry.buyerEmail}</Text>
+                  <MaterialCommunityIcons name="email" size={20} color={themeColors.primary} />
+                  <Text style={[styles.buyerInfoText, { color: themeColors.text }]}>{selectedInquiry.buyerEmail}</Text>
                 </View>
               )}
               <View style={styles.buyerInfoRow}>
-                <MaterialCommunityIcons name="map-marker" size={20} color={colors.primary} />
-                <Text style={[styles.buyerInfoText, { color: colors.text }]}>{selectedInquiry.location}</Text>
+                <MaterialCommunityIcons name="map-marker" size={20} color={themeColors.primary} />
+                <Text style={[styles.buyerInfoText, { color: themeColors.text }]}>{selectedInquiry.location}</Text>
               </View>
             </View>
 
             {/* Car Information */}
-            <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Car Details</Text>
-              <Text style={[styles.carModalTitle, { color: colors.text }]}>{selectedInquiry.carTitle}</Text>
-              <Text style={[styles.carModalPrice, { color: colors.primary }]}>{selectedInquiry.carPrice}</Text>
+            <View style={[styles.modalSection, { backgroundColor: themeColors.surface }]}>
+              <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Car Details</Text>
+              <Text style={[styles.carModalTitle, { color: themeColors.text }]}>{selectedInquiry.carTitle}</Text>
+              <Text style={[styles.carModalPrice, { color: themeColors.primary }]}>{selectedInquiry.carPrice}</Text>
             </View>
 
             {/* Message */}
-            <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Message</Text>
-              <Text style={[styles.messageText, { color: colors.text }]}>{selectedInquiry.message}</Text>
+            <View style={[styles.modalSection, { backgroundColor: themeColors.surface }]}>
+              <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Message</Text>
+              <Text style={[styles.messageText, { color: themeColors.text }]}>{selectedInquiry.message}</Text>
             </View>
 
             {/* Notes */}
             {selectedInquiry.notes.length > 0 && (
-              <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Notes</Text>
+              <View style={[styles.modalSection, { backgroundColor: themeColors.surface }]}>
+                <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Notes</Text>
                 {selectedInquiry.notes.map((note, index) => (
-                  <Text key={index} style={[styles.noteText, { color: colors.textSecondary }]}>
+                  <Text key={index} style={[styles.noteText, { color: themeColors.textSecondary }]}>
                     • {note}
                   </Text>
                 ))}
@@ -411,8 +411,8 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
             )}
 
             {/* Quick Actions */}
-            <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
+            <View style={[styles.modalSection, { backgroundColor: themeColors.surface }]}>
+              <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Quick Actions</Text>
               <View style={styles.quickActions}>
                 <TouchableOpacity
                   style={[styles.quickActionButton, { backgroundColor: '#4CAF5015' }]}
@@ -431,14 +431,14 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.quickActionButton, { backgroundColor: colors.primary + '15' }]}
+                  style={[styles.quickActionButton, { backgroundColor: themeColors.primary + '15' }]}
                   onPress={() => {
                     setShowInquiryModal(false);
                     navigation.navigate('CarDetails', { carId: selectedInquiry.carId });
                   }}
                 >
-                  <MaterialCommunityIcons name="car" size={20} color={colors.primary} />
-                  <Text style={[styles.quickActionText, { color: colors.primary }]}>View Car</Text>
+                  <MaterialCommunityIcons name="car" size={20} color={themeColors.primary} />
+                  <Text style={[styles.quickActionText, { color: themeColors.primary }]}>View Car</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -451,8 +451,8 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
   const renderActionModal = () => (
     <Modal visible={showActionModal} transparent animationType="fade">
       <View style={styles.actionModalOverlay}>
-        <View style={[styles.actionModalContent, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.actionModalTitle, { color: colors.text }]}>Update Status</Text>
+        <View style={[styles.actionModalContent, { backgroundColor: themeColors.surface }]}>
+          <Text style={[styles.actionModalTitle, { color: themeColors.text }]}>Update Status</Text>
           
           {[
             { key: 'contacted', label: 'Mark as Contacted', icon: 'phone' },
@@ -465,8 +465,8 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
               style={styles.actionModalButton}
               onPress={() => selectedInquiry && handleStatusUpdate(selectedInquiry.id, action.key as Inquiry['status'])}
             >
-              <MaterialCommunityIcons name={action.icon as any} size={20} color={colors.text} />
-              <Text style={[styles.actionModalButtonText, { color: colors.text }]}>{action.label}</Text>
+              <MaterialCommunityIcons name={action.icon as any} size={20} color={themeColors.text} />
+              <Text style={[styles.actionModalButtonText, { color: themeColors.text }]}>{action.label}</Text>
             </TouchableOpacity>
           ))}
           
@@ -474,7 +474,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
             style={[styles.actionModalButton, styles.cancelButton]}
             onPress={() => setShowActionModal(false)}
           >
-            <Text style={[styles.actionModalButtonText, { color: colors.textSecondary }]}>Cancel</Text>
+            <Text style={[styles.actionModalButtonText, { color: themeColors.textSecondary }]}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -482,7 +482,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <StatusBar
         translucent
         backgroundColor="transparent"
@@ -490,13 +490,13 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
       />
 
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+      <View style={[styles.header, { backgroundColor: themeColors.surface }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <AntDesign name="arrowleft" size={24} color={colors.text} />
+          <AntDesign name="left" size={24} color={themeColors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Inquiries</Text>
+        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Inquiries</Text>
         <TouchableOpacity onPress={() => navigation.navigate('DealerInquiryAnalytics')}>
-          <MaterialCommunityIcons name="chart-line" size={24} color={colors.primary} />
+          <MaterialCommunityIcons name="chart-line" size={24} color={themeColors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -505,8 +505,8 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
+            colors={[themeColors.primary]}
+            tintColor={themeColors.primary}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -523,12 +523,12 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Search and Filters */}
         <View style={styles.filtersContainer}>
-          <View style={[styles.searchContainer, { backgroundColor: colors.surface }]}>
-            <MaterialCommunityIcons name="magnify" size={20} color={colors.textSecondary} />
+          <View style={[styles.searchContainer, { backgroundColor: themeColors.surface }]}>
+            <MaterialCommunityIcons name="magnify" size={20} color={themeColors.textSecondary} />
             <TextInput
-              style={[styles.searchInput, { color: colors.text }]}
+              style={[styles.searchInput, { color: themeColors.text }]}
               placeholder="Search inquiries..."
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={themeColors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
@@ -541,14 +541,14 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
                 style={[
                   styles.filterButton,
                   { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                  selectedFilter === filter.key && { backgroundColor: colors.primary },
+                  selectedFilter === filter.key && { backgroundColor: themeColors.primary },
                 ]}
                 onPress={() => setSelectedFilter(filter.key)}
               >
                 <Text
                   style={[
                     styles.filterButtonText,
-                    { color: colors.text },
+                    { color: themeColors.text },
                     selectedFilter === filter.key && { color: '#111827' },
                   ]}
                 >
@@ -565,10 +565,10 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
             <MaterialCommunityIcons 
               name="message-text-outline" 
               size={64} 
-              color={colors.textSecondary} 
+              color={themeColors.textSecondary} 
             />
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>No inquiries found</Text>
-            <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
+            <Text style={[styles.emptyTitle, { color: themeColors.text }]}>No inquiries found</Text>
+            <Text style={[styles.emptyMessage, { color: themeColors.textSecondary }]}>
               {searchQuery.trim() 
                 ? `No inquiries match "${searchQuery}"`
                 : 'No inquiries in this category'
@@ -952,3 +952,5 @@ const styles = StyleSheet.create({
 });
 
 export default DealerInquiriesScreen;
+
+
