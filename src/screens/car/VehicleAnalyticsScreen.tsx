@@ -127,7 +127,15 @@ const VehicleAnalyticsScreen: React.FC = () => {
   const renderStatsOverview = () => {
     if (!analyticsData) return null;
 
-    const stats = [
+    type Stat = {
+      title: string;
+      value: string;
+      icon: React.ComponentProps<typeof MaterialIcons>['name'];
+      color: string;
+      change: string;
+    };
+
+    const stats: Stat[] = [
       {
         title: 'Total Views',
         value: analyticsData.totalViews.toLocaleString(),
@@ -310,7 +318,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
           {analyticsData.recentActivity.map((activity, index) => (
             <View key={index} style={styles.activityItem}>
               <View style={styles.activityIcon}>
-                <MaterialIcons name={getActivityIcon(activity.type)} size={16} color={colors.primary} />
+                <MaterialIcons name={getActivityIcon(activity.type)} size={16} color={themeColors.primary} />
               </View>
               <View style={styles.activityContent}>
                 <Text style={styles.activityText}>
@@ -344,7 +352,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
         <View style={styles.chartContainer}>
           <View style={styles.chartLegend}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: colors.primary }]} />
+              <View style={[styles.legendColor, { backgroundColor: themeColors.primary }]} />
               <Text style={styles.legendText}>Views</Text>
             </View>
             <View style={styles.legendItem}>
@@ -362,7 +370,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
                       styles.bar,
                       { 
                         height: (stat.views / maxViews) * 100,
-                        backgroundColor: colors.primary
+                        backgroundColor: themeColors.primary
                       }
                     ]}
                   />
@@ -405,7 +413,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+          <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Vehicle Analytics</Text>
         <View style={styles.headerRight} />
@@ -716,4 +724,6 @@ const styles = StyleSheet.create({
 });
 
 export default VehicleAnalyticsScreen;
+
+
 

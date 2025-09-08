@@ -223,8 +223,8 @@ const CoListVehicleScreen: React.FC = () => {
       activeOpacity={0.8}
     >
       <View style={styles.optionIcon}>
-        <Icon
-          name={item.type === 'group' ? 'group' : 'person'}
+        <MaterialCommunityIcons
+          name={item.type === 'group' ? 'group' : 'account'}
           size={24}
           color={item.selected ? '#fff' : '#4ECDC4'}
         />
@@ -379,8 +379,8 @@ const CoListVehicleScreen: React.FC = () => {
             <View style={styles.selectedList}>
               {selectedOptions.map((option, index) => (
                 <View key={option.id} style={styles.selectedItem}>
-                  <Icon
-                    name={option.type === 'group' ? 'group' : 'person'}
+                  <MaterialCommunityIcons
+                    name={option.type === 'group' ? 'group' : 'account'}
                     size={16}
                     color="#666"
                   />
@@ -718,4 +718,6 @@ const styles = StyleSheet.create({
 });
 
 export default CoListVehicleScreen;
+
+
 

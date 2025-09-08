@@ -20,6 +20,7 @@ import MaterialCommunityIcons from '@react-native-vector-icons/material-design-i
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { AntDesign } from '@react-native-vector-icons/ant-design';
 import * as Animatable from 'react-native-animatable';
+import { useTheme } from '../../theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -58,42 +59,6 @@ export interface Car {
   isPromoted: boolean;
   isFeatured: boolean;
 }
-
-interface Theme {
-  isDark: boolean;
-  colors: {
-    background: string;
-    surface: string;
-    text: string;
-    textSecondary: string;
-    primary: string;
-    border: string;
-    shadow: string;
-    success: string;
-    warning: string;
-    error: string;
-  };
-}
-
-// Mock theme hook
-const useTheme = (): Theme => {
-  const [isDark] = useState(false);
-  
-  const colors = {
-    background: isDark ? '#0A0A0A' : '#F8F9FA',
-    surface: isDark ? '#1A1A1A' : '#FFFFFF',
-    text: isDark ? '#FFFFFF' : '#333333',
-    textSecondary: isDark ? '#BBBBBB' : '#666666',
-    primary: '#FFD700',
-    border: isDark ? '#333333' : '#E0E0E0',
-    shadow: isDark ? '#000000' : '#888888',
-    success: '#30D158',
-    warning: '#FF9500',
-    error: '#FF3B30',
-  };
-  
-  return { isDark, colors };
-};
 
 // Mock API functions
 const updateCarStatus = async (carId: string, status: Car['status']) => {
@@ -258,11 +223,11 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const getStatusColor = (status: Car['status']) => {
     switch (status) {
-      case 'active': return colors.success;
-      case 'inactive': return colors.warning;
-      case 'sold': return colors.error;
-      case 'draft': return colors.textSecondary;
-      default: return colors.textSecondary;
+      case 'active': return themeColors.success;
+      case 'inactive': return themeColors.warning;
+      case 'sold': return themeColors.error;
+      case 'draft': return themeColors.textSecondary;
+      default: return themeColors.textSecondary;
     }
   };
 
@@ -292,7 +257,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       title: 'Edit Details',
       description: 'Update car information, photos, and description',
       icon: 'pencil',
-      color: colors.primary,
+      color: themeColors.primary,
       onPress: () => navigation.navigate('EditCar', { carId: car.id }),
     },
     {
@@ -300,7 +265,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       title: 'Change Price',
       description: 'Update your car\'s selling price',
       icon: 'currency-inr',
-      color: colors.success,
+      color: themeColors.success,
       onPress: () => setShowPriceModal(true),
     },
     {
@@ -308,7 +273,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       title: 'Change Status',
       description: 'Make active, inactive, or mark as sold',
       icon: 'toggle-switch',
-      color: colors.warning,
+      color: themeColors.warning,
       onPress: () => setShowStatusModal(true),
     },
     {
@@ -349,7 +314,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       title: 'Delete Listing',
       description: 'Permanently remove this car listing',
       icon: 'delete',
-      color: colors.error,
+      color: themeColors.error,
       onPress: () => setShowDeleteModal(true),
     },
   ];
@@ -357,7 +322,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: themeColors.background,
     },
     header: {
       flexDirection: 'row',
@@ -366,14 +331,14 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       paddingHorizontal: 16,
       paddingTop: 12,
       paddingBottom: 8,
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      borderBottomColor: themeColors.border,
     },
     headerTitle: {
       fontSize: 18,
       fontWeight: '700',
-      color: colors.text,
+      color: themeColors.text,
       flex: 1,
       textAlign: 'center',
       marginHorizontal: 16,
@@ -414,7 +379,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 20,
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
     },
     promotedText: {
       color: '#111827',
@@ -422,13 +387,13 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       fontWeight: '700',
     },
     carInfo: {
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       marginHorizontal: 16,
       marginBottom: 16,
       borderRadius: 16,
       padding: 16,
       elevation: 2,
-      shadowColor: colors.shadow,
+      shadowColor: themeColors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
@@ -436,13 +401,13 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     carTitle: {
       fontSize: 20,
       fontWeight: '700',
-      color: colors.text,
+      color: themeColors.text,
       marginBottom: 4,
     },
     carPrice: {
       fontSize: 24,
       fontWeight: '700',
-      color: colors.primary,
+      color: themeColors.primary,
       marginBottom: 8,
     },
     carDetails: {
@@ -458,7 +423,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     },
     carDetailText: {
       fontSize: 14,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       marginLeft: 4,
     },
     carStats: {
@@ -474,11 +439,11 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     statValue: {
       fontSize: 18,
       fontWeight: '700',
-      color: colors.text,
+      color: themeColors.text,
     },
     statLabel: {
       fontSize: 12,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       marginTop: 2,
     },
     actionsContainer: {
@@ -488,15 +453,15 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     sectionTitle: {
       fontSize: 18,
       fontWeight: '700',
-      color: colors.text,
+      color: themeColors.text,
       marginBottom: 12,
     },
     actionCard: {
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       borderRadius: 12,
       marginBottom: 8,
       elevation: 2,
-      shadowColor: colors.shadow,
+      shadowColor: themeColors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
@@ -521,12 +486,12 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     actionTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.text,
+      color: themeColors.text,
       marginBottom: 2,
     },
     actionDescription: {
       fontSize: 13,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       lineHeight: 18,
     },
     actionChevron: {
@@ -542,7 +507,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       alignItems: 'center',
     },
     modalContent: {
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       borderRadius: 16,
       padding: 20,
       width: width * 0.85,
@@ -551,13 +516,13 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     modalTitle: {
       fontSize: 18,
       fontWeight: '700',
-      color: colors.text,
+      color: themeColors.text,
       marginBottom: 8,
       textAlign: 'center',
     },
     modalSubtitle: {
       fontSize: 14,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       textAlign: 'center',
       marginBottom: 20,
       lineHeight: 20,
@@ -573,8 +538,8 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       borderColor: 'transparent',
     },
     statusOptionActive: {
-      borderColor: colors.primary,
-      backgroundColor: `${colors.primary}10`,
+      borderColor: themeColors.primary,
+      backgroundColor: `${themeColors.primary}10`,
     },
     statusOptionContent: {
       flex: 1,
@@ -583,11 +548,11 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     statusOptionTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.text,
+      color: themeColors.text,
     },
     statusOptionDescription: {
       fontSize: 13,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       marginTop: 2,
       lineHeight: 18,
     },
@@ -597,17 +562,17 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     priceInputLabel: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.text,
+      color: themeColors.text,
       marginBottom: 8,
     },
     priceInput: {
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: themeColors.border,
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 12,
       fontSize: 16,
-      color: colors.text,
+      color: themeColors.text,
       backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
     },
     modalButtons: {
@@ -624,15 +589,15 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       alignItems: 'center',
     },
     modalButtonPrimary: {
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
     },
     modalButtonSecondary: {
       backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: themeColors.border,
     },
     modalButtonDanger: {
-      backgroundColor: colors.error,
+      backgroundColor: themeColors.error,
     },
     modalButtonText: {
       fontSize: 14,
@@ -642,7 +607,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       color: '#111827',
     },
     modalButtonTextSecondary: {
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
     },
     modalButtonTextDanger: {
       color: '#FFFFFF',
@@ -653,11 +618,11 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       padding: 12,
       marginBottom: 16,
       borderWidth: 1,
-      borderColor: colors.error + '30',
+      borderColor: themeColors.error + '30',
     },
     deleteWarningText: {
       fontSize: 14,
-      color: colors.error,
+      color: themeColors.error,
       textAlign: 'center',
       lineHeight: 20,
     },
@@ -669,7 +634,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     },
     promoteFeatureText: {
       fontSize: 14,
-      color: colors.text,
+      color: themeColors.text,
       marginLeft: 8,
       flex: 1,
     },
@@ -679,17 +644,17 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       padding: 12,
       marginVertical: 12,
       borderWidth: 1,
-      borderColor: colors.primary + '30',
+      borderColor: themeColors.primary + '30',
     },
     promotePricingText: {
       fontSize: 16,
       fontWeight: '700',
-      color: colors.primary,
+      color: themeColors.primary,
       textAlign: 'center',
     },
     promotePricingSubtext: {
       fontSize: 12,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       textAlign: 'center',
       marginTop: 4,
     },
@@ -732,7 +697,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
                 </Text>
               </View>
               {car.status === status.key && (
-                <MaterialCommunityIcons name="check" size={20} color={colors.primary} />
+                <MaterialCommunityIcons name="check" size={20} color={themeColors.primary} />
               )}
             </TouchableOpacity>
           ))}
@@ -770,7 +735,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
               value={newPrice}
               onChangeText={setNewPrice}
               placeholder="₹0"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={themeColors.textSecondary}
               keyboardType="numeric"
             />
           </View>
@@ -868,7 +833,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
             'Extended visibility period',
           ].map((feature, index) => (
             <View key={index} style={styles.promoteFeature}>
-              <MaterialCommunityIcons name="check-circle" size={16} color={colors.success} />
+              <MaterialCommunityIcons name="check-circle" size={16} color={themeColors.success} />
               <Text style={styles.promoteFeatureText}>{feature}</Text>
             </View>
           ))}
@@ -914,11 +879,11 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <AntDesign name="arrowleft" size={24} color={colors.text} />
+          <AntDesign name="arrow-left" size={24} color={themeColors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Manage Car</Text>
         <TouchableOpacity onPress={() => navigation.navigate('VehicleDetail', { carId: car.id })}>
-          <MaterialCommunityIcons name="eye" size={24} color={colors.text} />
+          <MaterialCommunityIcons name="eye" size={24} color={themeColors.text} />
         </TouchableOpacity>
       </View>
 
@@ -952,19 +917,19 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
           
           <View style={styles.carDetails}>
             <View style={styles.carDetailItem}>
-              <MaterialCommunityIcons name="calendar" size={16} color={colors.textSecondary} />
+              <MaterialCommunityIcons name="calendar" size={16} color={themeColors.textSecondary} />
               <Text style={styles.carDetailText}>{car.year}</Text>
             </View>
             <View style={styles.carDetailItem}>
-              <MaterialCommunityIcons name="speedometer" size={16} color={colors.textSecondary} />
+              <MaterialCommunityIcons name="speedometer" size={16} color={themeColors.textSecondary} />
               <Text style={styles.carDetailText}>{car.mileage}</Text>
             </View>
             <View style={styles.carDetailItem}>
-              <MaterialCommunityIcons name="gas-station" size={16} color={colors.textSecondary} />
+              <MaterialCommunityIcons name="gas-station" size={16} color={themeColors.textSecondary} />
               <Text style={styles.carDetailText}>{car.fuelType}</Text>
             </View>
             <View style={styles.carDetailItem}>
-              <MaterialCommunityIcons name="map-marker" size={16} color={colors.textSecondary} />
+              <MaterialCommunityIcons name="map-marker" size={16} color={themeColors.textSecondary} />
               <Text style={styles.carDetailText}>{car.location}</Text>
             </View>
           </View>
@@ -1023,7 +988,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
                 <MaterialCommunityIcons 
                   name="chevron-right" 
                   size={20} 
-                  color={colors.textSecondary}
+                  color={themeColors.textSecondary}
                   style={styles.actionChevron}
                 />
               </TouchableOpacity>
@@ -1036,3 +1001,5 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
 };
 
 export default ManageCarScreen;
+
+

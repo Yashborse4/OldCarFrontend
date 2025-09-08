@@ -136,7 +136,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
         style={styles.backButton}
         onPress={() => navigation.goBack()}
       >
-        <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+        <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
       </TouchableOpacity>
       
       <View style={styles.headerContent}>
@@ -151,7 +151,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
           style={styles.filterButton}
           onPress={() => setShowFilters(true)}
         >
-          <MaterialIcons name="filter-list" size={24} color={colors.primary} />
+          <MaterialIcons name="filter-list" size={24} color={themeColors.primary} />
         </TouchableOpacity>
       </View>
     </View>
@@ -197,7 +197,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
       <SafeAreaView style={styles.filterModal}>
         <View style={styles.filterHeader}>
           <TouchableOpacity onPress={() => setShowFilters(false)}>
-            <MaterialIcons name="close" size={24} color={colors.text} />
+            <MaterialIcons name="close" size={24} color={themeColors.text} />
           </TouchableOpacity>
           <Text style={styles.filterTitle}>Filters</Text>
           <TouchableOpacity onPress={clearFilters}>
@@ -329,7 +329,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <MaterialIcons name="search-off" size={80} color={colors.textSecondary} />
+      <MaterialIcons name="search-off" size={80} color={themeColors.textSecondary} />
       <Text style={styles.emptyStateTitle}>No vehicles found</Text>
       <Text style={styles.emptyStateText}>
         Try adjusting your search filters or search terms
@@ -348,7 +348,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
     
     return (
       <View style={styles.loadingFooter}>
-        <ActivityIndicator size="small" color={colors.primary} />
+        <ActivityIndicator size="small" color={themeColors.primary} />
         <Text style={styles.loadingText}>Loading more vehicles...</Text>
       </View>
     );
@@ -358,7 +358,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={themeColors.primary} />
           <Text style={styles.loadingText}>Searching vehicles...</Text>
         </View>
       </SafeAreaView>
@@ -593,4 +593,6 @@ const styles = StyleSheet.create({
 });
 
 export default SearchResultsScreen;
+
+
 

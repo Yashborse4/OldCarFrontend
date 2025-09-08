@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import MaterialCommunityIcons from '@react-native-vector-icons/material-design-i
 import LinearGradient from 'react-native-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useTheme } from '../../theme';
 
 
 const { width, height } = Dimensions.get('window');
@@ -30,40 +31,10 @@ interface Props {
   route?: any;
 }
 
-interface Theme {
-  isDark: boolean;
-  colors: {
-    background: string;
-    surface: string;
-    text: string;
-    textSecondary: string;
-    primary: string;
-    border: string;
-    shadow: string;
-  };
-}
-
-// Mock theme hook for standalone implementation
-const useTheme = (): Theme => {
-  const [isDark, setIsDark] = useState(false);
-  
-  const colors = {
-    background: isDark ? '#0A0A0A' : '#FFFFFF',
-    surface: isDark ? '#1A1A1A' : '#FAFAFA',
-    text: isDark ? '#FFFFFF' : '#333333',
-    textSecondary: isDark ? '#BBBBBB' : '#666666',
-    primary: '#FFD700',
-    border: isDark ? '#333333' : '#E0E0E0',
-    shadow: isDark ? '#000000' : '#888888',
-  };
-  
-  return { isDark, colors };
-};
-
 const VEHICLE_DATA = {
   title: 'Tesla Model S Plaid',
-  price: 'â‚¹75,00,000',
-  originalPrice: 'â‚¹85,00,000',
+  price: '₹75,00,000',
+  originalPrice: '₹85,00,000',
   location: 'Mumbai, India',
   dealer: 'Premium Auto Cars',
   phone: '+91 9876543210',
@@ -99,7 +70,7 @@ const VEHICLE_DATA = {
 };
 
 const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { isDark, colors } = useTheme();
+  const { isDark, themeColors } = useTheme();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isBookmarked, setIsBookmarked] = useState(false);
   
@@ -139,7 +110,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: themeColors.background,
     },
     scrollContainer: {
       paddingBottom: 120, // Space for the footer
@@ -181,12 +152,12 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       height: 8,
       borderRadius: 4,
       marginHorizontal: 4,
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
       opacity: 0.5,
     },
     indicatorActive: {
       opacity: 1,
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
     },
     imageCounter: {
       position: 'absolute',
@@ -206,7 +177,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       padding: 16,
     },
     card: {
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       borderRadius: 15,
       padding: 20,
       marginTop: 15,
@@ -216,10 +187,10 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       shadowRadius: 8,
       elevation: 4,
       borderWidth: isDark ? 1 : 0,
-      borderColor: colors.border,
+      borderColor: themeColors.border,
     },
     titleCard: {
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       borderRadius: 15,
       padding: 20,
       marginTop: 15,
@@ -229,7 +200,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       shadowRadius: 8,
       elevation: 4,
       borderWidth: isDark ? 1 : 0,
-      borderColor: colors.border,
+      borderColor: themeColors.border,
     },
     titleRow: {
       flexDirection: 'row',
@@ -240,7 +211,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     title: {
       fontSize: 24,
       fontWeight: 'bold',
-      color: colors.text,
+      color: themeColors.text,
       flex: 1,
       marginRight: 12,
     },
@@ -257,11 +228,11 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     price: {
       fontSize: 22,
       fontWeight: 'bold',
-      color: colors.primary,
+      color: themeColors.primary,
     },
     originalPrice: {
       fontSize: 16,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       textDecorationLine: 'line-through',
       marginLeft: 8,
     },
@@ -282,7 +253,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     location: {
       fontSize: 16,
       marginLeft: 4,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
     },
     dealerInfo: {
       flexDirection: 'row',
@@ -290,18 +261,18 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       marginTop: 8,
       paddingTop: 12,
       borderTopWidth: 1,
-      borderTopColor: colors.border,
+      borderTopColor: themeColors.border,
     },
     dealerText: {
       fontSize: 14,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       marginLeft: 4,
     },
     sectionTitle: {
       fontSize: 20,
       fontWeight: 'bold',
       marginBottom: 15,
-      color: colors.text,
+      color: themeColors.text,
     },
     specsContainer: {
       flexDirection: 'row',
@@ -319,18 +290,18 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     specLabel: {
       fontSize: 14,
       marginTop: 5,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
     },
     specValue: {
       fontSize: 16,
       fontWeight: '600',
       marginTop: 2,
-      color: colors.text,
+      color: themeColors.text,
     },
     overview: {
       fontSize: 16,
       lineHeight: 24,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
     },
     featuresGrid: {
       flexDirection: 'row',
@@ -346,7 +317,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       marginLeft: 8,
       fontSize: 14,
       fontWeight: '500',
-      color: colors.text,
+      color: themeColors.text,
     },
     footer: {
       position: 'absolute',
@@ -362,8 +333,8 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       shadowOffset: { width: 0, height: -4 },
       shadowOpacity: 0.1,
       shadowRadius: 8,
-      backgroundColor: colors.surface,
-      borderTopColor: colors.border,
+      backgroundColor: themeColors.surface,
+      borderTopColor: themeColors.border,
     },
     footerContent: {
       flexDirection: 'row',
@@ -376,12 +347,12 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     footerPrice: {
       fontSize: 20,
       fontWeight: 'bold',
-      color: colors.primary,
+      color: themeColors.primary,
     },
     footerLocation: {
       fontSize: 12,
       marginTop: 2,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
     },
     footerButtons: {
       flexDirection: 'row',
@@ -394,7 +365,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       marginRight: 12,
       backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: themeColors.border,
     },
     ctaButton: {
       borderRadius: 12,
@@ -408,7 +379,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.2,
       shadowRadius: 4,
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
     },
     ctaButtonText: {
       fontSize: 16,
@@ -505,7 +476,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
                 <MaterialCommunityIcons
                   name={isBookmarked ? 'heart' : 'heart-outline'}
                   size={24}
-                  color={isBookmarked ? '#FF3B30' : colors.textSecondary}
+                  color={isBookmarked ? '#FF3B30' : themeColors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
@@ -513,16 +484,16 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.priceRow}>
               <Text style={styles.price}>{VEHICLE_DATA.price}</Text>
               <Text style={styles.originalPrice}>{VEHICLE_DATA.originalPrice}</Text>
-              <Text style={styles.savings}>Save â‚¹10L</Text>
+              <Text style={styles.savings}>Save ₹10L</Text>
             </View>
             
             <View style={styles.locationRow}>
-              <MaterialCommunityIcons name="map-marker" size={18} color={colors.textSecondary} />
+              <MaterialCommunityIcons name="map-marker" size={18} color={themeColors.textSecondary} />
               <Text style={styles.location}>{VEHICLE_DATA.location}</Text>
             </View>
             
             <View style={styles.dealerInfo}>
-              <MaterialCommunityIcons name="store" size={16} color={colors.textSecondary} />
+              <MaterialCommunityIcons name="store" size={16} color={themeColors.textSecondary} />
               <Text style={styles.dealerText}>Sold by {VEHICLE_DATA.dealer}</Text>
             </View>
           </View>
@@ -533,7 +504,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.specsContainer}>
               {VEHICLE_DATA.specs.map((spec, index) => (
                 <View key={index} style={styles.specItem}>
-                  <MaterialCommunityIcons name={spec.icon as any} size={28} color={colors.primary} />
+                  <MaterialCommunityIcons name={spec.icon as any} size={28} color={themeColors.primary} />
                   <Text style={styles.specLabel}>{spec.label}</Text>
                   <Text style={styles.specValue}>{spec.value}</Text>
                 </View>
@@ -553,7 +524,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.featuresGrid}>
               {VEHICLE_DATA.features.map((feature, index) => (
                 <View key={index} style={styles.featureItem}>
-                  <MaterialCommunityIcons name="check-circle" size={20} color={colors.primary} />
+                  <MaterialCommunityIcons name="check-circle" size={20} color={themeColors.primary} />
                   <Text style={styles.featureText}>{feature}</Text>
                 </View>
               ))}
@@ -564,7 +535,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
       {/* Enhanced Footer */}
       <LinearGradient
-        colors={isDark ? ['rgba(0,0,0,0.9)', colors.surface] : ['rgba(255,255,255,0.95)', colors.surface]}
+        colors={isDark ? ['rgba(0,0,0,0.9)', themeColors.surface] : ['rgba(255,255,255,0.95)', themeColors.surface]}
         style={styles.footer}
       >
         <View style={styles.footerContent}>
@@ -575,7 +546,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           
           <View style={styles.footerButtons}>
             <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-              <MaterialCommunityIcons name="share-variant" size={20} color={colors.textSecondary} />
+              <MaterialCommunityIcons name="share-variant" size={20} color={themeColors.textSecondary} />
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.ctaButton} onPress={handleContactSeller}>
@@ -607,4 +578,6 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 };
 
 export default VehicleDetailScreen;
+
+
 

@@ -20,6 +20,7 @@ import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { AntDesign } from '@react-native-vector-icons/ant-design';
 import LinearGradient from 'react-native-linear-gradient';
 import * as Animatable from 'react-native-animatable';
+import { useTheme } from '../../theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -54,42 +55,6 @@ interface Car {
   isPromoted: boolean;
   isFeatured: boolean;
 }
-
-interface Theme {
-  isDark: boolean;
-  colors: {
-    background: string;
-    surface: string;
-    text: string;
-    textSecondary: string;
-    primary: string;
-    border: string;
-    shadow: string;
-    success: string;
-    warning: string;
-    error: string;
-  };
-}
-
-// Mock theme hook
-const useTheme = (): Theme => {
-  const [isDark] = useState(false);
-  
-  const colors = {
-    background: isDark ? '#0A0A0A' : '#F8F9FA',
-    surface: isDark ? '#1A1A1A' : '#FFFFFF',
-    text: isDark ? '#FFFFFF' : '#333333',
-    textSecondary: isDark ? '#BBBBBB' : '#666666',
-    primary: '#FFD700',
-    border: isDark ? '#333333' : '#E0E0E0',
-    shadow: isDark ? '#000000' : '#888888',
-    success: '#30D158',
-    warning: '#FF9500',
-    error: '#FF3B30',
-  };
-  
-  return { isDark, colors };
-};
 
 // Mock data
 const MOCK_USER_CARS: Car[] = [
@@ -357,11 +322,11 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
 
   const getStatusColor = (status: Car['status']) => {
     switch (status) {
-      case 'active': return colors.success;
-      case 'inactive': return colors.warning;
-      case 'sold': return colors.error;
-      case 'draft': return colors.textSecondary;
-      default: return colors.textSecondary;
+      case 'active': return themeColors.success;
+      case 'inactive': return themeColors.warning;
+      case 'sold': return themeColors.error;
+      case 'draft': return themeColors.textSecondary;
+      default: return themeColors.textSecondary;
     }
   };
 
@@ -388,7 +353,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: themeColors.background,
     },
     header: {
       flexDirection: 'row',
@@ -397,14 +362,14 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       paddingHorizontal: 16,
       paddingTop: 12,
       paddingBottom: 8,
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      borderBottomColor: themeColors.border,
     },
     headerTitle: {
       fontSize: 20,
       fontWeight: '700',
-      color: colors.text,
+      color: themeColors.text,
     },
     headerActions: {
       flexDirection: 'row',
@@ -417,13 +382,13 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
     },
     statsContainer: {
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       marginHorizontal: 16,
       marginTop: 16,
       borderRadius: 16,
       padding: 16,
       elevation: 2,
-      shadowColor: colors.shadow,
+      shadowColor: themeColors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
@@ -431,7 +396,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
     statsTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.text,
+      color: themeColors.text,
       marginBottom: 12,
     },
     statsGrid: {
@@ -447,15 +412,15 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
     statValue: {
       fontSize: 20,
       fontWeight: '700',
-      color: colors.primary,
+      color: themeColors.primary,
     },
     statLabel: {
       fontSize: 12,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       marginTop: 2,
     },
     filtersContainer: {
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       marginHorizontal: 16,
       marginTop: 12,
       borderRadius: 12,
@@ -473,7 +438,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       flex: 1,
       paddingVertical: 8,
       paddingLeft: 8,
-      color: colors.text,
+      color: themeColors.text,
       fontSize: 14,
     },
     filtersRow: {
@@ -493,11 +458,11 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
     },
     filterButtonActive: {
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
     },
     filterButtonText: {
       fontSize: 12,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       fontWeight: '500',
     },
     filterButtonTextActive: {
@@ -514,7 +479,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
     },
     sortButtonText: {
       fontSize: 12,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       marginRight: 4,
     },
     carsList: {
@@ -523,11 +488,11 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       paddingTop: 12,
     },
     carCard: {
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       borderRadius: 16,
       marginBottom: 12,
       elevation: 3,
-      shadowColor: colors.shadow,
+      shadowColor: themeColors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
@@ -566,7 +531,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 12,
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
     },
     promotedText: {
       color: '#111827',
@@ -585,14 +550,14 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
     carTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.text,
+      color: themeColors.text,
       flex: 1,
       marginRight: 12,
     },
     carPrice: {
       fontSize: 16,
       fontWeight: '700',
-      color: colors.primary,
+      color: themeColors.primary,
     },
     carDetails: {
       flexDirection: 'row',
@@ -601,7 +566,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
     },
     carDetailText: {
       fontSize: 12,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       marginRight: 12,
     },
     carStats: {
@@ -618,11 +583,11 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
     carStatValue: {
       fontSize: 14,
       fontWeight: '600',
-      color: colors.text,
+      color: themeColors.text,
     },
     carStatLabel: {
       fontSize: 10,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       marginTop: 2,
     },
     carActions: {
@@ -641,15 +606,15 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       marginHorizontal: 2,
     },
     primaryActionButton: {
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
     },
     secondaryActionButton: {
       backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: themeColors.border,
     },
     dangerActionButton: {
-      backgroundColor: colors.error,
+      backgroundColor: themeColors.error,
     },
     actionButtonText: {
       fontSize: 12,
@@ -660,7 +625,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       color: '#111827',
     },
     secondaryActionText: {
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
     },
     dangerActionText: {
       color: '#FFFFFF',
@@ -677,19 +642,19 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
     emptyTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: colors.text,
+      color: themeColors.text,
       marginBottom: 8,
       textAlign: 'center',
     },
     emptyMessage: {
       fontSize: 14,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       textAlign: 'center',
       lineHeight: 20,
       marginBottom: 24,
     },
     addCarButton: {
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
       paddingHorizontal: 24,
       paddingVertical: 12,
       borderRadius: 24,
@@ -709,7 +674,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       alignItems: 'center',
     },
     modalContent: {
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       borderRadius: 16,
       padding: 20,
       width: width * 0.8,
@@ -718,7 +683,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
     modalTitle: {
       fontSize: 18,
       fontWeight: '700',
-      color: colors.text,
+      color: themeColors.text,
       marginBottom: 16,
       textAlign: 'center',
     },
@@ -731,11 +696,11 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       marginBottom: 8,
     },
     modalOptionActive: {
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
     },
     modalOptionText: {
       fontSize: 16,
-      color: colors.text,
+      color: themeColors.text,
       marginLeft: 12,
       flex: 1,
     },
@@ -756,12 +721,12 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       marginHorizontal: 4,
     },
     modalButtonPrimary: {
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
     },
     modalButtonSecondary: {
       backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: themeColors.border,
     },
     modalButtonText: {
       textAlign: 'center',
@@ -772,7 +737,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       color: '#111827',
     },
     modalButtonTextSecondary: {
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
     },
   });
 
@@ -799,7 +764,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
               <MaterialCommunityIcons
                 name={option.icon as any}
                 size={20}
-                color={sortBy === option.key ? '#111827' : colors.textSecondary}
+                color={sortBy === option.key ? '#111827' : themeColors.textSecondary}
               />
               <Text
                 style={[
@@ -841,8 +806,8 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <MaterialCommunityIcons name="loading" size={48} color={colors.primary} />
-          <Text style={{ color: colors.textSecondary, marginTop: 12 }}>Loading your cars...</Text>
+          <MaterialCommunityIcons name="loading" size={48} color={themeColors.primary} />
+          <Text style={{ color: themeColors.textSecondary, marginTop: 12 }}>Loading your cars...</Text>
         </View>
       </SafeAreaView>
     );
@@ -861,7 +826,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <AntDesign name="arrowleft" size={24} color={colors.text} />
+          <AntDesign name="arrow-left" size={24} color={themeColors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Garage</Text>
         <View style={styles.headerActions}>
@@ -869,7 +834,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.headerButton}
             onPress={() => navigation.navigate('SellCar')}
           >
-            <AntDesign name="plus" size={20} color={colors.text} />
+            <AntDesign name="plus" size={20} color={themeColors.text} />
           </TouchableOpacity>
         </View>
       </View>
@@ -879,8 +844,8 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
+            colors={[themeColors.primary]}
+            tintColor={themeColors.primary}
           />
         }
       >
@@ -910,11 +875,11 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
         {/* Filters */}
         <View style={styles.filtersContainer}>
           <View style={styles.searchContainer}>
-            <AntDesign name="search" size={16} color={colors.textSecondary} />
+            <AntDesign name="search" size={16} color={themeColors.textSecondary} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search your cars..."
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={themeColors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
@@ -951,7 +916,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
             
             <TouchableOpacity style={styles.sortButton} onPress={() => setShowSortModal(true)}>
               <Text style={styles.sortButtonText}>Sort</Text>
-              <AntDesign name="filter" size={12} color={colors.textSecondary} />
+              <AntDesign name="filter" size={12} color={themeColors.textSecondary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -962,7 +927,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
             <MaterialCommunityIcons 
               name="car-off" 
               size={64} 
-              color={colors.textSecondary} 
+              color={themeColors.textSecondary} 
               style={styles.emptyIcon}
             />
             <Text style={styles.emptyTitle}>
@@ -1057,7 +1022,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                       style={[styles.actionButton, styles.secondaryActionButton]}
                       onPress={() => handleCarAction(car, 'edit')}
                     >
-                      <MaterialCommunityIcons name="pencil" size={14} color={colors.textSecondary} />
+                      <MaterialCommunityIcons name="pencil" size={14} color={themeColors.textSecondary} />
                       <Text style={[styles.actionButtonText, styles.secondaryActionText]}>
                         Edit
                       </Text>
@@ -1067,7 +1032,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                       style={[styles.actionButton, styles.secondaryActionButton]}
                       onPress={() => handleCarAction(car, 'view')}
                     >
-                      <MaterialCommunityIcons name="eye" size={14} color={colors.textSecondary} />
+                      <MaterialCommunityIcons name="eye" size={14} color={themeColors.textSecondary} />
                       <Text style={[styles.actionButtonText, styles.secondaryActionText]}>
                         View
                       </Text>
@@ -1084,3 +1049,5 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 export default MyGarageScreen;
+
+

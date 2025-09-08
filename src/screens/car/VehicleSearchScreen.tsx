@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -425,7 +425,7 @@ const VehicleSearchScreen: React.FC = () => {
         </Text>
         <Text style={styles.vehiclePrice}>${item.price.toLocaleString()}</Text>
         <Text style={styles.vehicleDetails}>
-          {item.mileage.toLocaleString()} miles â€¢ {item.condition}
+          {item.mileage.toLocaleString()} miles • {item.condition}
         </Text>
         <Text style={styles.vehicleLocation}>{item.location}</Text>
         <Text style={styles.dealerName}>{item.dealerName}</Text>
@@ -971,4 +971,6 @@ const styles = StyleSheet.create({
 });
 
 export default VehicleSearchScreen;
+
+
 
