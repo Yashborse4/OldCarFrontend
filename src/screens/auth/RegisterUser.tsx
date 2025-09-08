@@ -45,16 +45,16 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
 
   // Adaptive color palette
   const systemColors = {
-    background: colors.background,
-    card: colors.surface,
-    label: colors.text,
-    secondaryLabel: colors.textSecondary,
-    accent: colors.primary,
+    background: themeColors.background,
+    card: themeColors.surface,
+    label: themeColors.text,
+    secondaryLabel: themeColors.textSecondary,
+    accent: themeColors.primary,
     error: '#FF3B30',
     warning: '#FFA000',
-    border: colors.border,
-    inputBg: isDark ? 'rgba(45, 45, 50, 0.8)' : colors.surface,
-    shadow: colors.shadow,
+    border: themeColors.border,
+    inputBg: isDark ? 'rgba(45, 45, 50, 0.8)' : themeColors.surface,
+    shadow: themeColors.shadow,
   };
 
   const handleRegister = async () => {
@@ -479,3 +479,5 @@ const styles = StyleSheet.create({
 });
 
 export default RegisterUser;
+
+

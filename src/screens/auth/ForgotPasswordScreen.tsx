@@ -17,42 +17,13 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { AntDesign } from '@react-native-vector-icons/ant-design';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import { useTheme } from '../../theme';
 
 const { width, height } = Dimensions.get('window');
 
 interface Props {
   navigation: any;
 }
-
-interface Theme {
-  isDark: boolean;
-  colors: {
-    background: string;
-    surface: string;
-    text: string;
-    textSecondary: string;
-    primary: string;
-    border: string;
-    shadow: string;
-  };
-}
-
-// Mock theme hook for standalone implementation
-const useTheme = (): Theme => {
-  const [isDark, setIsDark] = useState(false);
-  
-  const colors = {
-    background: isDark ? '#0A0A0A' : '#FFFFFF',
-    surface: isDark ? '#1A1A1A' : '#FAFAFA',
-    text: isDark ? '#FFFFFF' : '#333333',
-    textSecondary: isDark ? '#BBBBBB' : '#666666',
-    primary: '#FFD700',
-    border: isDark ? '#333333' : '#E0E0E0',
-    shadow: isDark ? '#000000' : '#888888',
-  };
-  
-  return { isDark, colors };
-};
 
 // Mock forgot password function
 const forgotPassword = async (data: { email: string }) => {
@@ -81,18 +52,18 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
 
   // Create dynamic UI colors based on theme
   const uiColors = {
-    background: colors.background,
-    card: colors.surface,
-    text: colors.text,
-    textSecondary: colors.textSecondary,
-    accent: colors.primary,
+    background: themeColors.background,
+    card: themeColors.surface,
+    text: themeColors.text,
+    textSecondary: themeColors.textSecondary,
+    accent: themeColors.primary,
     error: isDark ? '#FF453A' : '#FF3B30',
     success: '#30D158',
     warning: '#FFA000',
-    border: colors.border,
+    border: themeColors.border,
     inputBg: isDark ? 'rgba(35, 35, 38, 0.9)' : 'rgba(248, 249, 252, 0.9)',
-    shadow: colors.shadow,
-    goldGradient: [colors.primary, '#E6C200', '#D4AF37'],
+    shadow: themeColors.shadow,
+    goldGradient: [themeColors.primary, '#E6C200', '#D4AF37'],
   };
 
   const handleResetPassword = async () => {
@@ -462,7 +433,7 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
                       />
                       {email && (
                         <AntDesign
-                          name={isValidEmail(email) ? 'checkcircle' : 'exclamationcircle'}
+                          name={isValidEmail(email) ? 'check-circle' : 'exclamation-circle'}
                           size={18}
                           style={[
                             styles.validationIcon,
@@ -507,7 +478,7 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
                     style={styles.backToLogin}
                     onPress={() => navigation.goBack()}
                   >
-                    <AntDesign name="arrowleft" size={16} color={uiColors.accent} style={{ marginRight: 6 }} />
+                    <MaterialIcons name="arrow-left" size={16} color={uiColors.accent} style={{ marginRight: 6 }} />
                     <Text style={styles.backToLoginText}>Back to Sign In</Text>
                   </TouchableOpacity>
                 </View>
@@ -529,3 +500,5 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 export default ForgotPasswordScreen;
+
+
