@@ -9,23 +9,30 @@ export interface Colors {
   // Base colors
   background: string;
   surface: string;
+  surfaceVariant: string;
   card: string;
   text: string;
   textSecondary: string;
   textTertiary: string;
+  textDisabled: string;
   
   // Brand colors
   primary: string;
   primaryLight: string;
   primaryDark: string;
+  onPrimary: string;
   secondary: string;
   accent: string;
   
   // Status colors
   success: string;
+  onSuccess: string;
   warning: string;
+  onWarning: string;
   error: string;
+  onError: string;
   info: string;
+  onInfo: string;
   
   // UI colors
   border: string;
@@ -33,8 +40,10 @@ export interface Colors {
   shadow: string;
   overlay: string;
   disabled: string;
+  surfaceDisabled: string;
   navbar: string;
   icons: string;
+  onSurfaceVariant: string;
   
   // Input colors
   inputBackground: string;
@@ -178,23 +187,30 @@ const LightColors: Colors = {
   // Base colors
   background: '#FAFBFC',
   surface: '#FFFFFF',
+  surfaceVariant: '#F8FAFC',
   card: '#FFFFFF',
   text: '#1A202C',
   textSecondary: '#4A5568',
   textTertiary: '#718096',
+  textDisabled: '#9CA3AF',
   
   // Brand colors
   primary: '#FFD700',
   primaryLight: '#FFED4A',
   primaryDark: '#D4AF37',
+  onPrimary: '#1A202C',
   secondary: '#667EEA',
   accent: '#ED8936',
   
   // Status colors
   success: '#48BB78',
+  onSuccess: '#FFFFFF',
   warning: '#ED8936',
+  onWarning: '#FFFFFF',
   error: '#F56565',
+  onError: '#FFFFFF',
   info: '#4299E1',
+  onInfo: '#FFFFFF',
   
   // UI colors
   border: '#E2E8F0',
@@ -202,8 +218,10 @@ const LightColors: Colors = {
   shadow: '#000000',
   overlay: 'rgba(0, 0, 0, 0.6)',
   disabled: '#CBD5E0',
+  surfaceDisabled: '#E2E8F0',
   navbar: '#1A202C',
   icons: '#4A5568',
+  onSurfaceVariant: '#4A5568',
   
   // Input colors
   inputBackground: '#F7FAFC',
@@ -226,23 +244,30 @@ const DarkColors: Colors = {
   // Base colors
   background: '#0F0F0F',
   surface: '#1A1A1A',
+  surfaceVariant: '#262626',
   card: '#262626',
   text: '#FFFFFF',
   textSecondary: '#D1D5DB',
   textTertiary: '#9CA3AF',
+  textDisabled: '#6B7280',
   
   // Brand colors
   primary: '#FFD700',
   primaryLight: '#FFED4A',
   primaryDark: '#D4AF37',
+  onPrimary: '#1A202C',
   secondary: '#667EEA',
   accent: '#ED8936',
   
   // Status colors
   success: '#68D391',
+  onSuccess: '#1A202C',
   warning: '#F6AD55',
+  onWarning: '#1A202C',
   error: '#FC8181',
+  onError: '#1A202C',
   info: '#63B3ED',
+  onInfo: '#1A202C',
   
   // UI colors
   border: '#374151',
@@ -250,8 +275,10 @@ const DarkColors: Colors = {
   shadow: '#000000',
   overlay: 'rgba(0, 0, 0, 0.8)',
   disabled: '#4B5563',
+  surfaceDisabled: '#374151',
   navbar: '#1A1A1A',
   icons: '#FFD700',
+  onSurfaceVariant: '#D1D5DB',
   
   // Input colors
   inputBackground: '#262626',
@@ -317,6 +344,7 @@ export interface ThemeContextType {
   themeMode: ThemeMode;
   isDark: boolean;
   colors: Colors;
+  themeColors: Colors;
   typography: Typography;
   spacing: Spacing;
   borderRadius: BorderRadius;
@@ -391,6 +419,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       themeMode,
       isDark,
       colors,
+      themeColors: colors,
       typography,
       spacing,
       borderRadius,
@@ -436,3 +465,5 @@ export const DarkTheme: Theme = {
 };
 
 export type ThemeColors = Colors;
+
+
