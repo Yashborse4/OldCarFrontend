@@ -1,4 +1,4 @@
-﻿import React, { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, { 
   useSharedValue, 
@@ -66,7 +66,7 @@ const ThemeToggle = () => {
       color: interpolateColor(
         progress.value,
         [0, 1],
-        [colors.sun, colors.moon]
+        [themeColors.sun, themeColors.moon]
       ),
     };
   });
@@ -90,4 +90,6 @@ const ThemeToggle = () => {
 };
 
 export default ThemeToggle;
+
+
 

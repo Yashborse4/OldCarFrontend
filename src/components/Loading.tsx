@@ -91,12 +91,12 @@ const SkeletonComponent: React.FC<SkeletonProps> = ({
     ],
   });
 
-  const skeletonStyle: ViewStyle = {
+  const skeletonStyle = {
     width,
     height,
     borderRadius,
     backgroundColor: animated ? undefined : (isDark ? '#2D2D2D' : '#E5E7EB'),
-    overflow: 'hidden',
+    overflow: 'hidden' as const,
     ...style,
   };
 
@@ -305,12 +305,12 @@ const LoadingOverlayComponent: React.FC<LoadingOverlayProps> = ({
           {
             backgroundColor: transparent 
               ? 'rgba(0, 0, 0, 0.3)' 
-              : colors.background,
+              : themeColors.background,
             opacity: fadeAnim,
           },
         ]}
       >
-        <View style={[styles.loadingContent, { backgroundColor: colors.surface }]}>
+        <View style={[styles.loadingContent, { backgroundColor: themeColors.surface }]}>
           <SkeletonComponent
             width={scale(40)}
             height={scale(40)}
@@ -536,3 +536,5 @@ LoadingOverlay.displayName = 'LoadingOverlay';
 DashboardSkeleton.displayName = 'DashboardSkeleton';
 
 export default Skeleton;
+
+

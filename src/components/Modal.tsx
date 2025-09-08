@@ -21,7 +21,7 @@ import {
   TextStyle,
   Text,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
 import { 
@@ -376,7 +376,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
       hardwareAccelerated
     >
       <StatusBar
-        backgroundColor={colors.overlay}
+        backgroundColor={themeColors.overlay}
         barStyle="light-content"
         translucent
       />
@@ -388,7 +388,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
             style={[
               StyleSheet.absoluteFillObject,
               {
-                backgroundColor: backdropColor || colors.overlay,
+                backgroundColor: backdropColor || themeColors.overlay,
                 opacity: backdropOpacity,
               },
             ]}
@@ -401,7 +401,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
         <Animated.View
           style={[
             styles.container,
-            positionStyles,
+            positionStyles as ViewStyle,
             {
               opacity: fadeAnim,
               transform: containerTransform,
@@ -409,7 +409,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
             containerStyle,
           ]}
           accessible={true}
-          accessibilityRole={accessibilityRole}
+          accessibilityRole={accessibilityRole as any}
           accessibilityLabel={accessibilityLabel}
           accessibilityModal={true}
         >
@@ -475,8 +475,8 @@ const DialogComponent: React.FC<DialogProps> = ({
             key={index}
             style={[
               styles.dialogAction,
-              action.style === 'primary' && { backgroundColor: colors.primary },
-              action.style === 'destructive' && { backgroundColor: colors.error },
+              action.style === 'primary' && { backgroundColor: themeColors.primary },
+              action.style === 'destructive' && { backgroundColor: themeColors.error },
               action.disabled && { opacity: 0.5 },
             ]}
             onPress={action.onPress}
@@ -487,8 +487,8 @@ const DialogComponent: React.FC<DialogProps> = ({
                 styles.dialogActionText,
                 {
                   color: action.style === 'primary' || action.style === 'destructive'
-                    ? colors.onPrimary
-                    : colors.primary,
+                    ? themeColors.onPrimary
+                    : themeColors.primary,
                 },
               ]}
             >
@@ -505,16 +505,16 @@ const DialogComponent: React.FC<DialogProps> = ({
       {/* Header */}
       <View style={styles.dialogHeader}>
         {icon && (
-          <Icon
+          <MaterialIcons
             name={icon}
             size={scale(24)}
-            color={iconColor || colors.primary}
+            color={iconColor || themeColors.primary}
             style={styles.dialogIcon}
           />
         )}
         
         {title && (
-          <Text style={[styles.dialogTitle, { color: colors.text }, titleStyle]}>
+          <Text style={[styles.dialogTitle, { color: themeColors.text }, titleStyle]}>
             {title}
           </Text>
         )}
@@ -524,13 +524,13 @@ const DialogComponent: React.FC<DialogProps> = ({
       <View
         style={[
           styles.dialogContent,
-          maxHeight && { maxHeight },
+          maxHeight && ({ maxHeight } as ViewStyle),
         ]}
       >
         {scrollable ? (
           <ScrollView showsVerticalScrollIndicator={false}>
             {message && (
-              <Text style={[styles.dialogMessage, { color: colors.textSecondary }, messageStyle]}>
+              <Text style={[styles.dialogMessage, { color: themeColors.textSecondary }, messageStyle]}>
                 {message}
               </Text>
             )}
@@ -539,7 +539,7 @@ const DialogComponent: React.FC<DialogProps> = ({
         ) : (
           <>
             {message && (
-              <Text style={[styles.dialogMessage, { color: colors.textSecondary }, messageStyle]}>
+              <Text style={[styles.dialogMessage, { color: themeColors.textSecondary }, messageStyle]}>
                 {message}
               </Text>
             )}
@@ -558,7 +558,7 @@ const DialogComponent: React.FC<DialogProps> = ({
       {...modalProps}
       animationType="scale"
       position="center"
-      contentStyle={[styles.dialogWrapper, { backgroundColor: colors.surface }]}
+      contentStyle={[styles.dialogWrapper, { backgroundColor: themeColors.surface }] as ViewStyle}
     >
       {dialogContent}
     </BaseModal>
@@ -611,15 +611,15 @@ const BottomSheetComponent: React.FC<BottomSheetProps> = ({
       contentStyle={[
         styles.bottomSheetWrapper,
         {
-          backgroundColor: colors.surface,
+          backgroundColor: themeColors.surface,
           paddingBottom: insets.bottom,
         },
-      ]}
+      ] as ViewStyle}
     >
       {/* Handle */}
       {showHandle && (
         <View style={styles.bottomSheetHandle}>
-          <View style={[styles.handle, { backgroundColor: colors.border }, handleStyle]} />
+          <View style={[styles.handle, { backgroundColor: themeColors.border }, handleStyle]} />
         </View>
       )}
       
@@ -632,12 +632,12 @@ const BottomSheetComponent: React.FC<BottomSheetProps> = ({
           
           <View style={styles.headerCenter}>
             {title && (
-              <Text style={[styles.bottomSheetTitle, { color: colors.text }, titleStyle]}>
+              <Text style={[styles.bottomSheetTitle, { color: themeColors.text }, titleStyle]}>
                 {title}
               </Text>
             )}
             {subtitle && (
-              <Text style={[styles.bottomSheetSubtitle, { color: colors.textSecondary }, subtitleStyle]}>
+              <Text style={[styles.bottomSheetSubtitle, { color: themeColors.textSecondary }, subtitleStyle]}>
                 {subtitle}
               </Text>
             )}
@@ -650,10 +650,10 @@ const BottomSheetComponent: React.FC<BottomSheetProps> = ({
                 onPress={modalProps.onClose}
                 style={styles.closeButton}
               >
-                <Icon
+                <MaterialIcons
                   name="close"
                   size={scale(24)}
-                  color={colors.textSecondary}
+                  color={themeColors.textSecondary}
                 />
               </TouchableOpacity>
             )}
@@ -695,7 +695,7 @@ const LoadingDialogComponent: React.FC<LoadingDialogProps> = ({
       dismissible={false}
       closeOnBackdropPress={false}
       closeOnBackButton={false}
-      contentStyle={[styles.loadingDialogWrapper, { backgroundColor: colors.surface }]}
+      contentStyle={[styles.loadingDialogWrapper, { backgroundColor: themeColors.surface }] as ViewStyle}
     >
       <View style={styles.loadingDialogContent}>
         <Skeleton
@@ -705,24 +705,24 @@ const LoadingDialogComponent: React.FC<LoadingDialogProps> = ({
           animated={true}
         />
         
-        <Text style={[styles.loadingMessage, { color: colors.text }]}>
+        <Text style={[styles.loadingMessage, { color: themeColors.text }]}>
           {message}
         </Text>
         
         {showProgress && typeof progress === 'number' && (
           <View style={styles.progressContainer}>
-            <View style={[styles.progressBar, { backgroundColor: colors.surfaceVariant }]}>
+            <View style={[styles.progressBar, { backgroundColor: themeColors.surfaceVariant }]}>
               <View
                 style={[
                   styles.progressFill,
                   {
-                    backgroundColor: colors.primary,
+                    backgroundColor: themeColors.primary,
                     width: `${Math.max(0, Math.min(100, progress))}%`,
                   },
                 ]}
               />
             </View>
-            <Text style={[styles.progressText, { color: colors.textSecondary }]}>
+            <Text style={[styles.progressText, { color: themeColors.textSecondary }]}>
               {Math.round(progress)}%
             </Text>
           </View>
@@ -906,3 +906,5 @@ LoadingDialog.displayName = 'LoadingDialog';
 
 export default BaseModal;
 export type { DialogAction };
+
+

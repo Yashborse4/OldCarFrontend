@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated, Switch, Text } from 'react-native';
 import { useTheme } from '../theme';
 import { Feather } from '@react-native-vector-icons/feather';
@@ -9,7 +9,7 @@ const ThemeChecker = ({ compact = false }) => {
   return (
     <View style={[styles.container, compact && styles.compactContainer]}>
       {!compact && (
-        <Text style={[styles.label, { color: colors.text }]}>
+        <Text style={[styles.label, { color: themeColors.text }]}>
           {isDark ? 'Dark Mode' : 'Light Mode'}
         </Text>
       )}
@@ -24,7 +24,7 @@ const ThemeChecker = ({ compact = false }) => {
           value={isDark}
           onValueChange={toggleTheme}
           trackColor={{ false: '#767577', true: '#121212' }}
-          thumbColor={isDark ? colors.primary : '#f4f3f4'}
+          thumbColor={isDark ? themeColors.primary : '#f4f3f4'}
           ios_backgroundColor="#3e3e3e"
         />
         <Feather
@@ -65,4 +65,6 @@ const styles = StyleSheet.create({
 });
 
 export default ThemeChecker;
+
+
 

@@ -84,9 +84,9 @@ const DefaultEmptyComponent: React.FC<{
 
   if (loading) {
     return (
-      <View style={[styles.emptyContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.emptyText, { color: colors.textSecondary, fontSize: fontSize.md }]}>
+      <View style={[styles.emptyContainer, { backgroundColor: themeColors.background }]}>
+        <ActivityIndicator size="large" color={themeColors.primary} />
+        <Text style={[styles.emptyText, { color: themeColors.textSecondary, fontSize: fontSize.md }]}>
           Loading...
         </Text>
       </View>
@@ -95,16 +95,16 @@ const DefaultEmptyComponent: React.FC<{
 
   if (error) {
     return (
-      <View style={[styles.emptyContainer, { backgroundColor: colors.background }]}>
-        <Text style={[styles.emptyTitle, { color: colors.text, fontSize: fontSize.lg }]}>
+      <View style={[styles.emptyContainer, { backgroundColor: themeColors.background }]}>
+        <Text style={[styles.emptyTitle, { color: themeColors.text, fontSize: fontSize.lg }]}>
           Something went wrong
         </Text>
-        <Text style={[styles.emptyMessage, { color: colors.textSecondary, fontSize: fontSize.md }]}>
+        <Text style={[styles.emptyMessage, { color: themeColors.textSecondary, fontSize: fontSize.md }]}>
           {error}
         </Text>
         {onRetry && (
           <Text 
-            style={[styles.retryButton, { color: colors.primary, fontSize: fontSize.md }]}
+            style={[styles.retryButton, { color: themeColors.primary, fontSize: fontSize.md }]}
             onPress={onRetry}
           >
             Try Again
@@ -115,11 +115,11 @@ const DefaultEmptyComponent: React.FC<{
   }
 
   return (
-    <View style={[styles.emptyContainer, { backgroundColor: colors.background }]}>
-      <Text style={[styles.emptyTitle, { color: colors.text, fontSize: fontSize.lg }]}>
+    <View style={[styles.emptyContainer, { backgroundColor: themeColors.background }]}>
+      <Text style={[styles.emptyTitle, { color: themeColors.text, fontSize: fontSize.lg }]}>
         {title || 'No items found'}
       </Text>
-      <Text style={[styles.emptyMessage, { color: colors.textSecondary, fontSize: fontSize.md }]}>
+      <Text style={[styles.emptyMessage, { color: themeColors.textSecondary, fontSize: fontSize.md }]}>
         {message || 'There are no items to display at the moment.'}
       </Text>
     </View>
@@ -131,7 +131,7 @@ const DefaultEmptyComponent: React.FC<{
  */
 const ItemSeparator = memo(() => {
   const { colors } = useTheme();
-  return <View style={[styles.separator, { backgroundColor: colors.border }]} />;
+  return <View style={[styles.separator, { backgroundColor: themeColors.border }]} />;
 });
 
 /**
@@ -146,8 +146,8 @@ const FooterLoadingComponent: React.FC<{
   
   return (
     <View style={styles.footerLoading}>
-      <ActivityIndicator size="small" color={colors.primary} />
-      <Text style={[styles.footerLoadingText, { color: colors.textSecondary }]}>
+      <ActivityIndicator size="small" color={themeColors.primary} />
+      <Text style={[styles.footerLoadingText, { color: themeColors.textSecondary }]}>
         Loading more...
       </Text>
     </View>
@@ -278,9 +278,9 @@ function OptimizedFlatList<T>({
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.primary}
-          colors={[colors.primary]}
-          progressBackgroundColor={colors.surface}
+          tintColor={themeColors.primary}
+          colors={[themeColors.primary]}
+          progressBackgroundColor={themeColors.surface}
         />
       ) : undefined,
     [onRefresh, refreshing, colors]
@@ -457,3 +457,5 @@ FooterLoadingComponent.displayName = 'FooterLoadingComponent';
 MemoizedOptimizedFlatList.displayName = 'OptimizedFlatList';
 
 export default MemoizedOptimizedFlatList;
+
+

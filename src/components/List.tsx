@@ -27,7 +27,7 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '../theme';
 import { 
   scale, 
@@ -210,10 +210,10 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
       <View style={styles.loadingFooter}>
         <ActivityIndicator
           size="small"
-          color={colors.primary}
+          color={themeColors.primary}
           style={styles.footerIndicator}
         />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+        <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
           Loading more...
         </Text>
       </View>
@@ -226,27 +226,27 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
 
     return (
       <View style={styles.emptyContainer}>
-        <Icon
+        <MaterialIcons
           name={emptyIcon}
           size={scale(64)}
-          color={colors.textDisabled}
+          color={themeColors.textDisabled}
           style={styles.emptyIcon}
         />
         
-        <Text style={[styles.emptyTitle, { color: colors.text }]}>
+        <Text style={[styles.emptyTitle, { color: themeColors.text }]}>
           {emptyTitle}
         </Text>
         
-        <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
+        <Text style={[styles.emptyMessage, { color: themeColors.textSecondary }]}>
           {emptyMessage}
         </Text>
         
         {emptyAction && (
           <TouchableOpacity
-            style={[styles.emptyAction, { backgroundColor: colors.primary }]}
+            style={[styles.emptyAction, { backgroundColor: themeColors.primary }]}
             onPress={emptyAction.onPress}
           >
-            <Text style={[styles.emptyActionText, { color: colors.onPrimary }]}>
+            <Text style={[styles.emptyActionText, { color: themeColors.onPrimary }]}>
               {emptyAction.title}
             </Text>
           </TouchableOpacity>
@@ -261,33 +261,33 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
 
     return (
       <View style={styles.errorContainer}>
-        <Icon
+        <MaterialIcons
           name="error-outline"
           size={scale(64)}
-          color={colors.error}
+          color={themeColors.error}
           style={styles.errorIcon}
         />
         
-        <Text style={[styles.errorTitle, { color: colors.error }]}>
+        <Text style={[styles.errorTitle, { color: themeColors.error }]}>
           Something went wrong
         </Text>
         
-        <Text style={[styles.errorMessage, { color: colors.textSecondary }]}>
+        <Text style={[styles.errorMessage, { color: themeColors.textSecondary }]}>
           {error}
         </Text>
         
         {onRetry && (
           <TouchableOpacity
-            style={[styles.retryButton, { backgroundColor: colors.primary }]}
+            style={[styles.retryButton, { backgroundColor: themeColors.primary }]}
             onPress={onRetry}
           >
-            <Icon
+            <MaterialIcons
               name="refresh"
               size={scale(18)}
-              color={colors.onPrimary}
+              color={themeColors.onPrimary}
               style={styles.retryIcon}
             />
-            <Text style={[styles.retryText, { color: colors.onPrimary }]}>
+            <Text style={[styles.retryText, { color: themeColors.onPrimary }]}>
               Try Again
             </Text>
           </TouchableOpacity>
@@ -382,9 +382,9 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[colors.primary]}
-              tintColor={colors.primary}
-              progressBackgroundColor={colors.surface}
+              colors={[themeColors.primary]}
+              tintColor={themeColors.primary}
+              progressBackgroundColor={themeColors.surface}
             />
           ) : undefined
         }
@@ -564,8 +564,8 @@ const SectionedListComponent = <T,>({
       }
       
       return (
-        <View style={[styles.sectionHeader, { backgroundColor: colors.surfaceVariant }]}>
-          <Text style={[styles.sectionHeaderText, { color: colors.onSurfaceVariant }]}>
+        <View style={[styles.sectionHeader, { backgroundColor: themeColors.surfaceVariant }]}>
+          <Text style={[styles.sectionHeaderText, { color: themeColors.onSurfaceVariant }]}>
             {flatItem.section.title}
           </Text>
         </View>
@@ -740,6 +740,8 @@ export const SectionedList = memo(withPerformanceTracking(SectionedListComponent
 BaseList.displayName = 'BaseList';
 CarList.displayName = 'CarList';
 ProfileList.displayName = 'ProfileList';
-SectionedList.displayName = 'SectionedList';
+// Note: displayName cannot be set on generic memoized components
 
 export default BaseList;
+
+

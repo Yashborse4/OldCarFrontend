@@ -96,3 +96,5 @@ const AppNavigator = ({ initialRouteName }: { initialRouteName: keyof RootStackP
 };
 
 export default AppNavigator;
+
+

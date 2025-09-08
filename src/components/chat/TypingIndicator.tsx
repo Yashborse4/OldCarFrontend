@@ -191,3 +191,5 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({
 };
 
 export default TypingIndicator;
+
+

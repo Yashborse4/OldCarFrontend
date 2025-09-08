@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../theme';
@@ -53,7 +53,7 @@ export const StatisticsCard: React.FC<StatisticsCardProps> = ({
     if (!data.trend) return null;
 
     const trendColor = data.trend.isPositive ? '#68D391' : '#FC8181';
-    const trendIcon = data.trend.isPositive ? 'arrowup' : 'arrowdown';
+    const trendIcon = data.trend.isPositive ? 'up' : 'down';
 
     return (
       <View style={styles.trendContainer}>
@@ -118,8 +118,8 @@ export const StatisticsCard: React.FC<StatisticsCardProps> = ({
             styles.glassCard,
             { 
               width: cardWidth,
-              backgroundColor: colors.glass,
-              borderColor: colors.glassBorder,
+              backgroundColor: themeColors.glass,
+              borderColor: themeColors.glassBorder,
             },
             shadows.sm
           ]}
@@ -141,8 +141,8 @@ export const StatisticsCard: React.FC<StatisticsCardProps> = ({
           styles.defaultCard,
           {
             width: cardWidth,
-            backgroundColor: data.backgroundColor || colors.surface,
-            borderColor: colors.border,
+            backgroundColor: data.backgroundColor || themeColors.surface,
+            borderColor: themeColors.border,
           },
           shadows.md
         ]}
@@ -231,4 +231,6 @@ const styles = StyleSheet.create({
 });
 
 export default StatisticsCard;
+
+
 

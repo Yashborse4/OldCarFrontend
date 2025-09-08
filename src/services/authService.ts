@@ -67,7 +67,7 @@ const STORAGE_KEYS = {
 class AuthService {
   private isRefreshing = false;
   private refreshPromise: Promise<AuthTokens> | null = null;
-  private refreshTokenTimeoutId: NodeJS.Timeout | null = null;
+  private refreshTokenTimeoutId: number | null = null;
 
   /**
    * Login user with credentials
@@ -520,3 +520,5 @@ class AuthService {
 }
 
 export const authService = new AuthService();
+
+

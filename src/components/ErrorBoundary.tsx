@@ -13,7 +13,8 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { AntDesign, MaterialIcons } from '@react-native-vector-icons/material-icons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '../theme';
 import { SPACING, FONT_SIZES, scale, getResponsiveValue } from '../utils/responsive';
 
@@ -194,12 +195,24 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
   onRetry,
   level,
 }) => {
-  const { colors, isDark } = useTheme();
+  // Provide fallback theme values - avoid using hooks in error boundary context
+  const isDark = false;
+  const themeColors = {
+    background: '#FFFFFF',
+    surface: '#F9FAFB',
+    text: '#111827',
+    textSecondary: '#6B7280',
+    primary: '#3B82F6',
+    error: '#EF4444',
+    success: '#10B981',
+    warning: '#F59E0B',
+    border: '#E5E7EB',
+  };
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: themeColors.background,
       justifyContent: 'center',
       alignItems: 'center',
       padding: SPACING.lg,
@@ -208,7 +221,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
       width: scale(80),
       height: scale(80),
       borderRadius: scale(40),
-      backgroundColor: colors.error + '20',
+      backgroundColor: themeColors.error + '20',
       justifyContent: 'center',
       alignItems: 'center',
       marginBottom: SPACING.lg,
@@ -219,13 +232,13 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
         default: FONT_SIZES.xxl,
       }),
       fontWeight: '600',
-      color: colors.text,
+      color: themeColors.text,
       textAlign: 'center',
       marginBottom: SPACING.md,
     },
     message: {
       fontSize: FONT_SIZES.md,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       textAlign: 'center',
       lineHeight: FONT_SIZES.md * 1.5,
       marginBottom: SPACING.xl,
@@ -239,7 +252,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
       paddingHorizontal: SPACING.lg,
       paddingVertical: SPACING.md,
       borderRadius: scale(8),
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
       flexDirection: 'row',
       alignItems: 'center',
       gap: SPACING.sm,
@@ -247,7 +260,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
     buttonSecondary: {
       backgroundColor: 'transparent',
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: themeColors.border,
     },
     buttonText: {
       fontSize: FONT_SIZES.md,
@@ -255,19 +268,19 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
       color: '#FFFFFF',
     },
     buttonTextSecondary: {
-      color: colors.text,
+      color: themeColors.text,
     },
     errorDetails: {
       marginTop: SPACING.xl,
       padding: SPACING.md,
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       borderRadius: scale(8),
       width: '100%',
       maxHeight: scale(200),
     },
     errorText: {
       fontSize: FONT_SIZES.xs,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       fontFamily: Platform.select({
         ios: 'Menlo',
         android: 'monospace',
@@ -303,7 +316,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
         <MaterialIcons
           name="error-outline"
           size={scale(40)}
-          color={colors.error}
+          color={themeColors.error}
         />
       </View>
 
@@ -327,7 +340,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
               // navigation.navigate('Dashboard');
             }}
           >
-            <AntDesign name="home" size={scale(16)} color={colors.text} />
+            <AntDesign name="home" size={scale(16)} color={themeColors.text} />
             <Text style={[styles.buttonText, styles.buttonTextSecondary]}>
               Go Home
             </Text>
@@ -463,3 +476,5 @@ export const SafeComponent: React.FC<{
 };
 
 export default ErrorBoundary;
+
+

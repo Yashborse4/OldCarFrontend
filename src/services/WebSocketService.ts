@@ -41,8 +41,8 @@ class WebSocketService {
   private isConnecting = false;
   private reconnectAttempts = 0;
   private lastConnected?: Date;
-  private reconnectTimer?: NodeJS.Timeout;
-  private pingInterval?: NodeJS.Timeout;
+  private reconnectTimer?: number;
+  private pingInterval?: number;
   private subscriptions: Map<string, any> = new Map();
 
   private messageHandlers: MessageHandler[] = [];
@@ -714,3 +714,5 @@ class WebSocketService {
 // Export singleton instance
 export const webSocketService = new WebSocketService();
 export default webSocketService;
+
+

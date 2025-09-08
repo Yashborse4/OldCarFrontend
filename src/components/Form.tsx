@@ -24,7 +24,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 import { useTheme } from '../theme';
 import { 
   scale, 
@@ -36,6 +36,7 @@ import {
 import { withPerformanceTracking } from '../utils/performance';
 import { BaseInput, PasswordInput, SearchInput, InputRef } from './Input';
 import { useNotification } from './Notification';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Form validation utilities
 export interface ValidationRule {
@@ -471,7 +472,7 @@ const FieldComponent: React.FC<FieldProps> = ({
             {...commonProps}
             keyboardType="email-address"
             autoCapitalize="none"
-            autoCompleteType="email"
+            autoComplete="email"
             leftIcon={leftIcon || 'email'}
           />
         );
@@ -481,7 +482,7 @@ const FieldComponent: React.FC<FieldProps> = ({
           <BaseInput
             {...commonProps}
             keyboardType="phone-pad"
-            autoCompleteType="tel"
+            autoComplete="tel"
             leftIcon={leftIcon || 'phone'}
           />
         );
@@ -593,7 +594,7 @@ const SubmitButtonComponent: React.FC<SubmitButtonProps> = ({
       case 'filled':
         return {
           ...baseStyle,
-          backgroundColor: isDisabled ? colors.surfaceDisabled : colors.primary,
+          backgroundColor: isDisabled ? themeColors.surfaceDisabled : themeColors.primary,
           elevation: isDisabled ? 0 : 2,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 2 },
@@ -606,7 +607,7 @@ const SubmitButtonComponent: React.FC<SubmitButtonProps> = ({
           ...baseStyle,
           backgroundColor: 'transparent',
           borderWidth: 1,
-          borderColor: isDisabled ? colors.border : colors.primary,
+          borderColor: isDisabled ? themeColors.border : themeColors.primary,
         };
 
       case 'text':
@@ -623,17 +624,17 @@ const SubmitButtonComponent: React.FC<SubmitButtonProps> = ({
 
   const getTextColor = () => {
     if (isDisabled) {
-      return colors.textDisabled;
+      return themeColors.textDisabled;
     }
 
     switch (variant) {
       case 'filled':
-        return colors.onPrimary;
+        return themeColors.onPrimary;
       case 'outlined':
       case 'text':
-        return colors.primary;
+        return themeColors.primary;
       default:
-        return colors.text;
+        return themeColors.text;
     }
   };
 
@@ -728,7 +729,7 @@ const ResetButtonComponent: React.FC<ResetButtonProps> = ({
         style={[
           styles.resetButtonText,
           {
-            color: colors.textSecondary,
+            color: themeColors.textSecondary,
             fontSize: size === 'small' ? FONT_SIZES.sm : size === 'large' ? FONT_SIZES.lg : FONT_SIZES.md,
           },
         ]}
@@ -777,6 +778,7 @@ Field.displayName = 'Field';
 SubmitButton.displayName = 'SubmitButton';
 ResetButton.displayName = 'ResetButton';
 
-// Export hook and utilities
-export { useForm, validators, validateField };
+// Hook and utilities are already exported above
 export default Form;
+
+

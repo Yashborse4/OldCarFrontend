@@ -127,3 +127,5 @@ export type ChatConversationRouteProp = RouteProp<RootStackParamList, 'ChatConve
 export type ManageCarRouteProp = RouteProp<RootStackParamList, 'ManageCar'>;
 export type DealerProfileRouteProp = RouteProp<RootStackParamList, 'DealerProfile'>;
 export type DealerNetworkChatRouteProp = RouteProp<RootStackParamList, 'DealerNetworkChat'>;
+
+

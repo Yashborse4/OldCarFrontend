@@ -77,7 +77,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
       zIndex: 9999,
     },
     overlayContent: {
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       borderRadius: 20,
       padding: 32,
       margin: 24,
@@ -92,13 +92,13 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
 
     // Inline mode styles
     inlineContainer: {
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       borderRadius: 16,
       padding: 24,
       margin: 16,
       alignItems: 'center',
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: themeColors.border,
     },
 
     // Banner mode styles
@@ -151,32 +151,32 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
     title: {
       fontSize: 20,
       fontWeight: '700',
-      color: colors.text,
+      color: themeColors.text,
       marginBottom: 8,
       textAlign: 'center',
     },
     message: {
       fontSize: 16,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       textAlign: 'center',
       lineHeight: 22,
       marginBottom: 24,
     },
     retryButton: {
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
       paddingHorizontal: 32,
       paddingVertical: 14,
       borderRadius: 25,
       flexDirection: 'row',
       alignItems: 'center',
       elevation: 3,
-      shadowColor: colors.primary,
+      shadowColor: themeColors.primary,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.3,
       shadowRadius: 4,
     },
     retryButtonDisabled: {
-      backgroundColor: colors.textSecondary,
+      backgroundColor: themeColors.textSecondary,
       opacity: 0.7,
     },
     retryText: {
@@ -186,7 +186,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
       marginLeft: 8,
     },
     retryTextDisabled: {
-      color: colors.surface,
+      color: themeColors.surface,
     },
     // Status indicator styles (small version)
     statusIndicator: {
@@ -354,3 +354,5 @@ export const NetworkStatusIndicator: React.FC<{ visible?: boolean }> = ({ visibl
 };
 
 export default NetworkError;
+
+

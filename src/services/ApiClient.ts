@@ -104,7 +104,7 @@ class ApiClient {
     resolve: (value: any) => void;
     reject: (error: any) => void;
   }> = [];
-  private networkCheckInterval: NodeJS.Timeout | null = null;
+  private networkCheckInterval: number | null = null;
   private retryConfig = {
     retries: 3,
     retryDelay: 1000, // Base delay in milliseconds
@@ -450,7 +450,11 @@ class ApiClient {
       const response = await this.retryRequest(() =>
         this.instance.get(`/api/v2/cars?page=${page}&size=${size}&sort=${sort}`)
       );
-      return response.data.data || response.data;
+      // Backend returns ApiResponse<Page<CarResponseV2>>
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data; // Return the Page<CarResponseV2>
+      }
+      return response.data;
     } catch (error: any) {
       console.error('Error fetching cars:', error);
       throw this.handleApiError(error, 'Failed to fetch vehicles');
@@ -462,7 +466,11 @@ class ApiClient {
       const response = await this.retryRequest(() =>
         this.instance.get(`/api/v2/cars/${id}`)
       );
-      return response.data.data || response.data;
+      // Backend returns ApiResponse<CarResponseV2>
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data; // Return the CarResponseV2
+      }
+      return response.data;
     } catch (error: any) {
       console.error('Error fetching car by ID:', error);
       throw this.handleApiError(error, 'Failed to fetch vehicle details');
@@ -474,7 +482,11 @@ class ApiClient {
       const response = await this.retryRequest(() =>
         this.instance.post('/api/v2/cars', carData)
       );
-      return response.data.data || response.data;
+      // Backend returns ApiResponse<CarResponseV2>
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data; // Return the created CarResponseV2
+      }
+      return response.data;
     } catch (error: any) {
       console.error('Error creating car:', error);
       throw this.handleApiError(error, 'Failed to create vehicle listing');
@@ -486,7 +498,11 @@ class ApiClient {
       const response = await this.retryRequest(() =>
         this.instance.patch(`/api/v2/cars/${id}`, carData)
       );
-      return response.data.data || response.data;
+      // Backend returns ApiResponse<CarResponseV2>
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data; // Return the updated CarResponseV2
+      }
+      return response.data;
     } catch (error: any) {
       console.error('Error updating car:', error);
       throw this.handleApiError(error, 'Failed to update vehicle listing');
@@ -525,23 +541,37 @@ class ApiClient {
     maxYear?: number;
     minPrice?: number;
     maxPrice?: number;
+    location?: string;
+    condition?: string;
     status?: string;
     featured?: boolean;
+    fuelType?: string;
+    transmission?: string;
     page?: number;
     size?: number;
     sort?: string;
   }): Promise<any> {
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.append(key, value.toString());
-      }
-    });
+    try {
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, value.toString());
+        }
+      });
 
-    const response = await this.instance.get(
-      `/api/v2/cars/search?${params.toString()}`,
-    );
-    return response.data;
+      const response = await this.retryRequest(() =>
+        this.instance.get(`/api/v2/cars/search?${params.toString()}`)
+      );
+      
+      // Backend returns ApiResponse<Page<CarResponseV2>>
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data; // Return the Page<CarResponseV2>
+      }
+      return response.data;
+    } catch (error: any) {
+      console.error('Error searching cars:', error);
+      throw this.handleApiError(error, 'Failed to search vehicles');
+    }
   }
 
   // User profile methods
@@ -719,3 +749,5 @@ class ApiClient {
 export const apiClient = new ApiClient();
 export { ApiClient };
 export default apiClient;
+
+

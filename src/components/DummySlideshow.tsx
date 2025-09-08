@@ -1,4 +1,4 @@
-﻿import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { View, Image, Animated, Dimensions, Text, StyleSheet, TouchableOpacity, ScrollView, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { useTheme } from '../theme';
 import LinearGradient from 'react-native-linear-gradient';
@@ -206,4 +206,6 @@ const styles = StyleSheet.create({
 });
 
 export default DummySlideshow;
+
+
 

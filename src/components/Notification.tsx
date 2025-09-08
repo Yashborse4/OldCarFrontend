@@ -17,7 +17,7 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
 import { 
@@ -149,7 +149,7 @@ const NotificationItemComponent: React.FC<NotificationItemProps> = ({
   const scale = useRef(new Animated.Value(0.8)).current;
   
   const [isVisible, setIsVisible] = useState(true);
-  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [timeoutId, setTimeoutId] = useState<number | null>(null);
 
   // Get notification theme colors
   const getNotificationColors = useCallback(() => {
@@ -157,39 +157,39 @@ const NotificationItemComponent: React.FC<NotificationItemProps> = ({
     
     const colorMap = {
       success: {
-        primary: colors.success,
+        primary: themeColors.success,
         background: isDark ? '#1B5E20' : '#E8F5E8',
-        border: colors.success,
-        text: variant === 'filled' ? colors.onSuccess : colors.success,
-        icon: variant === 'filled' ? colors.onSuccess : colors.success,
+        border: themeColors.success,
+        text: variant === 'filled' ? themeColors.onSuccess : themeColors.success,
+        icon: variant === 'filled' ? themeColors.onSuccess : themeColors.success,
       },
       error: {
-        primary: colors.error,
+        primary: themeColors.error,
         background: isDark ? '#C62828' : '#FFEBEE',
-        border: colors.error,
-        text: variant === 'filled' ? colors.onError : colors.error,
-        icon: variant === 'filled' ? colors.onError : colors.error,
+        border: themeColors.error,
+        text: variant === 'filled' ? themeColors.onError : themeColors.error,
+        icon: variant === 'filled' ? themeColors.onError : themeColors.error,
       },
       warning: {
-        primary: colors.warning,
+        primary: themeColors.warning,
         background: isDark ? '#F57C00' : '#FFF3E0',
-        border: colors.warning,
-        text: variant === 'filled' ? colors.onWarning : colors.warning,
-        icon: variant === 'filled' ? colors.onWarning : colors.warning,
+        border: themeColors.warning,
+        text: variant === 'filled' ? themeColors.onWarning : themeColors.warning,
+        icon: variant === 'filled' ? themeColors.onWarning : themeColors.warning,
       },
       info: {
-        primary: colors.info,
+        primary: themeColors.info,
         background: isDark ? '#1976D2' : '#E3F2FD',
-        border: colors.info,
-        text: variant === 'filled' ? colors.onInfo : colors.info,
-        icon: variant === 'filled' ? colors.onInfo : colors.info,
+        border: themeColors.info,
+        text: variant === 'filled' ? themeColors.onInfo : themeColors.info,
+        icon: variant === 'filled' ? themeColors.onInfo : themeColors.info,
       },
       default: {
-        primary: colors.primary,
-        background: colors.surface,
-        border: colors.border,
-        text: colors.text,
-        icon: colors.textSecondary,
+        primary: themeColors.primary,
+        background: themeColors.surface,
+        border: themeColors.border,
+        text: themeColors.text,
+        icon: themeColors.textSecondary,
       },
     };
     
@@ -739,3 +739,5 @@ export const createNotification = {
     ...options,
   }),
 };
+
+

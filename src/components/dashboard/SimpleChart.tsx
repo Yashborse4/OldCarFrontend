@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { useTheme } from '../../theme';
 import LinearGradient from 'react-native-linear-gradient';
@@ -55,7 +55,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
               <View key={index} style={styles.barWrapper}>
                 <View style={styles.barContainer}>
                   {showValues && (
-                    <Text style={[styles.barValue, { color: colors.text }]}>
+                    <Text style={[styles.barValue, { color: themeColors.text }]}>
                       {item.value}
                     </Text>
                   )}
@@ -73,7 +73,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                     ]}
                   />
                 </View>
-                <Text style={[styles.barLabel, { color: colors.textSecondary }]}>
+                <Text style={[styles.barLabel, { color: themeColors.textSecondary }]}>
                   {item.label}
                 </Text>
               </View>
@@ -101,7 +101,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                   styles.gridLine,
                   {
                     bottom: ratio * chartHeight,
-                    backgroundColor: colors.border,
+                    backgroundColor: themeColors.border,
                   },
                 ]}
               />
@@ -113,7 +113,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
             {data.map((item, index) => {
               const x = index * stepX;
               const y = chartHeight - ((item.value / maxValue) * chartHeight);
-              const color = item.color || colors.primary;
+              const color = item.color || themeColors.primary;
               
               return (
                 <Animatable.View
@@ -130,8 +130,8 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                   ]}
                 >
                   {showValues && (
-                    <View style={[styles.valueLabel, { backgroundColor: colors.surface }]}>
-                      <Text style={[styles.valueLabelText, { color: colors.text }]}>
+                    <View style={[styles.valueLabel, { backgroundColor: themeColors.surface }]}>
+                      <Text style={[styles.valueLabelText, { color: themeColors.text }]}>
                         {item.value}
                       </Text>
                     </View>
@@ -164,7 +164,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                       top: y1,
                       width: length,
                       transform: [{ rotate: `${angle}deg` }],
-                      backgroundColor: colors.primary,
+                      backgroundColor: themeColors.primary,
                     },
                   ]}
                 />
@@ -181,7 +181,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                   styles.xAxisLabel,
                   {
                     left: index * stepX - 20,
-                    color: colors.textSecondary,
+                    color: themeColors.textSecondary,
                   },
                 ]}
               >
@@ -250,7 +250,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                       },
                     ]}
                   >
-                    <Text style={[styles.pieLabelText, { color: colors.text }]}>
+                    <Text style={[styles.pieLabelText, { color: themeColors.text }]}>
                       {percentage.toFixed(0)}%
                     </Text>
                   </View>
@@ -272,7 +272,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                   },
                 ]}
               />
-              <Text style={[styles.legendLabel, { color: colors.text }]}>
+              <Text style={[styles.legendLabel, { color: themeColors.text }]}>
                 {item.label}: {item.value}
               </Text>
             </View>
@@ -296,11 +296,11 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }, shadows.md]}>
+    <View style={[styles.container, { backgroundColor: themeColors.surface }, shadows.md]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+        <Text style={[styles.title, { color: themeColors.text }]}>{title}</Text>
         {subtitle && (
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
             {subtitle}
           </Text>
         )}
@@ -465,4 +465,6 @@ const styles = StyleSheet.create({
 });
 
 export default SimpleChart;
+
+
 

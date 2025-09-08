@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -112,7 +112,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
               <Icon
                 name={isBookmarked ? 'bookmark' : 'bookmark-border'}
                 size={20}
-                color={isBookmarked ? colors.primary : '#fff'}
+                color={isBookmarked ? themeColors.primary : '#fff'}
               />
             </TouchableOpacity>
           )}
@@ -135,7 +135,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
             </Text>
             {vehicle.isCoListed && (
               <View style={styles.coListedBadge}>
-                <MaterialCommunityIcons name="share-variant" size={12} color={colors.primary} />
+                <MaterialCommunityIcons name="share-variant" size={12} color={themeColors.primary} />
               </View>
             )}
           </View>
@@ -184,13 +184,13 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
           {/* Action Buttons */}
           <View style={styles.actionRow}>
             <TouchableOpacity style={styles.contactButton} onPress={onPress}>
-              <MaterialCommunityIcons name="phone" size={16} color={colors.primary} />
+              <MaterialCommunityIcons name="phone" size={16} color={themeColors.primary} />
               <Text style={styles.contactText}>Contact</Text>
             </TouchableOpacity>
             
             {showCoListButton && onCoList && (
               <TouchableOpacity style={styles.coListButton} onPress={onCoList}>
-                <MaterialCommunityIcons name="share-variant" size={16} color={colors.primary} />
+                <MaterialCommunityIcons name="share-variant" size={16} color={themeColors.primary} />
                 <Text style={styles.coListText}>Co-List</Text>
               </TouchableOpacity>
             )}
@@ -425,4 +425,6 @@ const styles = StyleSheet.create({
 });
 
 export default VehicleCard;
+
+
 

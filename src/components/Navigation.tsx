@@ -25,7 +25,7 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
@@ -98,10 +98,10 @@ const CustomTabBarComponent: React.FC<CustomTabBarProps> = ({
   const slideAnim = useRef(new Animated.Value(0)).current;
   const scaleAnims = useRef(items.map(() => new Animated.Value(1))).current;
 
-  const finalBadgeColor = badgeColor || colors.error;
-  const finalBadgeTextColor = badgeTextColor || colors.onError;
-  const finalActiveColor = activeColor || colors.primary;
-  const finalInactiveColor = inactiveColor || colors.textSecondary;
+  const finalBadgeColor = badgeColor || themeColors.error;
+  const finalBadgeTextColor = badgeTextColor || themeColors.onError;
+  const finalActiveColor = activeColor || themeColors.primary;
+  const finalInactiveColor = inactiveColor || themeColors.textSecondary;
 
   // Calculate active tab index and animate indicator
   useEffect(() => {
@@ -142,7 +142,7 @@ const CustomTabBarComponent: React.FC<CustomTabBarProps> = ({
   // Get container styles based on variant
   const getContainerStyles = useCallback((): ViewStyle => {
     const baseStyle: ViewStyle = {
-      backgroundColor: backgroundColor || colors.surface,
+      backgroundColor: backgroundColor || themeColors.surface,
     };
 
     switch (variant) {
@@ -223,13 +223,13 @@ const CustomTabBarComponent: React.FC<CustomTabBarProps> = ({
   const renderTab = useCallback((item: TabBarItem, index: number) => {
     const isActive = item.key === activeTab;
     const iconColor = item.disabled 
-      ? colors.textDisabled 
+      ? themeColors.textDisabled 
       : isActive 
       ? finalActiveColor 
       : finalInactiveColor;
     
     const labelColor = item.disabled
-      ? colors.textDisabled
+      ? themeColors.textDisabled
       : isActive
       ? finalActiveColor
       : finalInactiveColor;
@@ -402,7 +402,7 @@ const CustomHeaderComponent: React.FC<HeaderProps> = ({
   const insets = useSafeAreaInsets();
   const [isSearchActive, setIsSearchActive] = useState(false);
 
-  const finalBackgroundColor = backgroundColor || (transparent ? 'transparent' : colors.surface);
+  const finalBackgroundColor = backgroundColor || (transparent ? 'transparent' : themeColors.surface);
 
   const handleSearchFocus = useCallback(() => {
     setIsSearchActive(true);
@@ -427,7 +427,7 @@ const CustomHeaderComponent: React.FC<HeaderProps> = ({
           <Icon
             name="arrow-back"
             size={scale(24)}
-            color={colors.text}
+            color={themeColors.text}
           />
         </TouchableOpacity>
       );
@@ -443,7 +443,7 @@ const CustomHeaderComponent: React.FC<HeaderProps> = ({
           <Icon
             name="menu"
             size={scale(24)}
-            color={colors.text}
+            color={themeColors.text}
           />
         </TouchableOpacity>
       );
@@ -480,7 +480,7 @@ const CustomHeaderComponent: React.FC<HeaderProps> = ({
           <Text
             style={[
               styles.headerTitle,
-              { color: colors.text },
+              { color: themeColors.text },
               titleStyle,
             ]}
             numberOfLines={1}
@@ -490,7 +490,7 @@ const CustomHeaderComponent: React.FC<HeaderProps> = ({
         )}
         {subtitle && (
           <Text
-            style={[styles.headerSubtitle, { color: colors.textSecondary }]}
+            style={[styles.headerSubtitle, { color: themeColors.textSecondary }]}
             numberOfLines={1}
           >
             {subtitle}
@@ -525,7 +525,7 @@ const CustomHeaderComponent: React.FC<HeaderProps> = ({
           <Icon
             name="search"
             size={scale(24)}
-            color={colors.text}
+            color={themeColors.text}
           />
         </TouchableOpacity>
       );
@@ -603,8 +603,8 @@ const FloatingActionButtonComponent: React.FC<FloatingActionButtonProps> = ({
   const insets = useSafeAreaInsets();
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const finalBackgroundColor = backgroundColor || colors.primary;
-  const finalColor = color || colors.onPrimary;
+  const finalBackgroundColor = backgroundColor || themeColors.primary;
+  const finalColor = color || themeColors.onPrimary;
 
   const buttonSize = {
     small: scale(48),
@@ -672,7 +672,7 @@ const FloatingActionButtonComponent: React.FC<FloatingActionButtonProps> = ({
         style={[
           styles.fab,
           {
-            backgroundColor: disabled ? colors.surfaceDisabled : finalBackgroundColor,
+            backgroundColor: disabled ? themeColors.surfaceDisabled : finalBackgroundColor,
             width: buttonSize,
             height: buttonSize,
             borderRadius: buttonSize / 2,
@@ -828,3 +828,5 @@ FloatingActionButton.displayName = 'FloatingActionButton';
 export type { TabBarItem, CustomTabBarProps, HeaderProps, FloatingActionButtonProps };
 
 export default CustomTabBar;
+
+

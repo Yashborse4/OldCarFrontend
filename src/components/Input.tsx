@@ -17,7 +17,7 @@ import {
   Platform,
   Pressable,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '../theme';
 import { 
   scale, 
@@ -240,7 +240,7 @@ const BaseInputComponent = forwardRef<InputRef, BaseInputProps>(({
     
     const baseInputStyle: TextStyle = {
       fontSize: sizeStyles.fontSize,
-      color: disabled ? colors.textDisabled : colors.text,
+      color: disabled ? themeColors.textDisabled : themeColors.text,
       paddingHorizontal: sizeStyles.paddingHorizontal,
       paddingVertical: SPACING.sm,
       height: sizeStyles.height,
@@ -257,12 +257,12 @@ const BaseInputComponent = forwardRef<InputRef, BaseInputProps>(({
             ...baseContainerStyle,
             borderWidth: 1,
             borderColor: hasError
-              ? colors.error
+              ? themeColors.error
               : isFocused
-              ? colors.primary
-              : colors.border,
+              ? themeColors.primary
+              : themeColors.border,
             borderRadius: RESPONSIVE_DIMENSIONS.borderRadius.medium,
-            backgroundColor: disabled ? colors.surfaceDisabled : colors.surface,
+            backgroundColor: disabled ? themeColors.surfaceDisabled : themeColors.surface,
           },
           input: {
             ...baseInputStyle,
@@ -274,13 +274,13 @@ const BaseInputComponent = forwardRef<InputRef, BaseInputProps>(({
         return {
           container: {
             ...baseContainerStyle,
-            backgroundColor: disabled ? colors.surfaceDisabled : colors.surfaceVariant,
+            backgroundColor: disabled ? themeColors.surfaceDisabled : themeColors.surfaceVariant,
             borderRadius: RESPONSIVE_DIMENSIONS.borderRadius.medium,
             borderBottomWidth: 2,
             borderBottomColor: hasError
-              ? colors.error
+              ? themeColors.error
               : isFocused
-              ? colors.primary
+              ? themeColors.primary
               : 'transparent',
           },
           input: {
@@ -295,10 +295,10 @@ const BaseInputComponent = forwardRef<InputRef, BaseInputProps>(({
             ...baseContainerStyle,
             borderBottomWidth: isFocused ? 2 : 1,
             borderBottomColor: hasError
-              ? colors.error
+              ? themeColors.error
               : isFocused
-              ? colors.primary
-              : colors.border,
+              ? themeColors.primary
+              : themeColors.border,
             backgroundColor: 'transparent',
           },
           input: {
@@ -331,11 +331,11 @@ const BaseInputComponent = forwardRef<InputRef, BaseInputProps>(({
         outputRange: [sizeStyles.fontSize, FONT_SIZES.sm],
       }),
       color: error || internalError
-        ? colors.error
+        ? themeColors.error
         : isFocused
-        ? colors.primary
-        : colors.textSecondary,
-      backgroundColor: variant === 'outlined' ? colors.background : 'transparent',
+        ? themeColors.primary
+        : themeColors.textSecondary,
+      backgroundColor: variant === 'outlined' ? themeColors.background : 'transparent',
       paddingHorizontal: variant === 'outlined' ? SPACING.xs : 0,
       zIndex: 1,
     };
@@ -350,9 +350,9 @@ const BaseInputComponent = forwardRef<InputRef, BaseInputProps>(({
     <View style={[styles.container, containerStyle]}>
       {/* Static label (when not animated) */}
       {label && !animateLabel && (
-        <Text style={[styles.staticLabel, { color: colors.text }, labelStyle]}>
+        <Text style={[styles.staticLabel, { color: themeColors.text }, labelStyle]}>
           {label}
-          {required && <Text style={[styles.required, { color: colors.error }]}> *</Text>}
+          {required && <Text style={[styles.required, { color: themeColors.error }]}> *</Text>}
         </Text>
       )}
       
@@ -362,7 +362,7 @@ const BaseInputComponent = forwardRef<InputRef, BaseInputProps>(({
         {label && animateLabel && (
           <Animated.Text style={[animatedLabelStyles, labelStyle]}>
             {label}
-            {required && <Text style={[styles.required, { color: colors.error }]}> *</Text>}
+            {required && <Text style={[styles.required, { color: themeColors.error }]}> *</Text>}
           </Animated.Text>
         )}
         
@@ -373,10 +373,10 @@ const BaseInputComponent = forwardRef<InputRef, BaseInputProps>(({
             style={styles.leftIcon}
             disabled={!onLeftIconPress || disabled}
           >
-            <Icon
+            <MaterialIcons
               name={leftIcon}
               size={scale(20)}
-              color={disabled ? colors.textDisabled : colors.textSecondary}
+              color={disabled ? themeColors.textDisabled : themeColors.textSecondary}
             />
           </TouchableOpacity>
         )}
@@ -395,7 +395,7 @@ const BaseInputComponent = forwardRef<InputRef, BaseInputProps>(({
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={!animateLabel || !label ? placeholder : undefined}
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor={themeColors.textSecondary}
           editable={!disabled}
           maxLength={maxLength}
           accessible={true}
@@ -415,10 +415,10 @@ const BaseInputComponent = forwardRef<InputRef, BaseInputProps>(({
             style={styles.rightIcon}
             disabled={!onRightIconPress || disabled}
           >
-            <Icon
+            <MaterialIcons
               name={rightIcon}
               size={scale(20)}
-              color={disabled ? colors.textDisabled : colors.textSecondary}
+              color={disabled ? themeColors.textDisabled : themeColors.textSecondary}
             />
           </TouchableOpacity>
         )}
@@ -428,19 +428,19 @@ const BaseInputComponent = forwardRef<InputRef, BaseInputProps>(({
       <View style={styles.helperContainer}>
         <View style={styles.helperTextContainer}>
           {hasError && (
-            <Text style={[styles.errorText, { color: colors.error }, errorStyle]}>
+            <Text style={[styles.errorText, { color: themeColors.error }, errorStyle]}>
               {displayError}
             </Text>
           )}
           {!hasError && helperText && (
-            <Text style={[styles.helperText, { color: colors.textSecondary }]}>
+            <Text style={[styles.helperText, { color: themeColors.textSecondary }]}>
               {helperText}
             </Text>
           )}
         </View>
         
         {showCharacterCount && maxLength && (
-          <Text style={[styles.characterCount, { color: colors.textSecondary }]}>
+          <Text style={[styles.characterCount, { color: themeColors.textSecondary }]}>
             {internalValue.length}/{maxLength}
           </Text>
         )}
@@ -482,12 +482,12 @@ const PasswordInputComponent: React.FC<PasswordInputProps> = ({
   const getStrengthColor = useCallback(() => {
     switch (passwordStrength) {
       case 0:
-      case 1: return colors.error;
+      case 1: return themeColors.error;
       case 2:
-      case 3: return colors.warning;
+      case 3: return themeColors.warning;
       case 4:
-      case 5: return colors.success;
-      default: return colors.textSecondary;
+      case 5: return themeColors.success;
+      default: return themeColors.textSecondary;
     }
   }, [passwordStrength, colors]);
 
@@ -524,7 +524,7 @@ const PasswordInputComponent: React.FC<PasswordInputProps> = ({
                   {
                     backgroundColor: level <= passwordStrength
                       ? getStrengthColor()
-                      : colors.surfaceVariant,
+                      : themeColors.surfaceVariant,
                   },
                 ]}
               />
@@ -657,3 +657,5 @@ PasswordInput.displayName = 'PasswordInput';
 SearchInput.displayName = 'SearchInput';
 
 export default BaseInput;
+
+

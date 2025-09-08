@@ -80,7 +80,7 @@ const withNetworkHandling = <P extends object>(
     const styles = StyleSheet.create({
       container: {
         flex: 1,
-        backgroundColor: colors.background,
+        backgroundColor: themeColors.background,
       },
       statusIndicatorContainer: {
         position: 'absolute',
@@ -284,7 +284,7 @@ export const NetworkAwareWrapper: React.FC<{
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: themeColors.background,
     },
     statusIndicatorContainer: {
       position: 'absolute',
@@ -320,3 +320,5 @@ export const NetworkAwareWrapper: React.FC<{
 };
 
 export default withNetworkHandling;
+
+

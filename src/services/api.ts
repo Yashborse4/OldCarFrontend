@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // IMPORTANT: Replace with your actual backend API URL
-const API_URL = 'http://192.168.152.183:9000';
+const API_URL = 'http://172.27.96.1:9000';
 
 export interface AuthResponse {
   token: string;
@@ -68,3 +68,5 @@ export const forgotPassword = async (forgotPasswordRequest: any) => {
     throw error;
   }
 };
+
+

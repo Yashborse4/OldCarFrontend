@@ -15,7 +15,7 @@ import {
   Pressable,
   Dimensions,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../theme';
 import { 
@@ -26,7 +26,6 @@ import {
   useResponsive 
 } from '../utils/responsive';
 import { withPerformanceTracking } from '../utils/performance';
-import { OptimizedImage } from './OptimizedImage';
 import { Skeleton } from './Loading';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -48,7 +47,7 @@ interface BaseCardProps {
   // Accessibility
   accessibilityLabel?: string;
   accessibilityHint?: string;
-  accessibilityRole?: string;
+  accessibilityRole?: 'button' | 'text' | 'image' | 'none';
 }
 
 // Base Card Component
@@ -101,9 +100,9 @@ const BaseCardComponent: React.FC<BaseCardProps> = ({
       case 'elevated':
         return {
           ...baseStyle,
-          backgroundColor: colors.surface,
+          backgroundColor: themeColors.surface,
           elevation: 4,
-          shadowColor: colors.shadow,
+          shadowColor: themeColors.shadow,
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.1,
           shadowRadius: 4,
@@ -112,15 +111,15 @@ const BaseCardComponent: React.FC<BaseCardProps> = ({
       case 'outlined':
         return {
           ...baseStyle,
-          backgroundColor: colors.surface,
+          backgroundColor: themeColors.surface,
           borderWidth: 1,
-          borderColor: colors.border,
+          borderColor: themeColors.border,
         };
       
       case 'filled':
         return {
           ...baseStyle,
-          backgroundColor: colors.surfaceVariant,
+          backgroundColor: themeColors.surfaceVariant,
         };
       
       default:
@@ -244,11 +243,11 @@ const CarCardComponent: React.FC<CarCardProps> = ({
 
   const getConditionColor = useCallback((condition?: string) => {
     switch (condition) {
-      case 'Excellent': return colors.success;
-      case 'Good': return colors.info;
-      case 'Fair': return colors.warning;
-      case 'Poor': return colors.error;
-      default: return colors.textSecondary;
+      case 'Excellent': return themeColors.success;
+      case 'Good': return themeColors.info;
+      case 'Fair': return themeColors.warning;
+      case 'Poor': return themeColors.error;
+      default: return themeColors.textSecondary;
     }
   }, [colors]);
 
@@ -264,21 +263,14 @@ const CarCardComponent: React.FC<CarCardProps> = ({
     >
       {/* Image Section */}
       <View style={styles.carImageContainer}>
-        <OptimizedImage
-          source={{ uri: car.images[currentImageIndex] }}
+        <Skeleton
+          width="100%"
+          height={scale(200)}
+          animated={true}
           style={[
             styles.carImage,
             compact && styles.carImageCompact,
           ]}
-          resizeMode="cover"
-          onPress={handleImagePress}
-          placeholder={
-            <Skeleton
-              width="100%"
-              height="100%"
-              animated={true}
-            />
-          }
         />
         
         {/* Image Indicators */}
@@ -291,8 +283,8 @@ const CarCardComponent: React.FC<CarCardProps> = ({
                   styles.imageIndicator,
                   {
                     backgroundColor: index === currentImageIndex 
-                      ? colors.primary 
-                      : colors.surface,
+                      ? themeColors.primary 
+                      : themeColors.surface,
                   },
                 ]}
               />
@@ -306,24 +298,24 @@ const CarCardComponent: React.FC<CarCardProps> = ({
           {showFavorite && (
             <TouchableOpacity
               onPress={handleFavoritePress}
-              style={[styles.favoriteButton, { backgroundColor: colors.surface }]}
+              style={[styles.favoriteButton, { backgroundColor: themeColors.surface }]}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Icon
+              <MaterialIcons
                 name={car.isFavorite ? 'favorite' : 'favorite-border'}
                 size={scale(20)}
-                color={car.isFavorite ? colors.error : colors.textSecondary}
+                color={car.isFavorite ? themeColors.error : themeColors.textSecondary}
               />
             </TouchableOpacity>
           )}
           
           {/* Verified Badge */}
           {showVerified && car.isVerified && (
-            <View style={[styles.verifiedBadge, { backgroundColor: colors.success }]}>
-              <Icon
+            <View style={[styles.verifiedBadge, { backgroundColor: themeColors.success }]}>
+              <MaterialIcons
                 name="verified"
                 size={scale(16)}
-                color={colors.onSuccess}
+                color={themeColors.onSuccess}
               />
             </View>
           )}
@@ -354,14 +346,14 @@ const CarCardComponent: React.FC<CarCardProps> = ({
         <View style={styles.carHeader}>
           <View style={styles.carTitleContainer}>
             <Text
-              style={[styles.carTitle, { color: colors.text }]}
+              style={[styles.carTitle, { color: themeColors.text }]}
               numberOfLines={1}
             >
               {car.title}
             </Text>
             {car.subtitle && (
               <Text
-                style={[styles.carSubtitle, { color: colors.textSecondary }]}
+                style={[styles.carSubtitle, { color: themeColors.textSecondary }]}
                 numberOfLines={1}
               >
                 {car.subtitle}
@@ -370,14 +362,14 @@ const CarCardComponent: React.FC<CarCardProps> = ({
           </View>
           
           <View style={styles.carPriceContainer}>
-            <Text style={[styles.carPrice, { color: colors.primary }]}>
+            <Text style={[styles.carPrice, { color: themeColors.primary }]}>
               {formatPrice(car.price)}
             </Text>
             {car.originalPrice && car.originalPrice !== car.price && (
               <Text
                 style={[
                   styles.carOriginalPrice,
-                  { color: colors.textSecondary },
+                  { color: themeColors.textSecondary },
                 ]}
               >
                 {formatPrice(car.originalPrice)}
@@ -391,12 +383,12 @@ const CarCardComponent: React.FC<CarCardProps> = ({
           <View style={styles.carDetails}>
             {car.year && (
               <View style={styles.carDetailItem}>
-                <Icon
+                <MaterialIcons
                   name="event"
                   size={scale(14)}
-                  color={colors.textSecondary}
+                  color={themeColors.textSecondary}
                 />
-                <Text style={[styles.carDetailText, { color: colors.textSecondary }]}>
+                <Text style={[styles.carDetailText, { color: themeColors.textSecondary }]}>
                   {car.year}
                 </Text>
               </View>
@@ -404,12 +396,12 @@ const CarCardComponent: React.FC<CarCardProps> = ({
             
             {car.mileage && (
               <View style={styles.carDetailItem}>
-                <Icon
+                <MaterialIcons
                   name="speed"
                   size={scale(14)}
-                  color={colors.textSecondary}
+                  color={themeColors.textSecondary}
                 />
-                <Text style={[styles.carDetailText, { color: colors.textSecondary }]}>
+                <Text style={[styles.carDetailText, { color: themeColors.textSecondary }]}>
                   {car.mileage}
                 </Text>
               </View>
@@ -417,12 +409,12 @@ const CarCardComponent: React.FC<CarCardProps> = ({
             
             {car.fuelType && (
               <View style={styles.carDetailItem}>
-                <Icon
+                <MaterialIcons
                   name="local-gas-station"
                   size={scale(14)}
-                  color={colors.textSecondary}
+                  color={themeColors.textSecondary}
                 />
-                <Text style={[styles.carDetailText, { color: colors.textSecondary }]}>
+                <Text style={[styles.carDetailText, { color: themeColors.textSecondary }]}>
                   {car.fuelType}
                 </Text>
               </View>
@@ -430,12 +422,12 @@ const CarCardComponent: React.FC<CarCardProps> = ({
             
             {car.transmission && (
               <View style={styles.carDetailItem}>
-                <Icon
+                <MaterialIcons
                   name="settings"
                   size={scale(14)}
-                  color={colors.textSecondary}
+                  color={themeColors.textSecondary}
                 />
-                <Text style={[styles.carDetailText, { color: colors.textSecondary }]}>
+                <Text style={[styles.carDetailText, { color: themeColors.textSecondary }]}>
                   {car.transmission}
                 </Text>
               </View>
@@ -447,13 +439,13 @@ const CarCardComponent: React.FC<CarCardProps> = ({
         <View style={styles.carFooter}>
           {car.location && (
             <View style={styles.carLocationContainer}>
-              <Icon
+              <MaterialIcons
                 name="location-on"
                 size={scale(14)}
-                color={colors.textSecondary}
+                color={themeColors.textSecondary}
               />
               <Text
-                style={[styles.carLocationText, { color: colors.textSecondary }]}
+                style={[styles.carLocationText, { color: themeColors.textSecondary }]}
                 numberOfLines={1}
               >
                 {car.location}
@@ -463,12 +455,12 @@ const CarCardComponent: React.FC<CarCardProps> = ({
           
           {showRating && car.rating && (
             <View style={styles.carRatingContainer}>
-              <Icon
+              <MaterialIcons
                 name="star"
                 size={scale(14)}
-                color={colors.warning}
+                color={themeColors.warning}
               />
-              <Text style={[styles.carRatingText, { color: colors.text }]}>
+              <Text style={[styles.carRatingText, { color: themeColors.text }]}>
                 {car.rating.toFixed(1)}
               </Text>
             </View>
@@ -483,13 +475,13 @@ const CarCardComponent: React.FC<CarCardProps> = ({
                 key={index}
                 style={[
                   styles.carFeatureTag,
-                  { backgroundColor: colors.surfaceVariant },
+                  { backgroundColor: themeColors.surfaceVariant },
                 ]}
               >
                 <Text
                   style={[
                     styles.carFeatureText,
-                    { color: colors.onSurfaceVariant },
+                    { color: themeColors.onSurfaceVariant },
                   ]}
                 >
                   {feature}
@@ -497,7 +489,7 @@ const CarCardComponent: React.FC<CarCardProps> = ({
               </View>
             ))}
             {car.features.length > 3 && (
-              <Text style={[styles.carMoreFeatures, { color: colors.primary }]}>
+              <Text style={[styles.carMoreFeatures, { color: themeColors.primary }]}>
                 +{car.features.length - 3} more
               </Text>
             )}
@@ -507,13 +499,13 @@ const CarCardComponent: React.FC<CarCardProps> = ({
         {/* Dealer */}
         {car.dealerName && (
           <View style={styles.carDealer}>
-            <Icon
+            <MaterialIcons
               name="store"
               size={scale(14)}
-              color={colors.textSecondary}
+              color={themeColors.textSecondary}
             />
             <Text
-              style={[styles.carDealerText, { color: colors.textSecondary }]}
+              style={[styles.carDealerText, { color: themeColors.textSecondary }]}
               numberOfLines={1}
             >
               Sold by {car.dealerName}
@@ -595,24 +587,24 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
           disabled={!onAvatarPress}
         >
           {user.avatar ? (
-            <OptimizedImage
-              source={{ uri: user.avatar }}
-              style={styles.profileAvatarImage}
-              borderRadius={horizontal ? scale(25) : scale(35)}
-              useFastImage={true}
+            <View
+              style={[
+                styles.profileAvatarImage,
+                { borderRadius: horizontal ? scale(25) : scale(35) }
+              ]}
             />
           ) : (
             <View
               style={[
                 styles.profileAvatarPlaceholder,
-                { backgroundColor: colors.primary },
+                { backgroundColor: themeColors.primary },
                 horizontal && styles.profileAvatarPlaceholderHorizontal,
               ]}
             >
               <Text
                 style={[
                   styles.profileAvatarText,
-                  { color: colors.onPrimary },
+                  { color: themeColors.onPrimary },
                   horizontal && styles.profileAvatarTextHorizontal,
                 ]}
               >
@@ -625,14 +617,14 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
             <View
               style={[
                 styles.profileVerifiedBadge,
-                { backgroundColor: colors.success },
+                { backgroundColor: themeColors.success },
                 horizontal && styles.profileVerifiedBadgeHorizontal,
               ]}
             >
-              <Icon
+              <MaterialIcons
                 name="verified"
                 size={scale(horizontal ? 12 : 14)}
-                color={colors.onSuccess}
+                color={themeColors.onSuccess}
               />
             </View>
           )}
@@ -646,7 +638,7 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
           <Text
             style={[
               styles.profileName,
-              { color: colors.text },
+              { color: themeColors.text },
               horizontal && styles.profileNameHorizontal,
             ]}
             numberOfLines={1}
@@ -658,7 +650,7 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
             <Text
               style={[
                 styles.profileTitle,
-                { color: colors.textSecondary },
+                { color: themeColors.textSecondary },
                 horizontal && styles.profileTitleHorizontal,
               ]}
               numberOfLines={1}
@@ -669,13 +661,13 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
           
           {user.location && (
             <View style={styles.profileLocation}>
-              <Icon
+              <MaterialIcons
                 name="location-on"
                 size={scale(14)}
-                color={colors.textSecondary}
+                color={themeColors.textSecondary}
               />
               <Text
-                style={[styles.profileLocationText, { color: colors.textSecondary }]}
+                style={[styles.profileLocationText, { color: themeColors.textSecondary }]}
                 numberOfLines={1}
               >
                 {user.location}
@@ -688,12 +680,12 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
             <View style={styles.profileStats}>
               {user.rating && (
                 <View style={styles.profileStat}>
-                  <Icon
+                  <MaterialIcons
                     name="star"
                     size={scale(14)}
-                    color={colors.warning}
+                    color={themeColors.warning}
                   />
-                  <Text style={[styles.profileStatText, { color: colors.text }]}>
+                  <Text style={[styles.profileStatText, { color: themeColors.text }]}>
                     {user.rating.toFixed(1)}
                   </Text>
                 </View>
@@ -701,12 +693,12 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
               
               {user.reviewCount && (
                 <View style={styles.profileStat}>
-                  <Icon
+                  <MaterialIcons
                     name="rate-review"
                     size={scale(14)}
-                    color={colors.textSecondary}
+                    color={themeColors.textSecondary}
                   />
-                  <Text style={[styles.profileStatText, { color: colors.text }]}>
+                  <Text style={[styles.profileStatText, { color: themeColors.text }]}>
                     {user.reviewCount}
                   </Text>
                 </View>
@@ -722,13 +714,13 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
                   key={index}
                   style={[
                     styles.profileBadge,
-                    { backgroundColor: colors.surfaceVariant },
+                    { backgroundColor: themeColors.surfaceVariant },
                   ]}
                 >
                   <Text
                     style={[
                       styles.profileBadgeText,
-                      { color: colors.onSurfaceVariant },
+                      { color: themeColors.onSurfaceVariant },
                     ]}
                   >
                     {badge}
@@ -742,7 +734,7 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
             <Text
               style={[
                 styles.profileJoinDate,
-                { color: colors.textSecondary },
+                { color: themeColors.textSecondary },
               ]}
             >
               Member since {user.joinDate}
@@ -1090,3 +1082,5 @@ CarCard.displayName = 'CarCard';
 ProfileCard.displayName = 'ProfileCard';
 
 export default BaseCard;
+
+
