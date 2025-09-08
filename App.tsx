@@ -10,29 +10,21 @@ import 'react-native-screens';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, ActivityIndicator, StatusBar, useColorScheme as useDeviceColorScheme } from 'react-native';
 import AppNavigator from './src/navigation/AppNavigator';
-import Toast from 'react-native-toast-message';
 import { isUserAuthorized } from './src/services/auth';
 import { RootStackParamList } from './src/navigation/types';
 import { ThemeProvider, useTheme } from './src/theme';
 import { AuthProvider } from './src/context/AuthContext';
 import { AppErrorBoundary } from './src/components/ErrorBoundary';
-import { initializePerformanceOptimizations, ResponsiveDebugger } from './src/utils/performance';
+import { ToastProvider } from './src/components/ui/ToastManager';
 
 
 function App() {
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
 
   useEffect(() => {
-    // Initialize performance optimizations
-    initializePerformanceOptimizations();
-    
-    // Log device info in development
-    if (__DEV__) {
-      ResponsiveDebugger.logDeviceInfo();
-    }
-    
     const checkAuthStatus = async () => {
       try {
         const authorized = await isUserAuthorized();
@@ -55,29 +47,32 @@ function App() {
   }
 
   return (
-    <AppErrorBoundary>
-      <ThemeProvider>
-        <AuthProvider>
-          <AppContent initialRoute={initialRoute} />
-        </AuthProvider>
-      </ThemeProvider>
-    </AppErrorBoundary>
+    <SafeAreaProvider>
+      <AppErrorBoundary>
+        <ThemeProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <AppContent initialRoute={initialRoute} />
+            </AuthProvider>
+          </ToastProvider>
+        </ThemeProvider>
+      </AppErrorBoundary>
+    </SafeAreaProvider>
   );
 }
 
 const AppContent = ({ initialRoute }: { initialRoute: keyof RootStackParamList }) => {
-  const { isDark, theme } = useTheme();
+  const { isDark, themeColors } = useTheme();
   
   return (
     <GestureHandlerRootView style={{flex: 1}}>
       <StatusBar 
         barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={theme.colors.background}
+        backgroundColor={themeColors.background}
         translucent
       />
       <NavigationContainer>
         <AppNavigator initialRouteName={initialRoute} />
-        <Toast />
       </NavigationContainer>
     </GestureHandlerRootView>
   );
