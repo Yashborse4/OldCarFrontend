@@ -9,15 +9,15 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
   const { isDark, toggleTheme, colors } = useTheme();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
       
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { borderBottomColor: themeColors.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <AntDesign name="arrowleft" size={24} color={colors.text} />
+          <AntDesign name="arrow-left" size={24} color={themeColors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Profile</Text>
+        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Profile</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -26,29 +26,29 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
         <View style={[styles.avatarContainer, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}>
           <Text style={styles.avatarText}>JD</Text>
         </View>
-        <Text style={[styles.userName, { color: colors.text }]}>John Doe</Text>
-        <Text style={[styles.userEmail, { color: colors.textSecondary }]}>john.doe@example.com</Text>
+        <Text style={[styles.userName, { color: themeColors.text }]}>John Doe</Text>
+        <Text style={[styles.userEmail, { color: themeColors.textSecondary }]}>john.doe@example.com</Text>
       </View>
 
       {/* Settings Cards */}
       <View style={styles.settingsContainer}>
         {/* Theme Toggle */}
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <View style={[styles.card, { backgroundColor: themeColors.surface }]}>
           <TouchableOpacity style={styles.settingItem} onPress={toggleTheme}>
             <View style={styles.settingLeft}>
               <MaterialIcons 
                 name={isDark ? "dark-mode" : "light-mode"} 
                 size={24} 
-                color={colors.primary} 
+                color={themeColors.primary} 
               />
-              <Text style={[styles.settingLabel, { color: colors.text }]}>
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>
                 {isDark ? "Dark Mode" : "Light Mode"}
               </Text>
             </View>
             <Switch 
               value={isDark} 
               onValueChange={toggleTheme} 
-              trackColor={{ false: '#767577', true: colors.primary }} 
+              trackColor={{ false: '#767577', true: themeColors.primary }} 
               thumbColor={isDark ? '#f4f3f4' : '#f4f3f4'} 
               ios_backgroundColor="#3e3e3e"
             />
@@ -56,35 +56,35 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
         </View>
 
         {/* My Listings */}
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <View style={[styles.card, { backgroundColor: themeColors.surface }]}>
           <TouchableOpacity style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <MaterialIcons name="list" size={24} color={colors.primary} />
-              <Text style={[styles.settingLabel, { color: colors.text }]}>My Listings</Text>
+              <MaterialIcons name="list" size={24} color={themeColors.primary} />
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>My Listings</Text>
             </View>
-            <AntDesign name="right" size={18} color={colors.textSecondary} />
+            <AntDesign name="right" size={18} color={themeColors.textSecondary} />
           </TouchableOpacity>
         </View>
 
         {/* Saved Cars */}
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <View style={[styles.card, { backgroundColor: themeColors.surface }]}>
           <TouchableOpacity style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <MaterialIcons name="favorite-border" size={24} color={colors.primary} />
-              <Text style={[styles.settingLabel, { color: colors.text }]}>Saved Cars</Text>
+              <MaterialIcons name="favorite-border" size={24} color={themeColors.primary} />
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Saved Cars</Text>
             </View>
-            <AntDesign name="right" size={18} color={colors.textSecondary} />
+            <AntDesign name="right" size={18} color={themeColors.textSecondary} />
           </TouchableOpacity>
         </View>
 
         {/* Notifications */}
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <View style={[styles.card, { backgroundColor: themeColors.surface }]}>
           <TouchableOpacity style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <MaterialIcons name="notifications-none" size={24} color={colors.primary} />
-              <Text style={[styles.settingLabel, { color: colors.text }]}>Notifications</Text>
+              <MaterialIcons name="notifications-none" size={24} color={themeColors.primary} />
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Notifications</Text>
             </View>
-            <AntDesign name="right" size={18} color={colors.textSecondary} />
+            <AntDesign name="right" size={18} color={themeColors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -198,3 +198,5 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
+
+

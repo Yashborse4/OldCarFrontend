@@ -19,6 +19,8 @@ import { useTheme } from '../../theme';
 import { Button } from '../../components/ui/Button';
 import { RootStackParamList } from '../../navigation/types';
 
+type IconProps = React.ComponentProps<typeof MaterialIcons>['name'];
+
 interface Notification {
   id: string;
   type: 'new_listing' | 'inquiry' | 'co_listing' | 'message' | 'group_invite' | 'price_alert' | 'system';
@@ -244,7 +246,7 @@ const NotificationsScreen: React.FC = () => {
     }
   };
 
-  const getNotificationIcon = (type: Notification['type']) => {
+  const getNotificationIcon = (type: Notification['type']): { name: IconProps; color: string } => {
     switch (type) {
       case 'inquiry':
         return { name: 'question-answer', color: '#2196F3' };
@@ -306,7 +308,7 @@ const NotificationsScreen: React.FC = () => {
           
           {item.actionable && (
             <View style={styles.actionIndicator}>
-              <MaterialIcons name="chevron-right" size={16} color={colors.primary} />
+              <MaterialIcons name="chevron-right" size={16} color={themeColors.primary} />
             </View>
           )}
         </View>
@@ -346,7 +348,7 @@ const NotificationsScreen: React.FC = () => {
           <View style={styles.settingsHeader}>
             <Text style={styles.settingsTitle}>Notification Settings</Text>
             <TouchableOpacity onPress={() => setShowSettings(false)}>
-              <MaterialIcons name="close" size={24} color={colors.text} />
+              <MaterialIcons name="close" size={24} color={themeColors.text} />
             </TouchableOpacity>
           </View>
           
@@ -361,7 +363,7 @@ const NotificationsScreen: React.FC = () => {
                   onValueChange={(newValue) => 
                     setSettings(prev => ({ ...prev, [key]: newValue }))
                   }
-                  trackColor={{ false: '#ddd', true: colors.primary }}
+                  trackColor={{ false: '#ddd', true: themeColors.primary }}
                   thumbColor={value ? '#fff' : '#f4f3f4'}
                 />
               </View>
@@ -392,7 +394,7 @@ const NotificationsScreen: React.FC = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+          <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
         </TouchableOpacity>
         
         <Text style={styles.headerTitle}>Notifications</Text>
@@ -402,7 +404,7 @@ const NotificationsScreen: React.FC = () => {
             style={styles.headerButton}
             onPress={() => setShowSettings(true)}
           >
-            <MaterialIcons name="settings" size={24} color={colors.text} />
+            <MaterialIcons name="settings" size={24} color={themeColors.text} />
           </TouchableOpacity>
           
           {unreadCount > 0 && (
@@ -410,7 +412,7 @@ const NotificationsScreen: React.FC = () => {
               style={styles.headerButton}
               onPress={markAllAsRead}
             >
-              <MaterialCommunityIcons name="check-all" size={24} color={colors.primary} />
+              <MaterialCommunityIcons name="check-all" size={24} color={themeColors.primary} />
             </TouchableOpacity>
           )}
         </View>
@@ -642,4 +644,6 @@ const styles = StyleSheet.create({
 });
 
 export default NotificationsScreen;
+
+
 

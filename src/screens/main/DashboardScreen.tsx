@@ -201,7 +201,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
   const styles = StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: themeColors.background,
     },
     header: {
       flexDirection: 'row',
@@ -219,7 +219,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
     headerTitle: {
       fontSize: 22,
       fontWeight: '700',
-      color: colors.text,
+      color: themeColors.text,
       letterSpacing: 0.2,
     },
     headerCityCard: {
@@ -228,10 +228,10 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 12,
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       elevation: 2,
       marginHorizontal: 8,
-      shadowColor: colors.shadow,
+      shadowColor: themeColors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
@@ -240,7 +240,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
       fontSize: 14,
       fontWeight: '600',
       marginLeft: 6,
-      color: colors.text,
+      color: themeColors.text,
     },
     scrollViewContent: {
       flexGrow: 1,
@@ -257,9 +257,9 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
       paddingHorizontal: 20,
       paddingVertical: 12,
       marginBottom: 16,
-      borderColor: colors.border,
-      backgroundColor: isDark ? colors.surface : '#F5F5F5',
-      shadowColor: colors.shadow,
+      borderColor: themeColors.border,
+      backgroundColor: isDark ? themeColors.surface : '#F5F5F5',
+      shadowColor: themeColors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.08,
       shadowRadius: 4,
@@ -271,7 +271,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
       paddingVertical: 0,
       paddingHorizontal: 12,
       backgroundColor: 'transparent',
-      color: colors.text,
+      color: themeColors.text,
     },
     bannerContainer: {
       height: height * 0.22,
@@ -336,7 +336,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
     sectionTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: colors.text,
+      color: themeColors.text,
       letterSpacing: 0.1,
     },
     viewAllButton: {
@@ -345,7 +345,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
     },
     viewAllText: {
       fontWeight: '600',
-      color: colors.primary,
+      color: themeColors.primary,
       fontSize: 14,
     },
     quickActionsGrid: {
@@ -359,10 +359,10 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
       justifyContent: 'center',
       width: width * 0.20,
       height: width * 0.20,
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       borderRadius: 16,
       elevation: 3,
-      shadowColor: colors.shadow,
+      shadowColor: themeColors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.10,
       shadowRadius: 4,
@@ -374,22 +374,22 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
     quickActionLabel: {
       fontSize: 12,
       fontWeight: '500',
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       textAlign: 'center',
     },
     carCard: {
       width: width * 0.75,
       marginRight: 16,
       borderRadius: 20,
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       overflow: 'hidden',
       elevation: 4,
-      shadowColor: colors.shadow,
+      shadowColor: themeColors.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.12,
       shadowRadius: 8,
       borderWidth: isDark ? 1 : 0,
-      borderColor: colors.border,
+      borderColor: themeColors.border,
     },
     carImageContainer: {
       position: 'relative',
@@ -432,7 +432,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
     carTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.text,
+      color: themeColors.text,
       flex: 1,
       marginRight: 8,
     },
@@ -450,7 +450,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
       backgroundColor: '#30D158',
     },
     badgePrimary: {
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
     },
     badgeText: {
       fontSize: 10,
@@ -462,7 +462,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
     },
     carSpecs: {
       fontSize: 13,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       marginTop: 4,
     },
     carFooter: {
@@ -480,16 +480,16 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
     carPrice: {
       fontSize: 18,
       fontWeight: '700',
-      color: colors.primary,
+      color: themeColors.primary,
     },
     originalPrice: {
       fontSize: 12,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       textDecorationLine: 'line-through',
       marginTop: 2,
     },
     detailsButton: {
-      backgroundColor: colors.primary,
+      backgroundColor: themeColors.primary,
       paddingHorizontal: 16,
       paddingVertical: 8,
       borderRadius: 8,
@@ -506,7 +506,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
     },
     ratingText: {
       fontSize: 12,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
       marginLeft: 4,
     },
     bottomTabs: {
@@ -516,8 +516,8 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
       paddingVertical: 10,
       paddingBottom: 18,
       borderTopWidth: 1,
-      borderTopColor: colors.border,
-      backgroundColor: colors.surface,
+      borderTopColor: themeColors.border,
+      backgroundColor: themeColors.surface,
       position: 'absolute',
       left: 0,
       right: 0,
@@ -547,16 +547,16 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
       borderRadius: 12,
     },
     tabIconActive: {
-      backgroundColor: `${colors.primary}20`,
+      backgroundColor: `${themeColors.primary}20`,
     },
     tabLabel: {
       fontSize: 12,
       marginTop: 4,
-      color: colors.textSecondary,
+      color: themeColors.textSecondary,
     },
     tabLabelActive: {
       fontWeight: '700',
-      color: colors.primary,
+      color: themeColors.primary,
     },
     modalOverlay: {
       flex: 1,
@@ -566,11 +566,11 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
     },
     modalContent: {
       width: 280,
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       borderRadius: 20,
       paddingVertical: 20,
       elevation: 10,
-      shadowColor: colors.shadow,
+      shadowColor: themeColors.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.25,
       shadowRadius: 16,
@@ -579,7 +579,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
     modalTitle: {
       fontSize: 18,
       fontWeight: '700',
-      color: colors.text,
+      color: themeColors.text,
       textAlign: 'center',
       marginBottom: 20,
     },
@@ -587,24 +587,24 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
       paddingVertical: 12,
       paddingHorizontal: 20,
       borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      borderBottomColor: themeColors.border,
     },
     cityText: {
       fontSize: 16,
-      color: colors.text,
+      color: themeColors.text,
       textAlign: 'center',
     },
     cityTextSelected: {
-      color: colors.primary,
+      color: themeColors.primary,
       fontWeight: '600',
     },
     drawer: {
       width: width * 0.75,
       height: '100%',
-      backgroundColor: colors.surface,
+      backgroundColor: themeColors.surface,
       padding: 20,
       paddingTop: 50,
-      shadowColor: colors.shadow,
+      shadowColor: themeColors.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.25,
       shadowRadius: 8,
@@ -617,7 +617,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
     drawerTitle: {
       fontSize: 22,
       fontWeight: '700',
-      color: colors.text,
+      color: themeColors.text,
       marginBottom: 20,
     },
     logoutButton: {
@@ -648,7 +648,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
     drawerOptionText: {
       fontSize: 16,
       fontWeight: '500',
-      color: colors.text,
+      color: themeColors.text,
       marginLeft: 12,
     },
   });
@@ -678,35 +678,35 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
           <View style={{ marginTop: 30 }}>
             <TouchableOpacity style={styles.drawerOption} onPress={handleComingSoon}>
               <View style={styles.drawerOptionContent}>
-                <AntDesign name="car" size={20} color={colors.text} />
+                <AntDesign name="car" size={20} color={themeColors.text} />
                 <Text style={styles.drawerOptionText}>My Garage</Text>
               </View>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.drawerOption} onPress={handleComingSoon}>
               <View style={styles.drawerOptionContent}>
-                <AntDesign name="heart" size={20} color={colors.text} />
+                <AntDesign name="heart" size={20} color={themeColors.text} />
                 <Text style={styles.drawerOptionText}>Saved Cars</Text>
               </View>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.drawerOption} onPress={handleComingSoon}>
               <View style={styles.drawerOptionContent}>
-                <MaterialIcons name="history" size={20} color={colors.text} />
+                <MaterialIcons name="history" size={20} color={themeColors.text} />
                 <Text style={styles.drawerOptionText}>View History</Text>
               </View>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.drawerOption} onPress={handleComingSoon}>
               <View style={styles.drawerOptionContent}>
-                <MaterialIcons name="support-agent" size={20} color={colors.text} />
+                <MaterialIcons name="support-agent" size={20} color={themeColors.text} />
                 <Text style={styles.drawerOptionText}>Support</Text>
               </View>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.drawerOption} onPress={handleComingSoon}>
               <View style={styles.drawerOptionContent}>
-                <AntDesign name="infocircle" size={20} color={colors.text} />
+                <AntDesign name="info-circle" size={20} color={themeColors.text} />
                 <Text style={styles.drawerOptionText}>About Us</Text>
               </View>
             </TouchableOpacity>
@@ -825,7 +825,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
         </View>
         
         <TouchableOpacity style={styles.favoriteButton}>
-          <AntDesign name="hearto" size={16} color="#FFFFFF" />
+          <AntDesign name="heart" size={16} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
       
@@ -896,7 +896,7 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
         <AntDesign 
           name={tab.icon as any} 
           size={20} 
-          color={idx === 0 ? colors.primary : colors.textSecondary}
+          color={idx === 0 ? themeColors.primary : themeColors.textSecondary}
         />
       </View>
       <Text style={[styles.tabLabel, idx === 0 && styles.tabLabelActive]}>
@@ -924,12 +924,12 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
             style={styles.headerCityCard} 
             onPress={() => setCityModalVisible(true)}
           >
-            <MaterialIcons name="location-pin" size={18} color={colors.text} />
+            <MaterialIcons name="location-pin" size={18} color={themeColors.text} />
             <Text style={styles.headerCityText}>{selectedCity}</Text>
-            <AntDesign name="caretdown" size={12} color={colors.text} style={{ marginLeft: 4 }} />
+            <AntDesign name="caret-down" size={12} color={themeColors.text} style={{ marginLeft: 4 }} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerButton} onPress={() => setDrawerVisible(true)}>
-            <AntDesign name="menuunfold" size={24} color={colors.text} />
+            <AntDesign name="menu-unfold" size={24} color={themeColors.text} />
           </TouchableOpacity>
         </View>
       </View>
@@ -941,17 +941,17 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
+            colors={[themeColors.primary]}
+            tintColor={themeColors.primary}
           />
         }
       >
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <AntDesign name="search" size={20} color={colors.textSecondary} />
+          <AntDesign name="search" size={20} color={themeColors.textSecondary} />
           <TextInput
             placeholder="Search for cars..."
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -1005,4 +1005,6 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
 const DashboardScreen = withOverlayNetworkHandling(DashboardScreenBase);
 
 export default DashboardScreen;
+
+
 

@@ -9,17 +9,17 @@ const SettingsScreen = () => {
   const { isDark, toggleTheme, colors } = useTheme();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
+        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Settings</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Appearance</Text>
+        <Text style={[styles.sectionTitle, { color: themeColors.textSecondary }]}>Appearance</Text>
         <Animatable.View 
           animation={isDark ? "fadeIn" : "fadeIn"}
           duration={500}
-          style={[styles.card, { backgroundColor: colors.surface }]}
+          style={[styles.card, { backgroundColor: themeColors.surface }]}
         >
           <TouchableOpacity style={styles.row} onPress={toggleTheme}>
             <MaterialIcons 
@@ -27,7 +27,7 @@ const SettingsScreen = () => {
               size={24} 
               color={'#FFD700'} 
             />
-            <Text style={[styles.rowLabel, { color: colors.text }]}>
+            <Text style={[styles.rowLabel, { color: themeColors.text }]}>
               {isDark ? "Dark Mode" : "Light Mode"}
             </Text>
             <Switch 
@@ -42,11 +42,11 @@ const SettingsScreen = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Premium Features</Text>
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: themeColors.textSecondary }]}>Premium Features</Text>
+        <View style={[styles.card, { backgroundColor: themeColors.surface }]}>
           <TouchableOpacity style={styles.row}>
             <MaterialIcons name="workspace-premium" size={24} color={'#FFD700'} />
-            <Text style={[styles.rowLabel, { color: colors.text }]}>Premium Midnight Gold</Text>
+            <Text style={[styles.rowLabel, { color: themeColors.text }]}>Premium Midnight Gold</Text>
             <MaterialIcons name="check-circle" size={24} color={'#FFD700'} />
           </TouchableOpacity>
         </View>
@@ -100,4 +100,6 @@ const styles = StyleSheet.create({
 });
 
 export default SettingsScreen;
+
+
 
