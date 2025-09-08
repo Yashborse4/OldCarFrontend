@@ -1,4 +1,4 @@
-import React, { memo, useRef, useEffect, useState } from 'react';
+import React, { memo, useRef, useCallback, useState } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -8,38 +8,25 @@ import {
   View,
   StyleSheet,
   Animated,
-  Platform,
   Pressable,
   Easing,
+  Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { BlurView } from '@react-native-community/blur';
 import { useTheme } from '../../theme';
 import * as Animatable from 'react-native-animatable';
-import { 
-  scale, 
-  FONT_SIZES, 
-  DIMENSIONS, 
-  getResponsiveValue, 
-  COMMON_STYLES,
-  SPACING 
-} from '../../utils/responsive';
-import { 
-  useOptimizedCallback, 
-  withPerformanceTracking,
-  ANIMATION_CONFIG,
-  useDebounce 
-} from '../../utils/performance';
+import { spacing, borderRadius, typography, shadows, colors as designTokens } from '../../design-system/tokens';
 
 export interface ButtonProps {
   // Core props
   title: string;
-  onPress: () => void;
+  onPress?: () => void;
   
   // Appearance
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient' | 'danger' | 'success' | 'warning' | 'glass';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient' | 'danger' | 'success' | 'warning' | 'glass' | 'subtle';
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  radius?: keyof typeof borderRadius;
   
   // State
   disabled?: boolean;
@@ -53,27 +40,24 @@ export interface ButtonProps {
   
   // Layout
   fullWidth?: boolean;
-  shadow?: boolean;
-  elevation?: boolean;
   
   // Styling
   style?: ViewStyle;
   textStyle?: TextStyle;
-  pressedStyle?: ViewStyle;
   
   // Animation & Interaction
-  animationType?: 'bounce' | 'pulse' | 'fadeIn' | 'scale' | 'glow' | 'none';
+  animationType?: 'bounce' | 'pulse' | 'scale' | 'glow' | 'none';
   hapticFeedback?: boolean;
-  debounceMs?: number;
   rippleEffect?: boolean;
   
   // Accessibility
   testID?: string;
   accessibilityLabel?: string;
   accessibilityHint?: string;
+  accessibilityRole?: string;
 }
 
-export const Button: React.FC<ButtonProps> = ({
+export const Button: React.FC<ButtonProps> = memo(({
   title,
   onPress,
   variant = 'primary',
@@ -83,83 +67,86 @@ export const Button: React.FC<ButtonProps> = ({
   icon,
   iconPosition = 'left',
   fullWidth = false,
-  borderRadius = 'lg',
-  shadow = true,
-  elevation = true,
+  radius = 'lg',
   style,
   textStyle,
-  pressedStyle,
   animationType = 'scale',
   rippleEffect = true,
-  debounceMs = 150,
   testID,
+  accessibilityLabel,
+  accessibilityHint,
+  accessibilityRole = 'button',
 }) => {
-  const { colors, typography, spacing, borderRadius: radius, shadows } = useTheme();
+  const { themeColors, isDark } = useTheme();
   const [isPressed, setIsPressed] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
   const rippleAnim = useRef(new Animated.Value(0)).current;
 
   // Animation handlers
-  const handlePressIn = () => {
+  const handlePressIn = useCallback(() => {
+    if (disabled || loading) return;
+    
     setIsPressed(true);
+    
     if (animationType === 'scale') {
       Animated.spring(scaleAnim, {
-        toValue: 0.95,
-        tension: 300,
-        friction: 10,
+        toValue: 0.96,
+        tension: 400,
+        friction: 12,
         useNativeDriver: true,
       }).start();
     }
+    
     if (animationType === 'glow') {
       Animated.timing(glowAnim, {
         toValue: 1,
-        duration: 150,
-        easing: Easing.out(Easing.quad),
+        duration: 200,
+        easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
         useNativeDriver: false,
       }).start();
     }
+    
     if (rippleEffect) {
       rippleAnim.setValue(0);
       Animated.timing(rippleAnim, {
         toValue: 1,
-        duration: 600,
-        easing: Easing.out(Easing.quad),
+        duration: 500,
+        easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
         useNativeDriver: true,
       }).start();
     }
-  };
+  }, [animationType, rippleEffect, disabled, loading, scaleAnim, glowAnim, rippleAnim]);
 
-  const handlePressOut = () => {
+  const handlePressOut = useCallback(() => {
     setIsPressed(false);
+    
     if (animationType === 'scale') {
       Animated.spring(scaleAnim, {
         toValue: 1,
-        tension: 300,
-        friction: 10,
+        tension: 400,
+        friction: 12,
         useNativeDriver: true,
       }).start();
     }
+    
     if (animationType === 'glow') {
       Animated.timing(glowAnim, {
         toValue: 0,
         duration: 300,
-        easing: Easing.out(Easing.quad),
+        easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
         useNativeDriver: false,
       }).start();
     }
-  };
+  }, [animationType, scaleAnim, glowAnim]);
 
-  // Debounced press handler
-  const debouncedOnPress = useDebounce(onPress, debounceMs);
-
-  const getButtonStyle = (): ViewStyle => {
+  const getButtonStyle = useCallback((): ViewStyle => {
     const baseStyle: ViewStyle = {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: radius[borderRadius],
-      opacity: disabled ? 0.6 : 1,
+      borderRadius: borderRadius[radius],
+      opacity: disabled ? 0.5 : 1,
       position: 'relative',
       overflow: 'hidden',
     };
@@ -173,7 +160,7 @@ export const Button: React.FC<ButtonProps> = ({
       sm: {
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
-        minHeight: 36,
+        minHeight: 40,
       },
       md: {
         paddingHorizontal: spacing.lg,
@@ -187,127 +174,124 @@ export const Button: React.FC<ButtonProps> = ({
       },
       xl: {
         paddingHorizontal: spacing['2xl'],
-        paddingVertical: spacing.lg,
+        paddingVertical: spacing.xl,
         minHeight: 64,
       },
     };
 
     const variantStyles = {
       primary: {
-        backgroundColor: colors.primary,
-        ...(shadow ? shadows.md : {}),
+        backgroundColor: themeColors.primary,
+        ...shadows.md,
       },
       secondary: {
-        backgroundColor: colors.secondary,
-        ...(shadow ? shadows.md : {}),
+        backgroundColor: themeColors.secondary,
+        ...shadows.sm,
       },
       outline: {
         backgroundColor: 'transparent',
-        borderWidth: 2,
-        borderColor: colors.primary,
+        borderWidth: 1.5,
+        borderColor: themeColors.primary,
       },
       ghost: {
         backgroundColor: 'transparent',
       },
+      subtle: {
+        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+        borderWidth: 1,
+        borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+      },
       gradient: {
-        ...(shadow ? shadows.lg : {}),
+        ...shadows.lg,
       },
       danger: {
-        backgroundColor: colors.error,
-        ...(shadow ? shadows.md : {}),
+        backgroundColor: themeColors.error,
+        ...shadows.md,
       },
       success: {
-        backgroundColor: colors.success,
-        ...(shadow ? shadows.md : {}),
+        backgroundColor: themeColors.success,
+        ...shadows.md,
       },
       warning: {
-        backgroundColor: colors.warning,
-        ...(shadow ? shadows.md : {}),
+        backgroundColor: themeColors.warning,
+        ...shadows.md,
       },
       glass: {
-        backgroundColor: colors.glass,
+        backgroundColor: themeColors.glass,
         borderWidth: 1,
-        borderColor: colors.glassBorder,
+        borderColor: themeColors.glassBorder,
         backdropFilter: 'blur(10px)',
       },
     };
+
 
     return {
       ...baseStyle,
       ...sizeStyles[size],
       ...variantStyles[variant],
       width: fullWidth ? '100%' : undefined,
-      ...(isPressed ? pressedStyle : {}),
       ...style,
     };
-  };
+  }, [variant, size, disabled, isDark, fullWidth, style, radius]);
 
-  const getTextStyle = (): TextStyle => {
+  const getTextStyle = useCallback((): TextStyle => {
     const sizeStyles = {
       xs: {
         fontSize: typography.fontSizes.xs,
+        lineHeight: typography.fontSizes.xs * 1.4,
       },
       sm: {
         fontSize: typography.fontSizes.sm,
+        lineHeight: typography.fontSizes.sm * 1.4,
       },
       md: {
-        fontSize: typography.fontSizes.md,
+        fontSize: typography.fontSizes.base,
+        lineHeight: typography.fontSizes.base * 1.4,
       },
       lg: {
         fontSize: typography.fontSizes.lg,
+        lineHeight: typography.fontSizes.lg * 1.4,
       },
       xl: {
         fontSize: typography.fontSizes.xl,
+        lineHeight: typography.fontSizes.xl * 1.4,
       },
     };
 
-    const variantStyles = {
-      primary: {
-        color: '#1A202C',
-        fontWeight: typography.fontWeights.semibold as any,
-      },
-      secondary: {
-        color: colors.surface,
-        fontWeight: typography.fontWeights.semibold as any,
-      },
-      outline: {
-        color: colors.primary,
-        fontWeight: typography.fontWeights.semibold as any,
-      },
-      ghost: {
-        color: colors.text,
-        fontWeight: typography.fontWeights.medium as any,
-      },
-      gradient: {
-        color: '#1A202C',
-        fontWeight: typography.fontWeights.bold as any,
-      },
-      danger: {
-        color: '#FFFFFF',
-        fontWeight: typography.fontWeights.semibold as any,
-      },
-      success: {
-        color: '#FFFFFF',
-        fontWeight: typography.fontWeights.semibold as any,
-      },
-      warning: {
-        color: '#1A202C',
-        fontWeight: typography.fontWeights.semibold as any,
-      },
-      glass: {
-        color: colors.text,
-        fontWeight: typography.fontWeights.medium as any,
-      },
+    const getTextColor = () => {
+      switch (variant) {
+        case 'primary':
+        case 'gradient':
+          return isDark ? themeColors.background : designTokens.gray[900];
+        case 'secondary':
+        case 'danger':
+        case 'success':
+          return designTokens.white;
+        case 'outline':
+          return themeColors.primary;
+        case 'warning':
+          return designTokens.gray[900];
+        case 'ghost':
+        case 'subtle':
+          return themeColors.text;
+        case 'glass':
+          return themeColors.text;
+        default:
+          return themeColors.text;
+      }
     };
 
     return {
       ...sizeStyles[size],
-      ...variantStyles[variant],
+      color: getTextColor(),
+      fontWeight: typography.fontWeights.semibold,
+      textAlign: 'center' as const,
+      letterSpacing: typography.letterSpacing.wide,
       ...textStyle,
     };
-  };
+  }, [size, variant, colors, isDark, textStyle]);
 
-  const renderRipple = () => {
+  const renderRipple = useCallback(() => {
     if (!rippleEffect) return null;
     
     return (
@@ -319,49 +303,67 @@ export const Button: React.FC<ButtonProps> = ({
               {
                 scale: rippleAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [0, 4],
+                  outputRange: [0, 3],
                 }),
               },
             ],
             opacity: rippleAnim.interpolate({
               inputRange: [0, 1],
-              outputRange: [0.3, 0],
+              outputRange: [0.2, 0],
             }),
           },
         ]}
       />
     );
-  };
+  }, [rippleEffect, rippleAnim]);
 
-  const renderContent = () => (
-    <View style={styles.contentContainer}>
-      {loading && (
-        <ActivityIndicator
-          size={size === 'xs' || size === 'sm' ? 'small' : 'small'}
-          color={variant === 'outline' || variant === 'ghost' || variant === 'glass' ? colors.primary : '#1A202C'}
-          style={styles.loader}
-        />
-      )}
-      {icon && iconPosition === 'left' && !loading && (
-        <View style={styles.iconLeft}>{icon}</View>
-      )}
-      <Text style={getTextStyle()}>{title}</Text>
-      {icon && iconPosition === 'right' && !loading && (
-        <View style={styles.iconRight}>{icon}</View>
-      )}
-    </View>
-  );
+  const renderContent = useCallback(() => {
+    const indicatorColor = (() => {
+      switch (variant) {
+        case 'outline':
+        case 'ghost':
+        case 'subtle':
+        case 'glass':
+          return themeColors.primary;
+        case 'primary':
+        case 'gradient':
+        case 'warning':
+          return isDark ? themeColors.background : designTokens.gray[900];
+        default:
+          return designTokens.white;
+      }
+    })();
 
-  const renderButtonContent = () => {
+    return (
+      <View style={styles.contentContainer}>
+        {loading && (
+          <ActivityIndicator
+            size={size === 'xs' || size === 'sm' ? 'small' : 'small'}
+            color={indicatorColor}
+            style={styles.loader}
+          />
+        )}
+        {icon && iconPosition === 'left' && !loading && (
+          <View style={styles.iconLeft}>{icon}</View>
+        )}
+        {!loading && <Text style={getTextStyle()}>{title}</Text>}
+        {icon && iconPosition === 'right' && !loading && (
+          <View style={styles.iconRight}>{icon}</View>
+        )}
+      </View>
+    );
+  }, [loading, size, variant, colors, isDark, icon, iconPosition, title, getTextStyle]);
+
+  const renderButtonContent = useCallback(() => {
     const content = (
       <>
         {renderRipple()}
         {variant === 'glass' && (
           <BlurView
             style={StyleSheet.absoluteFillObject}
-            blurType="light"
-            blurAmount={10}
-            reducedTransparencyFallbackColor={colors.surface}
+            blurType={isDark ? "dark" : "light"}
+            blurAmount={8}
+            reducedTransparencyFallbackColor={themeColors.surface}
           />
         )}
         {renderContent()}
@@ -370,11 +372,11 @@ export const Button: React.FC<ButtonProps> = ({
             style={[
               StyleSheet.absoluteFillObject,
               {
-                borderRadius: radius[borderRadius],
-                backgroundColor: colors.primary,
+                borderRadius: borderRadius[radius],
+                backgroundColor: themeColors.primary,
                 opacity: glowAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [0, 0.1],
+                  outputRange: [0, 0.15],
                 }),
               },
             ]}
@@ -384,11 +386,15 @@ export const Button: React.FC<ButtonProps> = ({
     );
 
     if (variant === 'gradient') {
+      const gradientColors = isDark 
+        ? [designTokens.primary[400], designTokens.primary[500], designTokens.primary[600]]
+        : [designTokens.primary[300], designTokens.primary[400], designTokens.primary[500]];
+        
       return (
         <LinearGradient
-          colors={['#FFD700', '#F7931E', '#D4AF37']}
+          colors={gradientColors}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={getButtonStyle()}
         >
           {content}
@@ -397,7 +403,12 @@ export const Button: React.FC<ButtonProps> = ({
     }
 
     return <View style={getButtonStyle()}>{content}</View>;
-  };
+  }, [variant, isDark, renderRipple, renderContent, animationType, glowAnim, borderRadius, radius, colors, getButtonStyle]);
+
+  const handlePress = useCallback(() => {
+    if (disabled || loading || !onPress) return;
+    onPress();
+  }, [disabled, loading, onPress]);
 
   const ButtonComponent = animationType === 'bounce' || animationType === 'pulse' ? 
     Animatable.createAnimatableComponent(Pressable) : Pressable;
@@ -409,22 +420,29 @@ export const Button: React.FC<ButtonProps> = ({
       }}
     >
       <ButtonComponent
-        onPress={disabled || loading ? undefined : debouncedOnPress}
+        onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         disabled={disabled || loading}
         testID={testID}
+        accessibilityLabel={accessibilityLabel || title}
+        accessibilityHint={accessibilityHint}
+        accessibilityRole={accessibilityRole as any}
+        accessibilityState={{
+          disabled: disabled || loading,
+          selected: isPressed,
+        }}
         animation={animationType === 'bounce' || animationType === 'pulse' ? animationType : undefined}
         duration={animationType === 'bounce' || animationType === 'pulse' ? 600 : undefined}
         style={({ pressed }) => [{
-          opacity: pressed && !disabled ? 0.9 : 1,
+          opacity: pressed && !disabled ? 0.95 : 1,
         }]}
       >
         {renderButtonContent()}
       </ButtonComponent>
     </Animated.View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   contentContainer: {
@@ -434,27 +452,30 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   loader: {
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
   iconLeft: {
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
   iconRight: {
-    marginLeft: 8,
+    marginLeft: spacing.sm,
   },
   ripple: {
     position: 'absolute',
     top: '50%',
     left: '50%',
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginTop: -10,
-    marginLeft: -10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    marginTop: -12,
+    marginLeft: -12,
     zIndex: 1,
   },
 });
 
+export { Button };
 export default Button;
+
+
 

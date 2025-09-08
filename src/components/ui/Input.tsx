@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, forwardRef } from 'react';
 import {
   TextInput,
   View,
@@ -9,57 +9,75 @@ import {
   TextInputProps,
   ViewStyle,
   TextStyle,
+  Platform,
 } from 'react-native';
 import { useTheme } from '../../theme';
+import { spacing, borderRadius, typography, shadows } from '../../design-system/tokens';
 import * as Animatable from 'react-native-animatable';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 
 export interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
   hint?: string;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
+  leftIcon?: string; // Icon name from MaterialIcons
+  rightIcon?: string; // Icon name from MaterialIcons
   onRightIconPress?: () => void;
-  variant?: 'default' | 'outline' | 'filled' | 'glass';
+  variant?: 'default' | 'outline' | 'filled' | 'glass' | 'minimal';
   size?: 'sm' | 'md' | 'lg';
-  borderRadius?: 'sm' | 'md' | 'lg' | 'xl';
+  radius?: keyof typeof borderRadius;
   containerStyle?: ViewStyle;
   showCharacterCount?: boolean;
   maxLength?: number;
   floatingLabel?: boolean;
   required?: boolean;
+  disabled?: boolean;
+  success?: boolean;
+  loading?: boolean;
   testID?: string;
 }
 
-export const Input: React.FC<InputProps> = ({
-  label,
-  error,
-  hint,
-  leftIcon,
-  rightIcon,
-  onRightIconPress,
-  variant = 'default',
-  size = 'md',
-  borderRadius = 'md',
-  containerStyle,
-  showCharacterCount = false,
-  maxLength,
-  floatingLabel = true,
-  required = false,
-  testID,
-  value = '',
-  onFocus,
-  onBlur,
-  style,
-  ...props
-}) => {
-  const { colors, typography, spacing, borderRadius: radius, shadows } = useTheme();
+export const Input = forwardRef<TextInput, InputProps>((
+  {
+    label,
+    error,
+    hint,
+    leftIcon,
+    rightIcon,
+    onRightIconPress,
+    variant = 'default',
+    size = 'md',
+    radius = 'lg',
+    containerStyle,
+    showCharacterCount = false,
+    maxLength,
+    floatingLabel = true,
+    required = false,
+    disabled = false,
+    success = false,
+    loading = false,
+    testID,
+    value = '',
+    onFocus,
+    onBlur,
+    style,
+    ...props
+  }: InputProps,
+  ref: React.ForwardedRef<TextInput>
+) => {
+  const { colors, isDark } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
   const [characterCount, setCharacterCount] = useState(value?.length || 0);
+  const [isPasswordVisible, setPasswordVisible] = useState(false);
   const labelAnimation = useRef(new Animated.Value(value ? 1 : 0)).current;
+  const focusAnimation = useRef(new Animated.Value(0)).current;
 
-  const handleFocus = (e: any) => {
+  const handleFocus = useCallback((e: any) => {
+    if (disabled) return;
+    
     setIsFocused(true);
+    
+    // Animate label and focus indicator
     if (floatingLabel && label) {
       Animated.timing(labelAnimation, {
         toValue: 1,
@@ -67,11 +85,20 @@ export const Input: React.FC<InputProps> = ({
         useNativeDriver: false,
       }).start();
     }
+    
+    Animated.timing(focusAnimation, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+    
     onFocus?.(e);
-  };
+  }, [disabled, floatingLabel, label, labelAnimation, focusAnimation, onFocus]);
 
-  const handleBlur = (e: any) => {
+  const handleBlur = useCallback((e: any) => {
     setIsFocused(false);
+    
+    // Animate label back if no value
     if (floatingLabel && label && !value) {
       Animated.timing(labelAnimation, {
         toValue: 0,
@@ -79,13 +106,24 @@ export const Input: React.FC<InputProps> = ({
         useNativeDriver: false,
       }).start();
     }
+    
+    Animated.timing(focusAnimation, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+    
     onBlur?.(e);
-  };
+  }, [floatingLabel, label, value, labelAnimation, focusAnimation, onBlur]);
 
-  const handleChangeText = (text: string) => {
+  const handleChangeText = useCallback((text: string) => {
     setCharacterCount(text.length);
     props.onChangeText?.(text);
-  };
+  }, [props.onChangeText]);
+
+  const togglePasswordVisibility = useCallback(() => {
+    setPasswordVisible(!isPasswordVisible);
+  }, [isPasswordVisible]);
 
   const getContainerStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
@@ -114,73 +152,92 @@ export const Input: React.FC<InputProps> = ({
       },
     };
 
-    const variantStyles = {
+    type InputVariant = 'default' | 'outline' | 'filled' | 'glass' | 'minimal';
+    const variantStyles: Record<InputVariant, ViewStyle> = {
       default: {
-        backgroundColor: colors.inputBackground,
+        backgroundColor: (colors as any).background,
         borderWidth: 1,
-        borderColor: error ? colors.error : isFocused ? colors.primary : colors.inputBorder,
+        borderColor: error ? (colors as any).error : (isFocused ? (colors as any).primary : (colors as any).border),
       },
       outline: {
         backgroundColor: 'transparent',
-        borderWidth: 2,
-        borderColor: error ? colors.error : isFocused ? colors.primary : colors.border,
+        borderWidth: 1,
+        borderColor: error ? (colors as any).error : (isFocused ? (colors as any).primary : (colors as any).border),
       },
       filled: {
-        backgroundColor: colors.surface,
-        borderWidth: 0,
-        ...shadows.sm,
+        backgroundColor: (colors as any).background,
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+        borderWidth: 1,
       },
       glass: {
-        backgroundColor: colors.glass,
-        borderWidth: 1,
-        borderColor: colors.glassBorder,
-        backdropFilter: 'blur(10px)',
+        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+        borderWidth: 0,
+      },
+      minimal: {
+        backgroundColor: 'transparent',
+        borderWidth: 0,
+        borderBottomWidth: 1,
+        borderRadius: 0,
+        borderColor: error ? (colors as any).error : (isFocused ? (colors as any).primary : (colors as any).border),
       },
     };
 
     return {
       flexDirection: 'row',
       alignItems: 'center',
-      borderRadius: radius[borderRadius],
+      borderRadius: radius === 'sm' ? 8 : radius === 'lg' ? 16 : 12,
       ...sizeStyles[size],
       ...variantStyles[variant],
     };
   };
 
   const getInputStyle = (): TextStyle => {
-    const sizeStyles = {
-      sm: {
-        fontSize: typography.fontSizes.sm,
-      },
-      md: {
-        fontSize: typography.fontSizes.md,
-      },
-      lg: {
-        fontSize: typography.fontSizes.lg,
-      },
+    const baseStyle: TextStyle = {
+      flex: 1,
+      padding: 0,
+      margin: 0,
+      color: (colors as any).text || '#000000',
+      fontFamily: 'System',
+      fontSize: size === 'sm' ? (typography.fontSizes as any).sm || 14 : 
+               size === 'lg' ? (typography.fontSizes as any).lg || 18 : 
+               (typography.fontSizes as any).base || 16,
+      ...(style as any),
     };
 
-    return {
-      flex: 1,
-      color: colors.inputText,
-      ...sizeStyles[size],
-      ...(style as object),
-    };
+    if (variant === 'minimal') {
+      return {
+        ...baseStyle,
+        paddingVertical: 0,
+        paddingHorizontal: 0,
+      };
+    }
+
+    return baseStyle;
   };
 
-  const getLabelStyle = () => {
-    if (!floatingLabel || !label) return null;
+  const getLabelStyle = (): any => {
+    if (!floatingLabel || !label) return {};
+    
+    const baseFontSize = size === 'sm' ? (typography.fontSizes as any).sm || 14 : 
+                        size === 'lg' ? (typography.fontSizes as any).lg || 18 : 
+                        (typography.fontSizes as any).base || 16;
 
     return {
-      position: 'absolute' as const,
+      position: 'absolute',
       left: leftIcon ? spacing.xl + spacing.md : spacing.md,
-      backgroundColor: colors.background,
-      paddingHorizontal: spacing.xs,
-      color: error ? colors.error : isFocused ? colors.primary : colors.textSecondary,
+      fontFamily: 'System',
       fontSize: labelAnimation.interpolate({
         inputRange: [0, 1],
-        outputRange: [typography.fontSizes.md, typography.fontSizes.sm],
+        outputRange: [baseFontSize, (typography.fontSizes as any).sm || 12],
       }),
+      color: error ? (colors as any).error : isFocused ? (colors as any).primary : (colors as any).textSecondary,
+      backgroundColor: (colors as any).background,
+      paddingHorizontal: spacing.xs,
+      zIndex: 1,
       top: labelAnimation.interpolate({
         inputRange: [0, 1],
         outputRange: [size === 'lg' ? 16 : size === 'md' ? 12 : 8, -8],
@@ -197,7 +254,7 @@ export const Input: React.FC<InputProps> = ({
       {!floatingLabel && label && (
         <Text style={styles.staticLabel}>
           {label}
-          {required && <Text style={[styles.required, { color: colors.error }]}>*</Text>}
+          {required && <Text style={[styles.required, { color: (colors as any).error }]}>*</Text>}
         </Text>
       )}
 
@@ -216,7 +273,7 @@ export const Input: React.FC<InputProps> = ({
           onBlur={handleBlur}
           onChangeText={handleChangeText}
           placeholder={floatingLabel ? undefined : props.placeholder}
-          placeholderTextColor={colors.placeholder}
+          placeholderTextColor={(colors as any).placeholder}
           maxLength={maxLength}
           testID={testID}
         />
@@ -234,31 +291,31 @@ export const Input: React.FC<InputProps> = ({
         {floatingLabel && label && (
           <Animated.Text style={getLabelStyle()}>
             {label}
-            {required && <Text style={[styles.required, { color: colors.error }]}>*</Text>}
+            {required && <Text style={[styles.required, { color: (colors as any).error }]}>*</Text>}
           </Animated.Text>
         )}
       </View>
 
       {error && (
-        <Text style={[styles.errorText, { color: colors.error }]}>
+        <Text style={[styles.errorText, { color: (colors as any).error }]}>
           {error}
         </Text>
       )}
 
       {hint && !error && (
-        <Text style={[styles.hintText, { color: colors.textSecondary }]}>
+        <Text style={[styles.hintText, { color: (colors as any).textSecondary }]}>
           {hint}
         </Text>
       )}
 
       {showCharacterCount && maxLength && (
-        <Text style={[styles.characterCount, { color: colors.textTertiary }]}>
+        <Text style={[styles.characterCount, { color: (colors as any).textTertiary }]}>
           {characterCount}/{maxLength}
         </Text>
       )}
     </Animatable.View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   staticLabel: {
@@ -294,4 +351,6 @@ const styles = StyleSheet.create({
 });
 
 export default Input;
+
+
 

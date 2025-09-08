@@ -93,10 +93,10 @@ const ToastItem: React.FC<ToastItemProps> = ({
         };
       default:
         return {
-          background: [colors.surface, colors.card],
-          border: colors.border,
-          icon: colors.text,
-          text: colors.text,
+          background: [themeColors.surface, themeColors.card],
+          border: themeColors.border,
+          icon: themeColors.text,
+          text: themeColors.text,
           glow: 'rgba(0, 0, 0, 0.1)',
         };
     }
@@ -107,13 +107,13 @@ const ToastItem: React.FC<ToastItemProps> = ({
     
     switch (type) {
       case 'success':
-        return <AntDesign name="checkcircle" size={24} color={toastColors.icon} />;
+        return <AntDesign name="checkcircle1" size={24} color={toastColors.icon} />;
       case 'error':
         return <AntDesign name="closecircle" size={24} color={toastColors.icon} />;
       case 'warning':
-        return <AntDesign name="exclamationcircle" size={24} color={toastColors.icon} />;
+        return <AntDesign name="exclamationcircle1" size={24} color={toastColors.icon} />;
       case 'info':
-        return <AntDesign name="infocirlce" size={24} color={toastColors.icon} />;
+        return <AntDesign name="infocircle1" size={24} color={toastColors.icon} />;
       default:
         return <MaterialIcons name="notifications" size={24} color={toastColors.icon} />;
     }
@@ -264,7 +264,7 @@ const ToastItem: React.FC<ToastItemProps> = ({
             style={styles.blurContainer}
             blurType="light"
             blurAmount={10}
-            reducedTransparencyFallbackColor={colors.surface}
+            reducedTransparencyFallbackColor={themeColors.surface}
           />
           
           {/* Gradient overlay */}
@@ -415,3 +415,5 @@ const styles = StyleSheet.create({
 });
 
 export default ToastItem;
+
+
