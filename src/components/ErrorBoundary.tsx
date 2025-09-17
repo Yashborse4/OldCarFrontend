@@ -9,14 +9,14 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   Alert,
   Platform,
 } from 'react-native';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import { Button } from './ui/Button';
+import { Card } from './ui/Card';
 import { useTheme } from '../theme';
-import { SPACING, FONT_SIZES, scale, getResponsiveValue } from '../utils/responsive';
 
 interface ErrorInfo {
   componentStack: string;
@@ -52,7 +52,7 @@ interface ErrorFallbackProps {
  * Main Error Boundary Component
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  private resetTimeoutId: number | null = null;
+  private resetTimeoutId: NodeJS.Timeout | null = null;
   private maxRetries = 3;
 
   constructor(props: ErrorBoundaryProps) {
@@ -141,7 +141,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         errorInfo: null,
         retryCount: prevState.retryCount + 1,
       }));
-    }, 2000) as unknown as number;
+    }, 2000);
   };
 
   private resetErrorBoundary = () => {
@@ -195,92 +195,58 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
   onRetry,
   level,
 }) => {
-  // Provide fallback theme values - avoid using hooks in error boundary context
-  const isDark = false;
-  const themeColors = {
-    background: '#FFFFFF',
-    surface: '#F9FAFB',
-    text: '#111827',
-    textSecondary: '#6B7280',
-    primary: '#3B82F6',
-    error: '#EF4444',
-    success: '#10B981',
-    warning: '#F59E0B',
-    border: '#E5E7EB',
-  };
+  const { colors: theme } = useTheme();
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: themeColors.background,
+      backgroundColor: theme.background,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: SPACING.lg,
+      padding: 24,
+    },
+    errorCard: {
+      alignItems: 'center',
+      maxWidth: 320,
     },
     iconContainer: {
-      width: scale(80),
-      height: scale(80),
-      borderRadius: scale(40),
-      backgroundColor: themeColors.error + '20',
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: theme.error + '20',
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: SPACING.lg,
+      marginBottom: 24,
     },
     title: {
-      fontSize: getResponsiveValue({
-        small: FONT_SIZES.xl,
-        default: FONT_SIZES.xxl,
-      }),
+      fontSize: 24,
       fontWeight: '600',
-      color: themeColors.text,
+      color: theme.text,
       textAlign: 'center',
-      marginBottom: SPACING.md,
+      marginBottom: 12,
     },
     message: {
-      fontSize: FONT_SIZES.md,
-      color: themeColors.textSecondary,
+      fontSize: 16,
+      color: theme.textSecondary,
       textAlign: 'center',
-      lineHeight: FONT_SIZES.md * 1.5,
-      marginBottom: SPACING.xl,
-      maxWidth: scale(300),
+      lineHeight: 24,
+      marginBottom: 32,
     },
     buttonContainer: {
       flexDirection: 'row',
-      gap: SPACING.md,
-    },
-    button: {
-      paddingHorizontal: SPACING.lg,
-      paddingVertical: SPACING.md,
-      borderRadius: scale(8),
-      backgroundColor: themeColors.primary,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: SPACING.sm,
-    },
-    buttonSecondary: {
-      backgroundColor: 'transparent',
-      borderWidth: 1,
-      borderColor: themeColors.border,
-    },
-    buttonText: {
-      fontSize: FONT_SIZES.md,
-      fontWeight: '600',
-      color: '#FFFFFF',
-    },
-    buttonTextSecondary: {
-      color: themeColors.text,
+      gap: 12,
     },
     errorDetails: {
-      marginTop: SPACING.xl,
-      padding: SPACING.md,
-      backgroundColor: themeColors.surface,
-      borderRadius: scale(8),
+      marginTop: 32,
+      padding: 16,
+      backgroundColor: theme.surface,
+      borderRadius: 8,
       width: '100%',
-      maxHeight: scale(200),
+      maxHeight: 200,
     },
     errorText: {
-      fontSize: FONT_SIZES.xs,
-      color: themeColors.textSecondary,
+      fontSize: 12,
+      color: theme.textSecondary,
       fontFamily: Platform.select({
         ios: 'Menlo',
         android: 'monospace',
@@ -312,51 +278,53 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.iconContainer}>
-        <MaterialIcons
-          name="error-outline"
-          size={scale(40)}
-          color={themeColors.error}
-        />
-      </View>
-
-      <Text style={styles.title}>{getErrorTitle()}</Text>
-      
-      <Text style={styles.message}>
-        {getErrorMessage()}
-      </Text>
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={onRetry}>
-          <AntDesign name="reload1" size={scale(16)} color="#FFFFFF" />
-          <Text style={styles.buttonText}>Try Again</Text>
-        </TouchableOpacity>
-
-        {level !== 'component' && (
-          <TouchableOpacity
-            style={[styles.button, styles.buttonSecondary]}
-            onPress={() => {
-              // Navigate to home screen
-              // navigation.navigate('Dashboard');
-            }}
-          >
-            <AntDesign name="home" size={scale(16)} color={themeColors.text} />
-            <Text style={[styles.buttonText, styles.buttonTextSecondary]}>
-              Go Home
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {__DEV__ && error && (
-        <View style={styles.errorDetails}>
-          <Text style={styles.errorText}>
-            {error.message}
-            {'\n\n'}
-            {error.stack?.slice(0, 300)}...
-          </Text>
+      <Card style={styles.errorCard}>
+        <View style={styles.iconContainer}>
+          <MaterialIcons
+            name="error-outline"
+            size={40}
+            color={theme.error}
+          />
         </View>
-      )}
+
+        <Text style={styles.title}>{getErrorTitle()}</Text>
+        
+        <Text style={styles.message}>
+          {getErrorMessage()}
+        </Text>
+
+        <View style={styles.buttonContainer}>
+          <Button
+            title="Try Again"
+            onPress={onRetry}
+            icon="refresh"
+            size="md"
+          />
+
+          {level !== 'component' && (
+            <Button
+              title="Go Home"
+              onPress={() => {
+                // Navigate to home screen
+                // navigation.navigate('Dashboard');
+              }}
+              variant="outline"
+              icon="home"
+              size="md"
+            />
+          )}
+        </View>
+
+        {__DEV__ && error && (
+          <View style={styles.errorDetails}>
+            <Text style={styles.errorText}>
+              {error.message}
+              {'\n\n'}
+              {error.stack?.slice(0, 300)}...
+            </Text>
+          </View>
+        )}
+      </Card>
     </SafeAreaView>
   );
 };
