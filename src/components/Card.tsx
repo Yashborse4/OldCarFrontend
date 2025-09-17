@@ -15,7 +15,7 @@ import {
   Pressable,
   Dimensions,
 } from 'react-native';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../theme';
 import { 
@@ -65,7 +65,7 @@ const BaseCardComponent: React.FC<BaseCardProps> = ({
   accessibilityHint,
   accessibilityRole = 'button',
 }) => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = useCallback(() => {
@@ -125,7 +125,7 @@ const BaseCardComponent: React.FC<BaseCardProps> = ({
       default:
         return baseStyle;
     }
-  }, [variant, colors]);
+    }, [variant, themeColors]);
 
   const cardStyles = getCardStyles();
 
@@ -219,7 +219,7 @@ const CarCardComponent: React.FC<CarCardProps> = ({
   onImagePress,
   ...baseProps
 }) => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
   const { deviceInfo } = useResponsive();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -249,7 +249,7 @@ const CarCardComponent: React.FC<CarCardProps> = ({
       case 'Poor': return themeColors.error;
       default: return themeColors.textSecondary;
     }
-  }, [colors]);
+    }, [themeColors]);
 
   return (
     <BaseCard
@@ -548,7 +548,7 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
   onAvatarPress,
   ...baseProps
 }) => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
 
   const handleAvatarPress = useCallback(() => {
     onAvatarPress?.(user.id);

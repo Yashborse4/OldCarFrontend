@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,23 +8,18 @@ import {
   TouchableOpacity,
   Dimensions,
   StatusBar,
-  SafeAreaView,
   Alert,
   Linking,
-  Share,
   FlatList,
-  Animated,
-  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
-import LinearGradient from 'react-native-linear-gradient';
-import * as Animatable from 'react-native-animatable';
-import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from '../../theme';
+import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
 
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 interface Props {
   navigation: any;
@@ -33,44 +28,28 @@ interface Props {
 
 const VEHICLE_DATA = {
   title: 'Tesla Model S Plaid',
-  price: '₹75,00,000',
-  originalPrice: '₹85,00,000',
+  price: 'â‚¹75,00,000',
+  originalPrice: 'â‚¹85,00,000',
   location: 'Mumbai, India',
   dealer: 'Premium Auto Cars',
   phone: '+91 9876543210',
   images: [
-    'https://images.pexels.com/photos/112460/pexels-photo-112460.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    'https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    'https://images.pexels.com/photos/1402787/pexels-photo-1402787.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    'https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    'https://images.pexels.com/photos/112460/pexels-photo-112460.jpeg?auto=compress&cs=tinysrgb&w=800',
+    'https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg?auto=compress&cs=tinysrgb&w=800',
+    'https://images.pexels.com/photos/1402787/pexels-photo-1402787.jpeg?auto=compress&cs=tinysrgb&w=800',
   ],
   specs: [
-    { icon: 'calendar-range', label: 'Year', value: '2023' },
-    { icon: 'road-variant', label: 'KM Driven', value: '1,200' },
-    { icon: 'gas-station', label: 'Fuel Type', value: 'Electric' },
-    { icon: 'car-shift-pattern', label: 'Transmission', value: 'Automatic' },
-    { icon: 'account-group', label: 'Owners', value: '1st Owner' },
-    { icon: 'car-door', label: 'Doors', value: '4 Doors' },
+    { icon: 'event', label: 'Year', value: '2023' },
+    { icon: 'speed', label: 'Mileage', value: '1,200 km' },
+    { icon: 'local-gas-station', label: 'Fuel', value: 'Electric' },
+    { icon: 'settings', label: 'Transmission', value: 'Automatic' },
   ],
-  overview: 'The Tesla Model S Plaid is the quickest accelerating car in production today. It features a tri-motor all-wheel-drive platform with torque vectoring, achieving 0-60 mph in just 1.99 seconds. With a range of over 390 miles, it combines performance, safety, and efficiency.',
-  features: [
-    'ABS with EBD',
-    '6 Airbags',
-    'GPS Navigation',
-    'Bluetooth Connectivity',
-    'Climate Control',
-    'Parking Sensors',
-    'Reverse Camera',
-    'Keyless Entry',
-    'Power Steering',
-    'Electric Windows',
-    'Leather Seats',
-    'Sunroof',
-  ],
+  overview: 'The Tesla Model S Plaid is the quickest accelerating car in production today. Perfect combination of performance, safety, and efficiency.',
+  features: ['ABS with EBD', '6 Airbags', 'GPS Navigation', 'Climate Control', 'Parking Sensors', 'Reverse Camera'],
 };
 
 const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { isDark, themeColors } = useTheme();
+  const { colors: themeColors } = useTheme();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isBookmarked, setIsBookmarked] = useState(false);
   
@@ -85,7 +64,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         },
         {
           text: 'Send Message',
-          onPress: () => Alert.alert('Feature Coming Soon', 'Messaging feature will be available soon.'),
+          onPress: () => Alert.alert('Coming Soon', 'Messaging feature will be available soon.'),
         },
         {
           text: 'Cancel',
@@ -98,362 +77,56 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleBookmark = () => {
     setIsBookmarked(!isBookmarked);
     Alert.alert(
-      isBookmarked ? 'Removed from Wishlist' : 'Added to Wishlist',
-      isBookmarked ? 'Vehicle removed from your wishlist' : 'Vehicle added to your wishlist'
+      isBookmarked ? 'Removed from Saved' : 'Added to Saved',
+      isBookmarked ? 'Vehicle removed from saved cars' : 'Vehicle saved successfully'
     );
   };
 
-  const handleShare = () => {
-    Alert.alert('Share Vehicle', 'Sharing feature will be available soon.');
-  };
+  const renderImageItem = ({ item, index }: { item: string; index: number }) => (
+    <Image source={{ uri: item }} style={styles.carouselImage} />
+  );
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: themeColors.background,
-    },
-    scrollContainer: {
-      paddingBottom: 120, // Space for the footer
-    },
-    carouselWrapper: {
-      height: width * 0.75,
-      position: 'relative',
-    },
-    carouselContainer: {
-      height: width * 0.75,
-    },
-    imageWrapper: {
-      width: width,
-      height: width * 0.75,
-      position: 'relative',
-    },
-    carouselImage: {
-      width: '100%',
-      height: '100%',
-      resizeMode: 'cover',
-    },
-    imageGradient: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: '30%',
-    },
-    imageIndicators: {
-      position: 'absolute',
-      bottom: 20,
-      left: 0,
-      right: 0,
-      flexDirection: 'row',
-      justifyContent: 'center',
-    },
-    indicator: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      marginHorizontal: 4,
-      backgroundColor: themeColors.primary,
-      opacity: 0.5,
-    },
-    indicatorActive: {
-      opacity: 1,
-      backgroundColor: themeColors.primary,
-    },
-    imageCounter: {
-      position: 'absolute',
-      top: 20,
-      right: 20,
-      backgroundColor: 'rgba(0,0,0,0.7)',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 20,
-    },
-    imageCounterText: {
-      color: '#FFFFFF',
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    contentContainer: {
-      padding: 16,
-    },
-    card: {
-      backgroundColor: themeColors.surface,
-      borderRadius: 15,
-      padding: 20,
-      marginTop: 15,
-      shadowColor: isDark ? '#000' : '#888',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: isDark ? 0.3 : 0.1,
-      shadowRadius: 8,
-      elevation: 4,
-      borderWidth: isDark ? 1 : 0,
-      borderColor: themeColors.border,
-    },
-    titleCard: {
-      backgroundColor: themeColors.surface,
-      borderRadius: 15,
-      padding: 20,
-      marginTop: 15,
-      shadowColor: isDark ? '#000' : '#888',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: isDark ? 0.3 : 0.1,
-      shadowRadius: 8,
-      elevation: 4,
-      borderWidth: isDark ? 1 : 0,
-      borderColor: themeColors.border,
-    },
-    titleRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: 8,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: themeColors.text,
-      flex: 1,
-      marginRight: 12,
-    },
-    bookmarkButton: {
-      padding: 8,
-      borderRadius: 20,
-      backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-    },
-    priceRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 5,
-    },
-    price: {
-      fontSize: 22,
-      fontWeight: 'bold',
-      color: themeColors.primary,
-    },
-    originalPrice: {
-      fontSize: 16,
-      color: themeColors.textSecondary,
-      textDecorationLine: 'line-through',
-      marginLeft: 8,
-    },
-    savings: {
-      fontSize: 14,
-      color: '#30D158',
-      backgroundColor: isDark ? 'rgba(48, 209, 88, 0.1)' : 'rgba(48, 209, 88, 0.1)',
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 4,
-      marginLeft: 8,
-    },
-    locationRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 8,
-    },
-    location: {
-      fontSize: 16,
-      marginLeft: 4,
-      color: themeColors.textSecondary,
-    },
-    dealerInfo: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 8,
-      paddingTop: 12,
-      borderTopWidth: 1,
-      borderTopColor: themeColors.border,
-    },
-    dealerText: {
-      fontSize: 14,
-      color: themeColors.textSecondary,
-      marginLeft: 4,
-    },
-    sectionTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      marginBottom: 15,
-      color: themeColors.text,
-    },
-    specsContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
-    },
-    specItem: {
-      alignItems: 'center',
-      width: '48%',
-      marginBottom: 16,
-      padding: 12,
-      borderRadius: 12,
-      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-    },
-    specLabel: {
-      fontSize: 14,
-      marginTop: 5,
-      color: themeColors.textSecondary,
-    },
-    specValue: {
-      fontSize: 16,
-      fontWeight: '600',
-      marginTop: 2,
-      color: themeColors.text,
-    },
-    overview: {
-      fontSize: 16,
-      lineHeight: 24,
-      color: themeColors.textSecondary,
-    },
-    featuresGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-    },
-    featureItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      width: '50%',
-      marginBottom: 8,
-    },
-    featureText: {
-      marginLeft: 8,
-      fontSize: 14,
-      fontWeight: '500',
-      color: themeColors.text,
-    },
-    footer: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      paddingHorizontal: 20,
-      paddingTop: 16,
-      paddingBottom: 20,
-      borderTopWidth: 1,
-      elevation: 8,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: -4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      backgroundColor: themeColors.surface,
-      borderTopColor: themeColors.border,
-    },
-    footerContent: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    footerPriceSection: {
-      flex: 1,
-    },
-    footerPrice: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: themeColors.primary,
-    },
-    footerLocation: {
-      fontSize: 12,
-      marginTop: 2,
-      color: themeColors.textSecondary,
-    },
-    footerButtons: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    shareButton: {
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      marginRight: 12,
-      backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-      borderWidth: 1,
-      borderColor: themeColors.border,
-    },
-    ctaButton: {
-      borderRadius: 12,
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      elevation: 4,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-      backgroundColor: themeColors.primary,
-    },
-    ctaButtonText: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: isDark ? '#111827' : '#FFFFFF',
-    },
-    backButton: {
-      position: 'absolute',
-      top: 50,
-      left: 20,
-      borderRadius: 20,
-      padding: 10,
-      elevation: 4,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-      backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)',
-    },
-    actionButtons: {
-      position: 'absolute',
-      top: 50,
-      right: 20,
-      flexDirection: 'row',
-    },
-    actionButton: {
-      borderRadius: 20,
-      padding: 10,
-      marginLeft: 8,
-      elevation: 4,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-      backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)',
-    },
-  });
+  const renderSpecItem = ({ item }: { item: typeof VEHICLE_DATA.specs[0] }) => (
+    <View style={styles.specItem}>
+      <MaterialIcons name={item.icon as any} size={24} color={themeColors.primary} />
+      <Text style={styles.specLabel}>{item.label}</Text>
+      <Text style={styles.specValue}>{item.value}</Text>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
+      <StatusBar barStyle="default" />
       
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Image Carousel with Gradient Overlay */}
-        <View style={styles.carouselWrapper}>
-          <ScrollView
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.shareButton} onPress={handleBookmark}>
+          <MaterialIcons 
+            name={isBookmarked ? "favorite" : "favorite-border"} 
+            size={24} 
+            color={isBookmarked ? '#FF6B6B' : themeColors.textSecondary} 
+          />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Image Carousel */}
+        <View style={styles.imageSection}>
+          <FlatList
+            data={VEHICLE_DATA.images}
+            renderItem={renderImageItem}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
-            style={styles.carouselContainer}
             onMomentumScrollEnd={(event) => {
               const index = Math.round(event.nativeEvent.contentOffset.x / width);
               setCurrentImageIndex(index);
             }}
-          >
-            {VEHICLE_DATA.images.map((image, index) => (
-              <View key={index} style={styles.imageWrapper}>
-                <Image source={{ uri: image }} style={styles.carouselImage} />
-                <LinearGradient
-                  colors={['transparent', 'rgba(0,0,0,0.3)']}
-                  style={styles.imageGradient}
-                />
-              </View>
-            ))}
-          </ScrollView>
-          
-          {/* Image Counter */}
-          <View style={styles.imageCounter}>
-            <Text style={styles.imageCounterText}>
-              {currentImageIndex + 1} / {VEHICLE_DATA.images.length}
-            </Text>
-          </View>
-          
-          {/* Image Indicators */}
+            style={styles.carousel}
+          />
           <View style={styles.imageIndicators}>
             {VEHICLE_DATA.images.map((_, index) => (
               <View
@@ -467,117 +140,253 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </View>
 
-        <View style={styles.contentContainer}>
-          {/* Vehicle Title Card */}
-          <View style={styles.titleCard}>
-            <View style={styles.titleRow}>
-              <Text style={styles.title}>{VEHICLE_DATA.title}</Text>
-              <TouchableOpacity style={styles.bookmarkButton} onPress={handleBookmark}>
-                <MaterialCommunityIcons
-                  name={isBookmarked ? 'heart' : 'heart-outline'}
-                  size={24}
-                  color={isBookmarked ? '#FF3B30' : themeColors.textSecondary}
-                />
-              </TouchableOpacity>
-            </View>
-            
+        {/* Vehicle Info */}
+        <View style={styles.content}>
+          <Card style={styles.mainCard}>
+            <Text style={styles.title}>{VEHICLE_DATA.title}</Text>
             <View style={styles.priceRow}>
               <Text style={styles.price}>{VEHICLE_DATA.price}</Text>
               <Text style={styles.originalPrice}>{VEHICLE_DATA.originalPrice}</Text>
-              <Text style={styles.savings}>Save ₹10L</Text>
             </View>
-            
             <View style={styles.locationRow}>
-              <MaterialCommunityIcons name="map-marker" size={18} color={themeColors.textSecondary} />
+              <MaterialIcons name="location-on" size={16} color={themeColors.textSecondary} />
               <Text style={styles.location}>{VEHICLE_DATA.location}</Text>
             </View>
-            
-            <View style={styles.dealerInfo}>
-              <MaterialCommunityIcons name="store" size={16} color={themeColors.textSecondary} />
-              <Text style={styles.dealerText}>Sold by {VEHICLE_DATA.dealer}</Text>
+            <View style={styles.dealerRow}>
+              <MaterialIcons name="store" size={16} color={themeColors.textSecondary} />
+              <Text style={styles.dealer}>{VEHICLE_DATA.dealer}</Text>
             </View>
-          </View>
+          </Card>
 
-          {/* Key Specs Card */}
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Key Specifications</Text>
-            <View style={styles.specsContainer}>
+          {/* Specifications */}
+          <Card style={styles.card}>
+            <Text style={styles.sectionTitle}>Specifications</Text>
+            <View style={styles.specsGrid}>
               {VEHICLE_DATA.specs.map((spec, index) => (
                 <View key={index} style={styles.specItem}>
-                  <MaterialCommunityIcons name={spec.icon as any} size={28} color={themeColors.primary} />
+                  <MaterialIcons name={spec.icon as any} size={20} color={themeColors.primary} />
                   <Text style={styles.specLabel}>{spec.label}</Text>
                   <Text style={styles.specValue}>{spec.value}</Text>
                 </View>
               ))}
             </View>
-          </View>
+          </Card>
 
-          {/* Overview Card */}
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Vehicle Overview</Text>
+          {/* Overview */}
+          <Card style={styles.card}>
+            <Text style={styles.sectionTitle}>Overview</Text>
             <Text style={styles.overview}>{VEHICLE_DATA.overview}</Text>
-          </View>
+          </Card>
 
-          {/* Features Card */}
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Features & Safety</Text>
+          {/* Features */}
+          <Card style={styles.card}>
+            <Text style={styles.sectionTitle}>Features</Text>
             <View style={styles.featuresGrid}>
               {VEHICLE_DATA.features.map((feature, index) => (
                 <View key={index} style={styles.featureItem}>
-                  <MaterialCommunityIcons name="check-circle" size={20} color={themeColors.primary} />
+                  <MaterialIcons name="check-circle" size={16} color={themeColors.primary} />
                   <Text style={styles.featureText}>{feature}</Text>
                 </View>
               ))}
             </View>
-          </View>
+          </Card>
         </View>
       </ScrollView>
 
-      {/* Enhanced Footer */}
-      <LinearGradient
-        colors={isDark ? ['rgba(0,0,0,0.9)', themeColors.surface] : ['rgba(255,255,255,0.95)', themeColors.surface]}
-        style={styles.footer}
-      >
-        <View style={styles.footerContent}>
-          <View style={styles.footerPriceSection}>
-            <Text style={styles.footerPrice}>{VEHICLE_DATA.price}</Text>
-            <Text style={styles.footerLocation}>Best Price in {VEHICLE_DATA.location}</Text>
-          </View>
-          
-          <View style={styles.footerButtons}>
-            <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-              <MaterialCommunityIcons name="share-variant" size={20} color={themeColors.textSecondary} />
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.ctaButton} onPress={handleContactSeller}>
-              <MaterialCommunityIcons
-                name="phone"
-                size={20}
-                color={isDark ? '#111827' : '#FFFFFF'}
-                style={{ marginRight: 8 }}
-              />
-              <Text style={styles.ctaButtonText}>Contact Seller</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </LinearGradient>
-
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <MaterialCommunityIcons name="arrow-left" size={24} color={isDark ? '#FFFFFF' : '#333333'} />
-      </TouchableOpacity>
-      
-      {/* Action Buttons */}
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-          <MaterialCommunityIcons name="share-variant" size={20} color={isDark ? '#FFFFFF' : '#333333'} />
-        </TouchableOpacity>
+      {/* Bottom Actions */}
+      <View style={styles.bottomActions}>
+        <Button
+          title="Contact Seller"
+          onPress={handleContactSeller}
+          fullWidth
+          icon="phone"
+        />
       </View>
     </SafeAreaView>
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    backgroundColor: 'rgba(250, 250, 250, 0.9)',
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  shareButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  imageSection: {
+    height: width * 0.7,
+    position: 'relative',
+  },
+  carousel: {
+    height: width * 0.7,
+  },
+  carouselImage: {
+    width: width,
+    height: width * 0.7,
+    resizeMode: 'cover',
+  },
+  imageIndicators: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  indicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    marginHorizontal: 4,
+  },
+  indicatorActive: {
+    backgroundColor: '#FFFFFF',
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingBottom: 120,
+  },
+  mainCard: {
+    marginTop: -20,
+    marginBottom: 16,
+  },
+  card: {
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1A202C',
+    marginBottom: 8,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  price: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFD700',
+  },
+  originalPrice: {
+    fontSize: 16,
+    color: '#A0AEC0',
+    textDecorationLine: 'line-through',
+    marginLeft: 12,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  location: {
+    fontSize: 14,
+    color: '#718096',
+    marginLeft: 4,
+  },
+  dealerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dealer: {
+    fontSize: 14,
+    color: '#718096',
+    marginLeft: 4,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1A202C',
+    marginBottom: 16,
+  },
+  specsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  specItem: {
+    width: (width - 60) / 2 - 6,
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#F7FAFC',
+    borderRadius: 12,
+  },
+  specLabel: {
+    fontSize: 12,
+    color: '#718096',
+    marginTop: 4,
+  },
+  specValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1A202C',
+    marginTop: 2,
+  },
+  overview: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#718096',
+  },
+  featuresGrid: {
+    gap: 8,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  featureText: {
+    fontSize: 14,
+    color: '#4A5568',
+    marginLeft: 8,
+  },
+  bottomActions: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+  },
+});
+
 export default VehicleDetailScreen;
-
-
-

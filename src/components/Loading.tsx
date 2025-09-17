@@ -10,18 +10,9 @@ import {
   Animated,
   Easing,
   ViewStyle,
-  Dimensions,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { useTheme } from '../theme';
-import { 
-  scale, 
-  SPACING, 
-  DIMENSIONS as RESPONSIVE_DIMENSIONS, 
-  getResponsiveValue,
-  useResponsive 
-} from '../utils/responsive';
-import { withPerformanceTracking } from '../utils/performance';
+import { theme } from '../theme';
 
 interface SkeletonProps {
   width?: number | string;
@@ -51,13 +42,12 @@ interface LoadingOverlayProps {
 // Basic Skeleton Component
 const SkeletonComponent: React.FC<SkeletonProps> = ({
   width = '100%',
-  height = scale(20),
-  borderRadius = RESPONSIVE_DIMENSIONS.borderRadius.small,
+  height = 20,
+  borderRadius = 6,
   style,
   animated = true,
   shimmer = true,
 }) => {
-  const { colors, isDark } = useTheme();
   const animatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -85,17 +75,14 @@ const SkeletonComponent: React.FC<SkeletonProps> = ({
 
   const backgroundColor = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [
-      isDark ? '#2D2D2D' : '#E5E7EB',
-      isDark ? '#3D3D3D' : '#F3F4F6'
-    ],
+    outputRange: [theme.colors.border, theme.colors.surface],
   });
 
   const skeletonStyle = {
     width,
     height,
     borderRadius,
-    backgroundColor: animated ? undefined : (isDark ? '#2D2D2D' : '#E5E7EB'),
+    backgroundColor: animated ? undefined : theme.colors.border,
     overflow: 'hidden' as const,
     ...style,
   };
@@ -110,7 +97,7 @@ const SkeletonComponent: React.FC<SkeletonProps> = ({
         <LinearGradient
           colors={[
             'transparent',
-            isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
+            'rgba(255, 255, 255, 0.5)',
             'transparent'
           ]}
           start={{ x: 0, y: 0 }}
@@ -124,20 +111,12 @@ const SkeletonComponent: React.FC<SkeletonProps> = ({
 
 // Car Card Skeleton
 const CarCardSkeletonComponent: React.FC<{ style?: ViewStyle }> = ({ style }) => {
-  const { deviceInfo } = useResponsive();
-  
-  const cardWidth = getResponsiveValue({
-    small: '100%',
-    tablet: '48%',
-    default: '100%'
-  });
-
   return (
-    <View style={[styles.carCardSkeleton, { width: cardWidth }, style]}>
+    <View style={[styles.carCardSkeleton, style]}>
       {/* Image skeleton */}
       <SkeletonComponent
-        height={scale(180)}
-        borderRadius={RESPONSIVE_DIMENSIONS.borderRadius.medium}
+        height={180}
+        borderRadius={12}
         style={styles.carImageSkeleton}
       />
       
@@ -145,14 +124,14 @@ const CarCardSkeletonComponent: React.FC<{ style?: ViewStyle }> = ({ style }) =>
         {/* Title */}
         <SkeletonComponent
           width="80%"
-          height={scale(18)}
+          height={18}
           style={styles.carTitleSkeleton}
         />
         
         {/* Subtitle */}
         <SkeletonComponent
           width="60%"
-          height={scale(14)}
+          height={14}
           style={styles.carSubtitleSkeleton}
         />
         
@@ -160,26 +139,26 @@ const CarCardSkeletonComponent: React.FC<{ style?: ViewStyle }> = ({ style }) =>
         <View style={styles.carDetailsRow}>
           <SkeletonComponent
             width="40%"
-            height={scale(16)}
+            height={16}
           />
           <SkeletonComponent
             width="30%"
-            height={scale(16)}
+            height={16}
           />
         </View>
         
         {/* Tags */}
         <View style={styles.carTagsRow}>
           <SkeletonComponent
-            width={scale(60)}
-            height={scale(24)}
-            borderRadius={scale(12)}
+            width={60}
+            height={24}
+            borderRadius={12}
             style={styles.carTag}
           />
           <SkeletonComponent
-            width={scale(80)}
-            height={scale(24)}
-            borderRadius={scale(12)}
+            width={80}
+            height={24}
+            borderRadius={12}
             style={styles.carTag}
           />
         </View>
@@ -194,9 +173,9 @@ const ChatItemSkeletonComponent: React.FC<{ style?: ViewStyle }> = ({ style }) =
     <View style={[styles.chatItemSkeleton, style]}>
       {/* Avatar */}
       <SkeletonComponent
-        width={scale(48)}
-        height={scale(48)}
-        borderRadius={scale(24)}
+        width={48}
+        height={48}
+        borderRadius={24}
         style={styles.chatAvatar}
       />
       
@@ -204,26 +183,26 @@ const ChatItemSkeletonComponent: React.FC<{ style?: ViewStyle }> = ({ style }) =
         <View style={styles.chatHeader}>
           <SkeletonComponent
             width="60%"
-            height={scale(16)}
+            height={16}
           />
           <SkeletonComponent
             width="20%"
-            height={scale(12)}
+            height={12}
           />
         </View>
         
         <SkeletonComponent
           width="80%"
-          height={scale(14)}
+          height={14}
           style={styles.chatMessage}
         />
       </View>
       
       {/* Unread indicator */}
       <SkeletonComponent
-        width={scale(8)}
-        height={scale(8)}
-        borderRadius={scale(4)}
+        width={8}
+        height={8}
+        borderRadius={4}
       />
     </View>
   );
@@ -232,11 +211,11 @@ const ChatItemSkeletonComponent: React.FC<{ style?: ViewStyle }> = ({ style }) =
 // Generic List Skeleton
 const SkeletonListComponent: React.FC<SkeletonListProps> = ({
   count = 5,
-  itemHeight = scale(80),
+  itemHeight = 80,
   showAvatar = false,
   showImage = false,
   lines = 2,
-  spacing = SPACING.md,
+  spacing = 16,
 }) => {
   const items = Array.from({ length: count }, (_, index) => index);
 
@@ -248,9 +227,9 @@ const SkeletonListComponent: React.FC<SkeletonListProps> = ({
             {/* Avatar or Image */}
             {(showAvatar || showImage) && (
               <SkeletonComponent
-                width={showImage ? scale(80) : scale(40)}
-                height={showImage ? scale(60) : scale(40)}
-                borderRadius={showAvatar ? scale(20) : RESPONSIVE_DIMENSIONS.borderRadius.small}
+                width={showImage ? 80 : 40}
+                height={showImage ? 60 : 40}
+                borderRadius={showAvatar ? 20 : 6}
                 style={styles.skeletonItemMedia}
               />
             )}
@@ -261,7 +240,7 @@ const SkeletonListComponent: React.FC<SkeletonListProps> = ({
                 <SkeletonComponent
                   key={lineIndex}
                   width={lineIndex === lines - 1 ? '60%' : '100%'}
-                  height={scale(14)}
+                  height={14}
                   style={[
                     styles.skeletonLine,
                     lineIndex === 0 && styles.skeletonFirstLine
@@ -283,7 +262,6 @@ const LoadingOverlayComponent: React.FC<LoadingOverlayProps> = ({
   transparent = false,
   children,
 }) => {
-  const { colors } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -299,29 +277,29 @@ const LoadingOverlayComponent: React.FC<LoadingOverlayProps> = ({
   return (
     <View style={styles.overlayContainer}>
       {children}
-      <Animated.View
+        <Animated.View
         style={[
           styles.overlay,
           {
             backgroundColor: transparent 
               ? 'rgba(0, 0, 0, 0.3)' 
-              : themeColors.background,
+              : theme.colors.background,
             opacity: fadeAnim,
           },
         ]}
       >
-        <View style={[styles.loadingContent, { backgroundColor: themeColors.surface }]}>
+        <View style={[styles.loadingContent, { backgroundColor: theme.colors.surface }]}>
           <SkeletonComponent
-            width={scale(40)}
-            height={scale(40)}
-            borderRadius={scale(20)}
+            width={40}
+            height={40}
+            borderRadius={20}
             animated={true}
             style={styles.loadingSpinner}
           />
           {text && (
             <SkeletonComponent
-              width={scale(100)}
-              height={scale(16)}
+              width={100}
+              height={16}
               style={styles.loadingText}
             />
           )}
@@ -331,101 +309,51 @@ const LoadingOverlayComponent: React.FC<LoadingOverlayProps> = ({
   );
 };
 
-// Dashboard Skeleton
-const DashboardSkeletonComponent: React.FC = () => {
-  const { deviceInfo } = useResponsive();
-  
-  return (
-    <View style={styles.dashboardSkeleton}>
-      {/* Header */}
-      <View style={styles.dashboardHeader}>
-        <SkeletonComponent
-          width="60%"
-          height={scale(24)}
-          style={styles.dashboardTitle}
-        />
-        <SkeletonComponent
-          width={scale(40)}
-          height={scale(40)}
-          borderRadius={scale(20)}
-        />
-      </View>
-      
-      {/* Stats Cards */}
-      <View style={styles.statsRow}>
-        {[1, 2, 3, 4].map((index) => (
-          <View key={index} style={styles.statCard}>
-            <SkeletonComponent
-              width="100%"
-              height={scale(60)}
-              borderRadius={RESPONSIVE_DIMENSIONS.borderRadius.medium}
-            />
-          </View>
-        ))}
-      </View>
-      
-      {/* Chart */}
-      <SkeletonComponent
-        height={scale(200)}
-        borderRadius={RESPONSIVE_DIMENSIONS.borderRadius.medium}
-        style={styles.chartSkeleton}
-      />
-      
-      {/* List */}
-      <SkeletonListComponent
-        count={3}
-        showImage={true}
-        lines={2}
-        spacing={SPACING.sm}
-      />
-    </View>
-  );
-};
 
 const styles = StyleSheet.create({
   // Car Card Skeleton
   carCardSkeleton: {
     backgroundColor: 'transparent',
-    borderRadius: RESPONSIVE_DIMENSIONS.borderRadius.medium,
+    borderRadius: 12,
     overflow: 'hidden',
-    marginBottom: SPACING.md,
+    marginBottom: 16,
   },
   carImageSkeleton: {
-    marginBottom: SPACING.sm,
+    marginBottom: 8,
   },
   carContentSkeleton: {
-    paddingHorizontal: SPACING.sm,
-    paddingBottom: SPACING.sm,
+    paddingHorizontal: 8,
+    paddingBottom: 8,
   },
   carTitleSkeleton: {
-    marginBottom: SPACING.xs,
+    marginBottom: 4,
   },
   carSubtitleSkeleton: {
-    marginBottom: SPACING.sm,
+    marginBottom: 8,
   },
   carDetailsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SPACING.sm,
+    marginBottom: 8,
   },
   carTagsRow: {
     flexDirection: 'row',
-    gap: SPACING.xs,
+    gap: 4,
   },
   carTag: {
-    marginRight: SPACING.xs,
+    marginRight: 4,
   },
 
   // Chat Item Skeleton
   chatItemSkeleton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   chatAvatar: {
-    marginRight: SPACING.sm,
+    marginRight: 8,
   },
   chatContent: {
     flex: 1,
@@ -434,15 +362,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SPACING.xs,
+    marginBottom: 4,
   },
   chatMessage: {
-    marginTop: SPACING.xs,
+    marginTop: 4,
   },
 
   // Generic List Skeleton
   skeletonList: {
-    paddingHorizontal: SPACING.md,
+    paddingHorizontal: 16,
   },
   skeletonListItem: {
     backgroundColor: 'transparent',
@@ -452,16 +380,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   skeletonItemMedia: {
-    marginRight: SPACING.sm,
+    marginRight: 8,
   },
   skeletonItemText: {
     flex: 1,
   },
   skeletonLine: {
-    marginBottom: SPACING.xs,
+    marginBottom: 4,
   },
   skeletonFirstLine: {
-    height: scale(16),
+    height: 16,
   },
 
   // Loading Overlay
@@ -476,8 +404,8 @@ const styles = StyleSheet.create({
   },
   loadingContent: {
     alignItems: 'center',
-    padding: SPACING.lg,
-    borderRadius: RESPONSIVE_DIMENSIONS.borderRadius.medium,
+    padding: 24,
+    borderRadius: 12,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -485,47 +413,20 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   loadingSpinner: {
-    marginBottom: SPACING.sm,
+    marginBottom: 8,
   },
   loadingText: {
-    marginTop: SPACING.sm,
+    marginTop: 8,
   },
 
-  // Dashboard Skeleton
-  dashboardSkeleton: {
-    padding: SPACING.md,
-  },
-  dashboardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.lg,
-  },
-  dashboardTitle: {
-    marginBottom: SPACING.xs,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.lg,
-    flexWrap: 'wrap',
-  },
-  statCard: {
-    width: '22%',
-    minWidth: scale(80),
-  },
-  chartSkeleton: {
-    marginBottom: SPACING.lg,
-  },
 });
 
 // Memoized exports
-export const Skeleton = memo(withPerformanceTracking(SkeletonComponent, 'Skeleton'));
-export const CarCardSkeleton = memo(withPerformanceTracking(CarCardSkeletonComponent, 'CarCardSkeleton'));
-export const ChatItemSkeleton = memo(withPerformanceTracking(ChatItemSkeletonComponent, 'ChatItemSkeleton'));
-export const SkeletonList = memo(withPerformanceTracking(SkeletonListComponent, 'SkeletonList'));
-export const LoadingOverlay = memo(withPerformanceTracking(LoadingOverlayComponent, 'LoadingOverlay'));
-export const DashboardSkeleton = memo(withPerformanceTracking(DashboardSkeletonComponent, 'DashboardSkeleton'));
+export const Skeleton = memo(SkeletonComponent);
+export const CarCardSkeleton = memo(CarCardSkeletonComponent);
+export const ChatItemSkeleton = memo(ChatItemSkeletonComponent);
+export const SkeletonList = memo(SkeletonListComponent);
+export const LoadingOverlay = memo(LoadingOverlayComponent);
 
 // Display names
 Skeleton.displayName = 'Skeleton';
@@ -533,7 +434,6 @@ CarCardSkeleton.displayName = 'CarCardSkeleton';
 ChatItemSkeleton.displayName = 'ChatItemSkeleton';
 SkeletonList.displayName = 'SkeletonList';
 LoadingOverlay.displayName = 'LoadingOverlay';
-DashboardSkeleton.displayName = 'DashboardSkeleton';
 
 export default Skeleton;
 

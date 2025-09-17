@@ -27,7 +27,7 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { useTheme } from '../theme';
 import { 
   scale, 
@@ -136,7 +136,7 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
   accessibilityLabel,
   ...flatListProps
 }, ref) => {
-  const { colors, isDark } = useTheme();
+  const { colors: themeColors, isDark } = useTheme();
   const { deviceInfo } = useResponsive();
   const flatListRef = useRef<FlatList>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -218,7 +218,7 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
         </Text>
       </View>
     );
-  }, [loadingMore, colors]);
+  }, [loadingMore, themeColors]);
 
   // Render empty state
   const renderEmptyState = useCallback(() => {
@@ -253,7 +253,7 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
         )}
       </View>
     );
-  }, [loading, emptyIcon, emptyTitle, emptyMessage, emptyAction, colors]);
+  }, [loading, emptyIcon, emptyTitle, emptyMessage, emptyAction, themeColors]);
 
   // Render error state
   const renderErrorState = useCallback(() => {
@@ -294,7 +294,7 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
         )}
       </View>
     );
-  }, [error, onRetry, colors]);
+  }, [error, onRetry, themeColors]);
 
   // Render search header
   const renderSearchHeader = useCallback(() => {
@@ -526,7 +526,7 @@ const SectionedListComponent = <T,>({
   stickyHeaders = true,
   ...baseProps
 }: SectionedListProps<T>) => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
 
   // Flatten sections into single array with section headers
   const flattenedData = useMemo(() => {
@@ -573,7 +573,7 @@ const SectionedListComponent = <T,>({
     }
     
     return renderItem(flatItem.item, flatItem.section, flatItem.itemIndex);
-  }, [renderItem, renderSectionHeader, colors]);
+  }, [renderItem, renderSectionHeader, themeColors]);
 
   return (
     <BaseList

@@ -14,10 +14,9 @@ import {
   FlatList,
   RefreshControl,
 } from 'react-native';
-import { useTheme } from '../../theme/ThemeContext';
+import { useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { AntDesign } from '@react-native-vector-icons/ant-design';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import * as Animatable from 'react-native-animatable';
 
 const { width, height } = Dimensions.get('window');
@@ -163,7 +162,7 @@ const MOCK_INQUIRIES: Inquiry[] = [
 ];
 
 const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
-  const { isDark, colors } = useTheme();
+  const { isDark, colors: themeColors } = useTheme();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -251,7 +250,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
   const renderStatsCard = (title: string, value: string | number, subtitle: string, icon: string, color: string) => (
     <Animatable.View animation="fadeInUp" style={[styles.statsCard, { backgroundColor: themeColors.surface }]}>
       <View style={[styles.statsIconContainer, { backgroundColor: `${color}15` }]}>
-        <MaterialCommunityIcons name={icon as any} size={20} color={color} />
+        <MaterialIcons name={icon as any} size={20} color={color} />
       </View>
       <View style={styles.statsContent}>
         <Text style={[styles.statsValue, { color: themeColors.text }]}>{value}</Text>
@@ -290,7 +289,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={[styles.carTitle, { color: themeColors.text }]}>{item.carTitle}</Text>
             <Text style={[styles.carPrice, { color: themeColors.primary }]}>{item.carPrice}</Text>
           </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color={themeColors.textSecondary} />
+          <MaterialIcons name="chevron-right" size={20} color={themeColors.textSecondary} />
         </View>
 
         {/* Message Preview */}
@@ -301,8 +300,8 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
         {/* Status and Actions */}
         <View style={styles.inquiryFooter}>
           <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}15` }]}>
-            <MaterialCommunityIcons 
-              name={item.status === 'new' ? 'new-box' : item.status === 'contacted' ? 'phone' : item.status === 'interested' ? 'heart' : item.status === 'not_interested' ? 'heart-off' : 'check-circle'} 
+            <MaterialIcons 
+              name={item.status === 'new' ? 'new-releases' : item.status === 'contacted' ? 'phone' : item.status === 'interested' ? 'favorite' : item.status === 'not_interested' ? 'favorite-border' : 'check-circle'} 
               size={14} 
               color={getStatusColor(item.status)} 
             />
@@ -316,13 +315,13 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
               style={[styles.actionButton, { backgroundColor: '#4CAF5015' }]}
               onPress={() => handleCallBuyer(item.buyerPhone)}
             >
-              <MaterialCommunityIcons name="phone" size={14} color="#4CAF50" />
+              <MaterialIcons name="phone" size={14} color="#4CAF50" />
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionButton, { backgroundColor: '#FF980015' }]}
               onPress={() => handleWhatsAppBuyer(item.buyerPhone)}
             >
-              <MaterialCommunityIcons name="whatsapp" size={14} color="#FF9800" />
+              <MaterialIcons name="chat" size={14} color="#FF9800" />
             </TouchableOpacity>
           </View>
         </View>
@@ -357,7 +356,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
             </TouchableOpacity>
             <Text style={[styles.modalHeaderTitle, { color: themeColors.text }]}>Inquiry Details</Text>
             <TouchableOpacity onPress={() => setShowActionModal(true)}>
-              <MaterialCommunityIcons name="dots-vertical" size={24} color={themeColors.text} />
+              <MaterialIcons name="more-vert" size={24} color={themeColors.text} />
             </TouchableOpacity>
           </View>
 
@@ -366,21 +365,21 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
             <View style={[styles.modalSection, { backgroundColor: themeColors.surface }]}>
               <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Buyer Information</Text>
               <View style={styles.buyerInfoRow}>
-                <MaterialCommunityIcons name="account" size={20} color={themeColors.primary} />
+                <MaterialIcons name="person" size={20} color={themeColors.primary} />
                 <Text style={[styles.buyerInfoText, { color: themeColors.text }]}>{selectedInquiry.buyerName}</Text>
               </View>
               <View style={styles.buyerInfoRow}>
-                <MaterialCommunityIcons name="phone" size={20} color={themeColors.primary} />
+                <MaterialIcons name="phone" size={20} color={themeColors.primary} />
                 <Text style={[styles.buyerInfoText, { color: themeColors.text }]}>{selectedInquiry.buyerPhone}</Text>
               </View>
               {selectedInquiry.buyerEmail && (
                 <View style={styles.buyerInfoRow}>
-                  <MaterialCommunityIcons name="email" size={20} color={themeColors.primary} />
+                  <MaterialIcons name="email" size={20} color={themeColors.primary} />
                   <Text style={[styles.buyerInfoText, { color: themeColors.text }]}>{selectedInquiry.buyerEmail}</Text>
                 </View>
               )}
               <View style={styles.buyerInfoRow}>
-                <MaterialCommunityIcons name="map-marker" size={20} color={themeColors.primary} />
+                <MaterialIcons name="location-on" size={20} color={themeColors.primary} />
                 <Text style={[styles.buyerInfoText, { color: themeColors.text }]}>{selectedInquiry.location}</Text>
               </View>
             </View>
@@ -418,7 +417,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
                   style={[styles.quickActionButton, { backgroundColor: '#4CAF5015' }]}
                   onPress={() => handleCallBuyer(selectedInquiry.buyerPhone)}
                 >
-                  <MaterialCommunityIcons name="phone" size={20} color="#4CAF50" />
+                  <MaterialIcons name="phone" size={20} color="#4CAF50" />
                   <Text style={[styles.quickActionText, { color: '#4CAF50' }]}>Call</Text>
                 </TouchableOpacity>
                 
@@ -426,7 +425,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
                   style={[styles.quickActionButton, { backgroundColor: '#FF980015' }]}
                   onPress={() => handleWhatsAppBuyer(selectedInquiry.buyerPhone)}
                 >
-                  <MaterialCommunityIcons name="whatsapp" size={20} color="#FF9800" />
+                  <MaterialIcons name="chat" size={20} color="#FF9800" />
                   <Text style={[styles.quickActionText, { color: '#FF9800' }]}>WhatsApp</Text>
                 </TouchableOpacity>
 
@@ -437,7 +436,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
                     navigation.navigate('CarDetails', { carId: selectedInquiry.carId });
                   }}
                 >
-                  <MaterialCommunityIcons name="car" size={20} color={themeColors.primary} />
+                  <MaterialIcons name="directions-car" size={20} color={themeColors.primary} />
                   <Text style={[styles.quickActionText, { color: themeColors.primary }]}>View Car</Text>
                 </TouchableOpacity>
               </View>
@@ -456,8 +455,8 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
           
           {[
             { key: 'contacted', label: 'Mark as Contacted', icon: 'phone' },
-            { key: 'interested', label: 'Mark as Interested', icon: 'heart' },
-            { key: 'not_interested', label: 'Mark as Not Interested', icon: 'heart-off' },
+            { key: 'interested', label: 'Mark as Interested', icon: 'favorite' },
+            { key: 'not_interested', label: 'Mark as Not Interested', icon: 'favorite-border' },
             { key: 'sold', label: 'Mark as Sold', icon: 'check-circle' },
           ].map((action) => (
             <TouchableOpacity
@@ -465,7 +464,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
               style={styles.actionModalButton}
               onPress={() => selectedInquiry && handleStatusUpdate(selectedInquiry.id, action.key as Inquiry['status'])}
             >
-              <MaterialCommunityIcons name={action.icon as any} size={20} color={themeColors.text} />
+              <MaterialIcons name={action.icon as any} size={20} color={themeColors.text} />
               <Text style={[styles.actionModalButtonText, { color: themeColors.text }]}>{action.label}</Text>
             </TouchableOpacity>
           ))}
@@ -496,7 +495,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: themeColors.text }]}>Inquiries</Text>
         <TouchableOpacity onPress={() => navigation.navigate('DealerInquiryAnalytics')}>
-          <MaterialCommunityIcons name="chart-line" size={24} color={themeColors.primary} />
+          <MaterialIcons name="trending-up" size={24} color={themeColors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -514,9 +513,9 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
         {/* Stats Section */}
         <View style={styles.statsContainer}>
           <View style={styles.statsGrid}>
-            {renderStatsCard('New', inquiryStats.new, 'Uncontacted', 'new-box', '#FF9800')}
+            {renderStatsCard('New', inquiryStats.new, 'Uncontacted', 'new-releases', '#FF9800')}
             {renderStatsCard('Contacted', inquiryStats.contacted, 'In progress', 'phone', '#2196F3')}
-            {renderStatsCard('Interested', inquiryStats.interested, 'Hot leads', 'heart', '#4CAF50')}
+            {renderStatsCard('Interested', inquiryStats.interested, 'Hot leads', 'favorite', '#4CAF50')}
             {renderStatsCard('Conversion', `${inquiryStats.conversionRate}%`, `${inquiryStats.converted} sold`, 'trending-up', '#9C27B0')}
           </View>
         </View>
@@ -524,7 +523,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
         {/* Search and Filters */}
         <View style={styles.filtersContainer}>
           <View style={[styles.searchContainer, { backgroundColor: themeColors.surface }]}>
-            <MaterialCommunityIcons name="magnify" size={20} color={themeColors.textSecondary} />
+            <MaterialIcons name="search" size={20} color={themeColors.textSecondary} />
             <TextInput
               style={[styles.searchInput, { color: themeColors.text }]}
               placeholder="Search inquiries..."
@@ -562,8 +561,8 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
         {/* Inquiries List */}
         {filteredInquiries.length === 0 ? (
           <View style={styles.emptyState}>
-            <MaterialCommunityIcons 
-              name="message-text-outline" 
+            <MaterialIcons 
+              name="message" 
               size={64} 
               color={themeColors.textSecondary} 
             />

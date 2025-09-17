@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
+
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../theme';
 import { Button } from '../../components/ui/Button';
@@ -223,8 +223,8 @@ const CoListVehicleScreen: React.FC = () => {
       activeOpacity={0.8}
     >
       <View style={styles.optionIcon}>
-        <MaterialCommunityIcons
-          name={item.type === 'group' ? 'group' : 'account'}
+        <MaterialIcons
+          name={item.type === 'group' ? 'groups' : 'person'}
           size={24}
           color={item.selected ? '#fff' : '#4ECDC4'}
         />
@@ -379,8 +379,8 @@ const CoListVehicleScreen: React.FC = () => {
             <View style={styles.selectedList}>
               {selectedOptions.map((option, index) => (
                 <View key={option.id} style={styles.selectedItem}>
-                  <MaterialCommunityIcons
-                    name={option.type === 'group' ? 'group' : 'account'}
+                  <MaterialIcons
+                    name={option.type === 'group' ? 'groups' : 'person'}
                     size={16}
                     color="#666"
                   />

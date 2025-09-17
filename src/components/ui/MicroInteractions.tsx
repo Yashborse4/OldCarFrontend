@@ -37,7 +37,7 @@ export const PulseAnimation: React.FC<MicroInteractionProps> = ({
   style,
 }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
 
   const startPulse = () => {
     const { duration = 1000, intensity = 0.1, repeat = true } = config;
@@ -195,7 +195,7 @@ export const GlowAnimation: React.FC<MicroInteractionProps> = ({
   style,
 }) => {
   const glowAnim = useRef(new Animated.Value(0)).current;
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
 
   const startGlow = () => {
     const { duration = 1500, repeat = true } = config;
@@ -269,7 +269,7 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
   style,
 }) => {
   const shimmerAnim = useRef(new Animated.Value(-1)).current;
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
 
   useEffect(() => {
     const shimmer = () => {
@@ -412,7 +412,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  const { colors, shadows } = useTheme();
+  const { colors: themeColors, shadows } = useTheme();
 
   const handlePress = () => {
     Animated.sequence([
@@ -480,7 +480,7 @@ export const LoadingDots: React.FC<{ color?: string; size?: number }> = ({
   const dot1Anim = useRef(new Animated.Value(0)).current;
   const dot2Anim = useRef(new Animated.Value(0)).current;
   const dot3Anim = useRef(new Animated.Value(0)).current;
-  const { colors } = useTheme();
+  const { colors: themeColors, isDark } = useTheme();
 
   useEffect(() => {
     const animateDots = () => {

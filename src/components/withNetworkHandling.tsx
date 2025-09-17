@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, ComponentType } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useNetwork, useNetworkRefresh } from '../context/NetworkContext';
 import NetworkError, { NetworkStatusIndicator } from './NetworkError';
-import { useTheme } from '../theme/ThemeContext';
+import { useTheme } from '../theme';
 
 export interface NetworkHandlingProps {
   isLoading?: boolean;
@@ -46,7 +46,7 @@ const withNetworkHandling = <P extends object>(
       ...restProps 
     } = props;
 
-    const { isDark, colors } = useTheme();
+    const { isDark, colors: themeColors } = useTheme();
     const { isOnline, isOffline } = useNetwork();
     const [hasBeenOffline, setHasBeenOffline] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -279,7 +279,7 @@ export const NetworkAwareWrapper: React.FC<{
     }
   };
 
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
   
   const styles = StyleSheet.create({
     container: {

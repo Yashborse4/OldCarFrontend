@@ -14,7 +14,6 @@ import {
   Platform,
   Animated,
 } from 'react-native';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import { ThemeContext } from '../../theme/ThemeContext';
 import AuthContext from '../../context/AuthContext';
 
@@ -374,11 +373,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
           
           {item.type === 'location' && item.locationData && (
             <TouchableOpacity style={styles.locationContainer}>
-              <MaterialCommunityIcons
-                name="map-marker"
-                size={20}
-                color={isOwnMessage ? '#FFFFFF' : theme.primary}
-              />
+              <Text style={{fontSize: 20, marginRight: 4}}>📍</Text>
               <Text style={[
                 styles.locationText,
                 { color: isOwnMessage ? '#FFFFFF' : theme.text }
@@ -397,16 +392,14 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
             </Text>
             
             {isOwnMessage && (
-              <MaterialCommunityIcons
-                name={
-                  item.deliveryStatus === 'read' ? 'check-all' :
-                  item.deliveryStatus === 'delivered' ? 'check-all' :
-                  item.deliveryStatus === 'sent' ? 'check' : 'clock-outline'
-                }
-                size={12}
-                color={item.deliveryStatus === 'read' ? '#4CAF50' : '#FFFFFF'}
-                style={styles.deliveryIcon}
-              />
+              <Text style={[styles.deliveryIcon, {
+                fontSize: 12,
+                color: item.deliveryStatus === 'read' ? '#4CAF50' : '#FFFFFF'
+              }]}>
+                {item.deliveryStatus === 'read' ? '✓✓' :
+                 item.deliveryStatus === 'delivered' ? '✓✓' :
+                 item.deliveryStatus === 'sent' ? '✓' : '🕒'}
+              </Text>
             )}
           </View>
         </View>
@@ -713,7 +706,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <MaterialCommunityIcons name="arrow-left" size={24} color={theme.text} />
+          <Text style={{fontSize: 24, color: theme.text}}>←</Text>
         </TouchableOpacity>
         
         <View style={styles.headerContent}>
@@ -721,11 +714,9 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
             <Image source={{ uri: participant.avatar }} style={styles.headerAvatar} />
           ) : (
             <View style={styles.headerAvatarPlaceholder}>
-              <MaterialCommunityIcons
-                name={participant?.type === 'dealer' ? 'store' : 'account'}
-                size={20}
-                color="#FFFFFF"
-              />
+              <Text style={{fontSize: 20, color: '#FFFFFF'}}>
+                {participant?.type === 'dealer' ? '🏪' : '👤'}
+              </Text>
             </View>
           )}
           
@@ -739,10 +730,10 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
         
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.actionButton} onPress={makePhoneCall}>
-            <MaterialCommunityIcons name="phone" size={20} color={theme.primary} />
+            <Text style={{fontSize: 20, color: theme.primary}}>📞</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton} onPress={openWhatsApp}>
-            <MaterialCommunityIcons name="whatsapp" size={20} color="#25D366" />
+            <Text style={{fontSize: 20, color: '#25D366'}}>💬</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -762,7 +753,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
       {/* Input Area */}
       <View style={styles.inputContainer}>
         <TouchableOpacity style={styles.attachmentButton}>
-          <MaterialCommunityIcons name="plus" size={24} color={theme.primary} />
+          <Text style={{fontSize: 24, color: theme.primary}}>+</Text>
         </TouchableOpacity>
         
         <View style={styles.textInputContainer}>
@@ -785,11 +776,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
           onPress={sendMessage}
           disabled={!messageText.trim()}
         >
-          <MaterialCommunityIcons
-            name="send"
-            size={20}
-            color="#FFFFFF"
-          />
+          <Text style={{fontSize: 20, color: '#FFFFFF'}}>➤</Text>
         </TouchableOpacity>
       </View>
 
@@ -805,7 +792,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
             style={styles.modalCloseButton}
             onPress={() => setSelectedImage(null)}
           >
-            <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
+            <Text style={{fontSize: 24, color: '#FFFFFF'}}>×</Text>
           </TouchableOpacity>
           {selectedImage && (
             <Image source={{ uri: selectedImage }} style={styles.fullScreenImage} />

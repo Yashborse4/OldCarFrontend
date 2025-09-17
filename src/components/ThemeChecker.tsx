@@ -4,7 +4,7 @@ import { useTheme } from '../theme';
 import { Feather } from '@react-native-vector-icons/feather';
 
 const ThemeChecker = ({ compact = false }) => {
-  const { isDark, toggleTheme, colors } = useTheme();
+  const { isDark, toggleTheme, colors: themeColors } = useTheme();
 
   return (
     <View style={[styles.container, compact && styles.compactContainer]}>

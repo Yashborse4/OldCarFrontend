@@ -14,7 +14,6 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import { useTheme } from '../../theme';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -35,7 +34,7 @@ interface SearchResultsScreenProps {}
 const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
   const navigation = useNavigation<SearchResultsScreenNavigationProp>();
   const route = useRoute<SearchResultsScreenRouteProp>();
-  const { colors, spacing } = useTheme();
+  const { colors: themeColors, spacing } = useTheme();
   const { filters: initialFilters } = route.params as { filters: VehicleSearchFilters };
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);

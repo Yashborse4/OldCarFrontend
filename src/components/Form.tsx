@@ -24,7 +24,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { useTheme } from '../theme';
 import { 
   scale, 
@@ -36,7 +36,7 @@ import {
 import { withPerformanceTracking } from '../utils/performance';
 import { BaseInput, PasswordInput, SearchInput, InputRef } from './Input';
 import { useNotification } from './Notification';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+// Icon already imported as MaterialIcons above
 
 // Form validation utilities
 export interface ValidationRule {
@@ -567,7 +567,7 @@ const SubmitButtonComponent: React.FC<SubmitButtonProps> = ({
   size = 'medium',
   icon,
 }) => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
   const form = useForm();
 
   const isLoading = externalLoading || form.isSubmitting;
@@ -699,7 +699,7 @@ const ResetButtonComponent: React.FC<ResetButtonProps> = ({
   variant = 'text',
   size = 'medium',
 }) => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
   const form = useForm();
 
   const handlePress = useCallback(() => {

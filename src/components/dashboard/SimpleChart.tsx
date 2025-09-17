@@ -31,7 +31,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
   showValues = true,
   animated = true,
 }) => {
-  const { colors, spacing, borderRadius, shadows } = useTheme();
+  const { colors: themeColors, spacing, borderRadius, shadows } = useTheme();
 
   const maxValue = Math.max(...data.map(item => item.value));
   const totalValue = data.reduce((sum, item) => sum + item.value, 0);

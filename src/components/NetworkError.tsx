@@ -9,7 +9,6 @@ import {
   Modal,
 } from 'react-native';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import LinearGradient from 'react-native-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { useTheme } from '../theme';
@@ -36,7 +35,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
   showRetryButton = true,
   style,
 }) => {
-  const { isDark, colors } = useTheme();
+  const { isDark, colors: themeColors } = useTheme();
   const { retryConnection, checkConnection } = useNetwork();
   const [isRetrying, setIsRetrying] = useState(false);
 
@@ -215,7 +214,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
   if (mode === 'banner') {
     return (
       <Animatable.View animation="slideInDown" duration={500} style={styles.bannerContainer}>
-        <MaterialCommunityIcons
+        <MaterialIcons
           name="wifi-off"
           size={20}
           color={isDark ? '#FFFFFF' : '#C62828'}
@@ -250,7 +249,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
         style={[styles.inlineContainer, style]}
       >
         <View style={styles.iconContainer}>
-          <MaterialCommunityIcons
+          <MaterialIcons
             name="wifi-off"
             size={40}
             color={isDark ? '#FF6B6B' : '#D32F2F'}
@@ -290,7 +289,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
             ]}
             style={styles.iconContainer}
           >
-            <MaterialCommunityIcons
+            <MaterialIcons
               name="wifi-off"
               size={48}
               color={isDark ? '#FF6B6B' : '#D32F2F'}
@@ -347,7 +346,7 @@ export const NetworkStatusIndicator: React.FC<{ visible?: boolean }> = ({ visibl
 
   return (
     <Animatable.View animation="fadeIn" duration={300} style={styles.indicator}>
-      <MaterialCommunityIcons name="wifi-off" size={12} color="#FFFFFF" />
+      <MaterialIcons name="wifi-off" size={12} color="#FFFFFF" />
       <Text style={styles.text}>Offline</Text>
     </Animatable.View>
   );

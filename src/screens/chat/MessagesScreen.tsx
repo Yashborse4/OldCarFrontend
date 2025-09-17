@@ -3,17 +3,16 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   TouchableOpacity,
   RefreshControl,
   TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { MessagesNavigationProp, RootStackParamList } from '../../navigation/types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-// import { MessagesNavigationProp, ChatMessage } from '../../navigation/types'; // Update this path based on your project structure
-// import { Input } from '../../components/UI/Input'; // Update this path based on your project structure
+import { Card } from '../../components/UI/Card';
+import { theme } from '../../theme';
 
 // Temporary interface until proper types are available
 interface ChatMessage {
@@ -37,7 +36,8 @@ interface Conversation {
 }
 
 const MessagesScreen: React.FC = () => {
-  const navigation = useNavigation<MessagesNavigationProp>();
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [searchText, setSearchText] = useState('');
   const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
@@ -176,7 +176,7 @@ const MessagesScreen: React.FC = () => {
   };
 
   const handleConversationPress = (conversation: Conversation) => {
-    navigation.navigate('Chat', {
+    (navigation as any).navigate('ChatScreen', {
       dealerId: conversation.dealerId,
       dealerName: conversation.dealerName,
     });
@@ -209,58 +209,60 @@ const MessagesScreen: React.FC = () => {
   };
 
   const renderConversationItem = ({ item }: { item: Conversation }) => (
-    <TouchableOpacity
-      style={styles.conversationCard}
-      onPress={() => handleConversationPress(item)}
-      activeOpacity={0.8}
-    >
-      <View style={styles.avatarContainer}>
-        <View style={[styles.avatar, item.isOnline && styles.onlineAvatar]}>
-          <Text style={styles.avatarText}>
-            {item.dealerName.split(' ').map(n => n[0]).join('').toUpperCase()}
-          </Text>
+    <Card style={styles.conversationCard}>
+      <TouchableOpacity
+        onPress={() => handleConversationPress(item)}
+        activeOpacity={0.8}
+        style={styles.conversationContent}
+      >
+        <View style={styles.avatarContainer}>
+          <View style={[styles.avatar, item.isOnline && styles.onlineAvatar]}>
+            <Text style={styles.avatarText}>
+              {item.dealerName.split(' ').map(n => n[0]).join('').toUpperCase()}
+            </Text>
+          </View>
+          {item.isOnline && <View style={styles.onlineIndicator} />}
         </View>
-        {item.isOnline && <View style={styles.onlineIndicator} />}
-      </View>
 
-      <View style={styles.conversationInfo}>
-        <View style={styles.conversationHeader}>
-          <Text style={styles.dealerName} numberOfLines={1}>
-            {item.dealerName}
-          </Text>
-          <Text style={styles.timestamp}>
-            {formatTimestamp(item.lastMessage.timestamp)}
-          </Text>
-        </View>
-        
-        <Text style={styles.dealership} numberOfLines={1}>
-          {item.dealership}
-        </Text>
-        
-        <View style={styles.lastMessageContainer}>
-          <Text style={[
-            styles.lastMessage,
-            item.unreadCount > 0 && styles.unreadMessage
-          ]} numberOfLines={1}>
-            {item.lastMessage.senderId === 'current-user' && '✓ '}
-            {getMessagePreview(item.lastMessage)}
+        <View style={styles.conversationInfo}>
+          <View style={styles.conversationHeader}>
+            <Text style={styles.dealerName} numberOfLines={1}>
+              {item.dealerName}
+            </Text>
+            <Text style={styles.timestamp}>
+              {formatTimestamp(item.lastMessage.timestamp)}
+            </Text>
+          </View>
+          
+          <Text style={styles.dealership} numberOfLines={1}>
+            {item.dealership}
           </Text>
           
-          {item.unreadCount > 0 && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadCount}>
-                {item.unreadCount > 9 ? '9+' : item.unreadCount}
-              </Text>
-            </View>
-          )}
+          <View style={styles.lastMessageContainer}>
+            <Text style={[
+              styles.lastMessage,
+              item.unreadCount > 0 && styles.unreadMessage
+            ]} numberOfLines={1}>
+              {item.lastMessage.senderId === 'current-user' && '✓ '}
+              {getMessagePreview(item.lastMessage)}
+            </Text>
+            
+            {item.unreadCount > 0 && (
+              <View style={styles.unreadBadge}>
+                <Text style={styles.unreadCount}>
+                  {item.unreadCount > 9 ? '9+' : item.unreadCount}
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Card>
   );
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <MaterialIcons name="chat-bubble-outline" size={80} color="#ddd" />
+      <MaterialIcons name="chat-bubble-outline" size={80} color={theme.colors.textSecondary} />
       <Text style={styles.emptyStateTitle}>No Messages Yet</Text>
       <Text style={styles.emptyStateText}>
         Start networking with other dealers and your conversations will appear here
@@ -269,14 +271,12 @@ const MessagesScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Messages</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerButton}>
-            <MaterialIcons name="search" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.headerButton}>
+          <MaterialIcons name="search" size={24} color={theme.colors.text} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.searchContainer}>
@@ -284,6 +284,7 @@ const MessagesScreen: React.FC = () => {
           value={searchText}
           onChangeText={setSearchText}
           placeholder="Search conversations..."
+          placeholderTextColor={theme.colors.textSecondary}
           style={styles.searchInput}
         />
       </View>
@@ -292,19 +293,26 @@ const MessagesScreen: React.FC = () => {
         data={filteredConversations}
         renderItem={renderConversationItem}
         keyExtractor={(item) => item.id}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            colors={[theme.colors.primary]}
+            tintColor={theme.colors.primary}
+          />
+        }
         contentContainerStyle={filteredConversations.length === 0 ? styles.emptyContainer : styles.listContainer}
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -312,38 +320,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: theme.colors.border,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
-  },
-  headerActions: {
-    flexDirection: 'row',
+    color: theme.colors.text,
   },
   headerButton: {
     padding: 8,
-    marginLeft: 8,
   },
   searchContainer: {
     padding: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    backgroundColor: theme.colors.surface,
   },
   searchInput: {
-    marginBottom: 0,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
+    borderColor: theme.colors.border,
+    borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    color: '#333',
-    backgroundColor: '#f8f9fa',
+    color: theme.colors.text,
+    backgroundColor: theme.colors.background,
   },
   listContainer: {
     paddingVertical: 8,
@@ -355,13 +356,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   conversationCard: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+  conversationContent: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    padding: 16,
   },
   avatarContainer: {
     position: 'relative',
@@ -371,16 +372,16 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#4ECDC4',
+    backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   onlineAvatar: {
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: theme.colors.success,
   },
   avatarText: {
-    color: '#fff',
+    color: theme.colors.surface,
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -391,9 +392,9 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#4CAF50',
+    backgroundColor: theme.colors.success,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: theme.colors.surface,
   },
   conversationInfo: {
     flex: 1,
@@ -408,16 +409,16 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: theme.colors.text,
     marginRight: 8,
   },
   timestamp: {
     fontSize: 12,
-    color: '#666',
+    color: theme.colors.textSecondary,
   },
   dealership: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary,
     marginBottom: 6,
   },
   lastMessageContainer: {
@@ -428,15 +429,15 @@ const styles = StyleSheet.create({
   lastMessage: {
     flex: 1,
     fontSize: 14,
-    color: '#888',
+    color: theme.colors.textSecondary,
     marginRight: 8,
   },
   unreadMessage: {
-    color: '#333',
+    color: theme.colors.text,
     fontWeight: '500',
   },
   unreadBadge: {
-    backgroundColor: '#4ECDC4',
+    backgroundColor: theme.colors.primary,
     borderRadius: 12,
     minWidth: 24,
     height: 24,
@@ -445,7 +446,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   unreadCount: {
-    color: '#fff',
+    color: theme.colors.surface,
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -455,13 +456,13 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: theme.colors.text,
     marginTop: 20,
     marginBottom: 8,
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#666',
+    color: theme.colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },

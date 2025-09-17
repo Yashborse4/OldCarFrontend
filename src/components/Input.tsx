@@ -17,7 +17,7 @@ import {
   Platform,
   Pressable,
 } from 'react-native';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { useTheme } from '../theme';
 import { 
   scale, 
@@ -105,7 +105,7 @@ const BaseInputComponent = forwardRef<InputRef, BaseInputProps>(({
   accessibilityHint,
   ...textInputProps
 }, ref) => {
-  const { colors, isDark } = useTheme();
+  const { colors: themeColors, isDark } = useTheme();
   const { deviceInfo } = useResponsive();
   
   const [isFocused, setIsFocused] = useState(false);
@@ -311,7 +311,7 @@ const BaseInputComponent = forwardRef<InputRef, BaseInputProps>(({
       default:
         return { container: baseContainerStyle, input: baseInputStyle };
     }
-  }, [variant, error, internalError, isFocused, colors, disabled, getSizeStyles, animateLabel, label]);
+  }, [variant, error, internalError, isFocused, themeColors, disabled, getSizeStyles, animateLabel, label]);
 
   // Get animated label styles
   const getAnimatedLabelStyles = useCallback(() => {
@@ -339,7 +339,7 @@ const BaseInputComponent = forwardRef<InputRef, BaseInputProps>(({
       paddingHorizontal: variant === 'outlined' ? SPACING.xs : 0,
       zIndex: 1,
     };
-  }, [animateLabel, label, labelAnimation, variant, error, internalError, isFocused, colors, getSizeStyles]);
+  }, [animateLabel, label, labelAnimation, variant, error, internalError, isFocused, themeColors, getSizeStyles]);
 
   const variantStyles = getVariantStyles();
   const animatedLabelStyles = getAnimatedLabelStyles();
@@ -460,7 +460,7 @@ const PasswordInputComponent: React.FC<PasswordInputProps> = ({
 }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
 
   const calculatePasswordStrength = useCallback((password: string) => {
     let strength = 0;
@@ -489,7 +489,7 @@ const PasswordInputComponent: React.FC<PasswordInputProps> = ({
       case 5: return themeColors.success;
       default: return themeColors.textSecondary;
     }
-  }, [passwordStrength, colors]);
+  }, [passwordStrength, themeColors]);
 
   const getStrengthText = useCallback(() => {
     switch (passwordStrength) {

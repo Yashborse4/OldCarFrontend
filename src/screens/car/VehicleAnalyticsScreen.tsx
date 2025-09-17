@@ -14,7 +14,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../theme';
 import { Card } from '../../components/ui/Card';
@@ -40,7 +39,7 @@ interface AnalyticsData {
 
 const VehicleAnalyticsScreen: React.FC = () => {
   const navigation = useNavigation<VehicleAnalyticsScreenNavigationProp>();
-  const { colors, spacing } = useTheme();
+  const { colors: themeColors, spacing } = useTheme();
   
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState('7d');
@@ -246,7 +245,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
                     <Text style={styles.performerStatText}>{item.views}</Text>
                   </View>
                   <View style={styles.performerStat}>
-                    <MaterialCommunityIcons name="message" size={16} color="#fff" />
+                    <MaterialIcons name="message" size={16} color="#fff" />
                     <Text style={styles.performerStatText}>{item.inquiries}</Text>
                   </View>
                   <View style={styles.performerStat}>

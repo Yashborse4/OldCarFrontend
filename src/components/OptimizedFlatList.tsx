@@ -79,7 +79,7 @@ const DefaultEmptyComponent: React.FC<{
   error?: string | null;
   onRetry?: () => void;
 }> = ({ title, message, loading, error, onRetry }) => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
   const { SPACING: spacing, FONT_SIZES: fontSize } = useResponsive();
 
   if (loading) {
@@ -130,7 +130,7 @@ const DefaultEmptyComponent: React.FC<{
  * Optimized item separator
  */
 const ItemSeparator = memo(() => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
   return <View style={[styles.separator, { backgroundColor: themeColors.border }]} />;
 });
 
@@ -140,7 +140,7 @@ const ItemSeparator = memo(() => {
 const FooterLoadingComponent: React.FC<{
   loading?: boolean;
 }> = memo(({ loading }) => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
   
   if (!loading) return null;
   
@@ -188,7 +188,7 @@ function OptimizedFlatList<T>({
   keyExtractor,
   ...flatListProps
 }: OptimizedFlatListProps<T>) {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
   const { deviceInfo } = useResponsive();
   const flatListRef = useRef<FlatList<T>>(null);
   const [renderStartTime, setRenderStartTime] = useState<number>(0);
@@ -283,7 +283,7 @@ function OptimizedFlatList<T>({
           progressBackgroundColor={themeColors.surface}
         />
       ) : undefined,
-    [onRefresh, refreshing, colors]
+    [onRefresh, refreshing, themeColors]
   );
 
   // Empty component with error handling

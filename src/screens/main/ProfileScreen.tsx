@@ -1,105 +1,132 @@
 import React from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, Switch, TouchableOpacity, StatusBar, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import { AntDesign } from '@react-native-vector-icons/ant-design';
-import LinearGradient from 'react-native-linear-gradient';
+import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
 
 const ProfileScreen = ({ navigation }: { navigation: any }) => {
   const { isDark, toggleTheme, colors } = useTheme();
 
+  const handleComingSoon = (feature: string) => {
+    Alert.alert('Coming Soon', `${feature} feature is under development.`);
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: () => navigation.replace('Login'),
+        },
+      ]
+    );
+  };
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="default" />
       
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: themeColors.border }]}>
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <AntDesign name="arrow-left" size={24} color={themeColors.text} />
+          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Profile</Text>
+        <Text style={styles.headerTitle}>Profile</Text>
         <View style={{ width: 40 }} />
       </View>
 
       {/* Profile Section */}
-      <View style={styles.profileSection}>
-        <View style={[styles.avatarContainer, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}>
-          <Text style={styles.avatarText}>JD</Text>
+      <Card style={styles.profileCard}>
+        <View style={styles.profileSection}>
+          <View style={styles.avatarContainer}>
+            <MaterialIcons name="account-circle" size={80} color={colors.primary} />
+          </View>
+          <Text style={styles.userName}>John Doe</Text>
+          <Text style={styles.userEmail}>john.doe@example.com</Text>
+          <Text style={styles.userRole}>Car Enthusiast</Text>
         </View>
-        <Text style={[styles.userName, { color: themeColors.text }]}>John Doe</Text>
-        <Text style={[styles.userEmail, { color: themeColors.textSecondary }]}>john.doe@example.com</Text>
-      </View>
+      </Card>
 
-      {/* Settings Cards */}
+      {/* Settings */}
       <View style={styles.settingsContainer}>
         {/* Theme Toggle */}
-        <View style={[styles.card, { backgroundColor: themeColors.surface }]}>
-          <TouchableOpacity style={styles.settingItem} onPress={toggleTheme}>
+        <Card style={styles.settingCard}>
+          <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
               <MaterialIcons 
                 name={isDark ? "dark-mode" : "light-mode"} 
                 size={24} 
-                color={themeColors.primary} 
+                color={colors.primary} 
               />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>
+              <Text style={styles.settingLabel}>
                 {isDark ? "Dark Mode" : "Light Mode"}
               </Text>
             </View>
             <Switch 
               value={isDark} 
               onValueChange={toggleTheme} 
-              trackColor={{ false: '#767577', true: themeColors.primary }} 
-              thumbColor={isDark ? '#f4f3f4' : '#f4f3f4'} 
-              ios_backgroundColor="#3e3e3e"
+              trackColor={{ false: '#E2E8F0', true: colors.primary }} 
+              thumbColor="#FFFFFF"
             />
-          </TouchableOpacity>
-        </View>
+          </View>
+        </Card>
 
-        {/* My Listings */}
-        <View style={[styles.card, { backgroundColor: themeColors.surface }]}>
-          <TouchableOpacity style={styles.settingItem}>
+        {/* Menu Items */}
+        <Card style={styles.settingCard} onPress={() => handleComingSoon('My Listings')}>
+          <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <MaterialIcons name="list" size={24} color={themeColors.primary} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>My Listings</Text>
+              <MaterialIcons name="list-alt" size={24} color={colors.primary} />
+              <Text style={styles.settingLabel}>My Listings</Text>
             </View>
-            <AntDesign name="right" size={18} color={themeColors.textSecondary} />
-          </TouchableOpacity>
-        </View>
+            <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+          </View>
+        </Card>
 
-        {/* Saved Cars */}
-        <View style={[styles.card, { backgroundColor: themeColors.surface }]}>
-          <TouchableOpacity style={styles.settingItem}>
+        <Card style={styles.settingCard} onPress={() => handleComingSoon('Saved Cars')}>
+          <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <MaterialIcons name="favorite-border" size={24} color={themeColors.primary} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Saved Cars</Text>
+              <MaterialIcons name="favorite-border" size={24} color={colors.primary} />
+              <Text style={styles.settingLabel}>Saved Cars</Text>
             </View>
-            <AntDesign name="right" size={18} color={themeColors.textSecondary} />
-          </TouchableOpacity>
-        </View>
+            <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+          </View>
+        </Card>
 
-        {/* Notifications */}
-        <View style={[styles.card, { backgroundColor: themeColors.surface }]}>
-          <TouchableOpacity style={styles.settingItem}>
+        <Card style={styles.settingCard} onPress={() => handleComingSoon('Notifications')}>
+          <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <MaterialIcons name="notifications-none" size={24} color={themeColors.primary} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Notifications</Text>
+              <MaterialIcons name="notifications-none" size={24} color={colors.primary} />
+              <Text style={styles.settingLabel}>Notifications</Text>
             </View>
-            <AntDesign name="right" size={18} color={themeColors.textSecondary} />
-          </TouchableOpacity>
-        </View>
+            <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+          </View>
+        </Card>
+
+        <Card style={styles.settingCard} onPress={() => navigation.navigate('Settings')}>
+          <View style={styles.settingItem}>
+            <View style={styles.settingLeft}>
+              <MaterialIcons name="settings" size={24} color={colors.primary} />
+              <Text style={styles.settingLabel}>Settings</Text>
+            </View>
+            <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+          </View>
+        </Card>
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton}>
-          <LinearGradient
-            colors={['#FFD700', '#E6C200', '#D4AF37']} // Gold gradient
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 0}}
-            style={styles.logoutButtonGradient}
-          >
-            <MaterialIcons name="logout" size={20} color="#111827" style={{ marginRight: 8 }} />
-            <Text style={styles.logoutButtonText}>Logout</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+        <Button
+          title="Logout"
+          variant="danger"
+          onPress={handleLogout}
+          icon="logout"
+          fullWidth
+          style={styles.logoutButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -108,66 +135,62 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FAFAFA',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 20,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   backButton: {
     padding: 8,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1A202C',
+  },
+  profileCard: {
+    marginHorizontal: 20,
+    marginBottom: 24,
   },
   profileSection: {
     alignItems: 'center',
-    paddingVertical: 30,
+    paddingVertical: 24,
   },
   avatarContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
     marginBottom: 16,
-  },
-  avatarText: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#FFD700',
   },
   userName: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: '#1A202C',
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 16,
+    color: '#718096',
+    marginBottom: 4,
+  },
+  userRole: {
+    fontSize: 14,
+    color: '#A0AEC0',
   },
   settingsContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 32,
   },
-  card: {
-    borderRadius: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+  settingCard: {
+    marginBottom: 12,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
   },
   settingLeft: {
     flexDirection: 'row',
@@ -176,24 +199,11 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontSize: 16,
     fontWeight: '500',
+    color: '#1A202C',
     marginLeft: 12,
   },
   logoutButton: {
-    height: 56,
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginTop: 20,
-  },
-  logoutButtonGradient: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoutButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+    marginTop: 24,
   },
 });
 

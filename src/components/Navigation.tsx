@@ -25,7 +25,7 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
@@ -93,7 +93,7 @@ const CustomTabBarComponent: React.FC<CustomTabBarProps> = ({
   activeColor,
   inactiveColor,
 }) => {
-  const { colors } = useTheme();
+  const { isDark, colors: themeColors } = useTheme();
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(0)).current;
   const scaleAnims = useRef(items.map(() => new Animated.Value(1))).current;
@@ -186,7 +186,7 @@ const CustomTabBarComponent: React.FC<CustomTabBarProps> = ({
       default:
         return baseStyle;
     }
-  }, [variant, backgroundColor, colors, insets]);
+  }, [variant, backgroundColor, themeColors, insets]);
 
   // Render tab badge
   const renderBadge = useCallback((badge?: number | string) => {
@@ -292,7 +292,7 @@ const CustomTabBarComponent: React.FC<CustomTabBarProps> = ({
     );
   }, [
     activeTab,
-    colors,
+    themeColors,
     finalActiveColor,
     finalInactiveColor,
     variant,
@@ -398,7 +398,7 @@ const CustomHeaderComponent: React.FC<HeaderProps> = ({
   onSearchFocus,
   onSearchBlur,
 }) => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
   const insets = useSafeAreaInsets();
   const [isSearchActive, setIsSearchActive] = useState(false);
 
@@ -450,7 +450,7 @@ const CustomHeaderComponent: React.FC<HeaderProps> = ({
     }
 
     return <View style={styles.headerAction} />;
-  }, [leftComponent, showBackButton, showMenuButton, onBackPress, onMenuPress, colors]);
+  }, [leftComponent, showBackButton, showMenuButton, onBackPress, onMenuPress, themeColors]);
 
   const renderCenterComponent = useCallback(() => {
     if (centerComponent) return centerComponent;
@@ -508,7 +508,7 @@ const CustomHeaderComponent: React.FC<HeaderProps> = ({
     handleSearchBlur,
     title,
     subtitle,
-    colors,
+    themeColors,
     titleStyle,
   ]);
 
@@ -532,7 +532,7 @@ const CustomHeaderComponent: React.FC<HeaderProps> = ({
     }
 
     return <View style={styles.headerAction} />;
-  }, [rightComponent, searchable, isSearchActive, handleSearchFocus, colors]);
+  }, [rightComponent, searchable, isSearchActive, handleSearchFocus, themeColors]);
 
   const headerContent = (
     <SafeAreaView style={styles.headerSafeArea}>
@@ -599,7 +599,7 @@ const FloatingActionButtonComponent: React.FC<FloatingActionButtonProps> = ({
   disabled = false,
   loading = false,
 }) => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
   const insets = useSafeAreaInsets();
   const scaleAnim = useRef(new Animated.Value(1)).current;
 

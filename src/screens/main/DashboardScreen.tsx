@@ -1,165 +1,80 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity, 
+  TouchableOpacity,
   StatusBar,
-  TextInput,
   FlatList,
   Modal,
-  Dimensions,
-  SafeAreaView,
   Image,
   ScrollView,
-  Platform,
   StyleSheet,
   Alert,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
-import { Feather } from '@react-native-vector-icons/feather';
-import { AntDesign } from '@react-native-vector-icons/ant-design';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import LinearGradient from 'react-native-linear-gradient';
-import * as Animatable from 'react-native-animatable';
-import Button from '../../components/UI/Button';
-import Input from '../../components/UI/Input';
-import Card from '../../components/UI/Card';
-import { withOverlayNetworkHandling } from '../../components/withNetworkHandling';
-import { NetworkStatusIndicator } from '../../components/NetworkError';
-
-const { width, height } = Dimensions.get('window');
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Card } from '../../components/ui/Card';
 
 interface Props {
   navigation: any;
 }
 
-// Mock auth hook
-const useAuth = () => {
-  return { authorized: true };
-};
-
-// Mock functions
-const clearAuthData = async () => {
-  console.log('Clearing auth data');
-};
-
-const showToast = (type: 'success' | 'error' | 'info', title: string, message: string) => {
-  Alert.alert(title, message);
-};
-
-const CITIES = ['Mumbai', 'Nashik', 'Pune', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Kolkata'];
-
-const BANNERS = [
-  {
-    id: 1,
-    title: 'Sell Your Car Instantly',
-    desc: 'Get the best price, quick & easy!',
-    btn: 'Sell Now',
-    image: 'https://images.pexels.com/photos/116675/pexels-photo-116675.jpeg?auto=compress&cs=tinysrgb&w=800',
-    gradient: ['#FF6B6B', '#FF8E53'],
-  },
-  {
-    id: 2,
-    title: 'Find Your Dream Car',
-    desc: 'Browse thousands of used cars',
-    btn: 'Browse Cars',
-    image: 'https://images.pexels.com/photos/3764984/pexels-photo-3764984.jpeg?auto=compress&cs=tinysrgb&w=800',
-    gradient: ['#4ECDC4', '#44A08D'],
-  },
-  {
-    id: 3,
-    title: 'Car Valuation',
-    desc: "Know your car's worth in seconds",
-    btn: 'Check Value',
-    image: 'https://images.pexels.com/photos/70912/pexels-photo-70912.jpeg?auto=compress&cs=tinysrgb&w=800',
-    gradient: ['#667eea', '#764ba2'],
-  },
+const QUICK_ACTIONS = [
+  { icon: 'directions-car', label: 'Sell Car', route: 'SellCar' },
+  { icon: 'search', label: 'Buy Used', route: 'BrowseCars' },
+  { icon: 'calculate', label: 'Valuation', route: 'Valuation' },
+  { icon: 'account-balance', label: 'Finance', route: 'Finance' },
 ];
 
-const QUICK_CARDS = [
-  { icon: 'car', label: 'Sell Car', route: 'SellCar', color: '#FF6B6B' },
-  { icon: 'search1', label: 'Buy Used', route: 'Dashboard', color: '#4ECDC4' },
-  { icon: 'calculator', label: 'Valuation', route: null, color: '#45B7D1' },
-  { icon: 'creditcard', label: 'Finance', route: null, color: '#96CEB4' },
-];
-
-const CAR_LISTINGS = [
+const FEATURED_CARS = [
   {
     id: 1,
     image: 'https://images.pexels.com/photos/358070/pexels-photo-358070.jpeg?auto=compress&w=400',
     title: 'Maruti Swift VXI',
-    certified: true,
-    verified: true,
     price: 'â‚¹4,50,000',
-    originalPrice: 'â‚¹5,20,000',
     location: 'Nashik',
     year: 2018,
     km: '45,000',
     fuel: 'Petrol',
-    rating: 4.5,
-    discount: 'â‚¹70K off',
   },
   {
     id: 2,
     image: 'https://images.pexels.com/photos/170782/pexels-photo-170782.jpeg?auto=compress&w=400',
     title: 'Hyundai i20 Sportz',
-    certified: false,
-    verified: true,
     price: 'â‚¹5,80,000',
-    originalPrice: 'â‚¹6,50,000',
     location: 'Mumbai',
     year: 2019,
     km: '32,000',
     fuel: 'Diesel',
-    rating: 4.2,
-    discount: 'â‚¹70K off',
   },
   {
     id: 3,
     image: 'https://images.pexels.com/photos/358070/pexels-photo-358070.jpeg?auto=compress&w=400',
     title: 'Honda City ZX',
-    certified: true,
-    verified: false,
     price: 'â‚¹7,20,000',
-    originalPrice: 'â‚¹8,00,000',
     location: 'Pune',
     year: 2017,
     km: '60,000',
     fuel: 'Petrol',
-    rating: 4.7,
-    discount: 'â‚¹80K off',
   },
 ];
 
-const BOTTOM_TABS = [
-  { icon: 'home', label: 'HOME', route: 'Dashboard' },
-  { icon: 'pluscircleo', label: 'SELL', route: 'SellCar' },
-  { icon: 'appstore-o', label: 'USED', route: null },
-  { icon: 'message1', label: 'ASK AI', new: true, route: null },
-  { icon: 'user', label: 'PROFILE', route: 'Settings' },
-];
-
-const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
-  const { authorized } = useAuth();
-  const { isDark, colors } = useTheme();
-  const [isDrawerVisible, setDrawerVisible] = useState(false);
-  const [isCityModalVisible, setCityModalVisible] = useState(false);
-  const [selectedCity, setSelectedCity] = useState('Nashik');
+const DashboardScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors: themeColors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [selectedCity, setSelectedCity] = useState('Nashik');
 
-  // Auto-scroll banner
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentBannerIndex((prev) => (prev + 1) % BANNERS.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, []);
+  const handleComingSoon = () => {
+    Alert.alert('Coming Soon', 'This feature is under development.');
+  };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -168,843 +83,325 @@ const DashboardScreenBase: React.FC<Props> = ({ navigation }) => {
         {
           text: 'Logout',
           style: 'destructive',
-          onPress: async () => {
-            await clearAuthData();
-            navigation.replace('Login');
-            showToast('success', 'Logged Out', 'You have been successfully logged out.');
-          },
+          onPress: () => navigation.replace('Login'),
         },
       ]
     );
   };
 
-  const handleComingSoon = () => {
-    showToast('info', 'Coming Soon', 'This feature is under development.');
-  };
-
   const onRefresh = async () => {
     setRefreshing(true);
-    try {
-      // Simulate API call - replace with actual API calls
-      await new Promise(resolve => setTimeout(() => resolve(null), 1500));
-      // TODO: Add actual data refresh logic here
-      // await loadDashboardData();
-      showToast('success', 'Refreshed', 'Data has been updated.');
-    } catch (error) {
-      console.error('Error refreshing dashboard:', error);
-      showToast('error', 'Refresh Failed', 'Unable to refresh data. Please try again.');
-    } finally {
+    // Simulate API call
+    setTimeout(() => {
       setRefreshing(false);
-    }
+    }, 1500);
   };
 
-  const styles = StyleSheet.create({
-    safeArea: {
-      flex: 1,
-      backgroundColor: themeColors.background,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      paddingTop: 12,
-      paddingBottom: 8,
-      backgroundColor: 'transparent',
-    },
-    headerButton: {
-      padding: 8,
-      borderRadius: 8,
-    },
-    headerTitle: {
-      fontSize: 22,
-      fontWeight: '700',
-      color: themeColors.text,
-      letterSpacing: 0.2,
-    },
-    headerCityCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 12,
-      backgroundColor: themeColors.surface,
-      elevation: 2,
-      marginHorizontal: 8,
-      shadowColor: themeColors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-    },
-    headerCityText: {
-      fontSize: 14,
-      fontWeight: '600',
-      marginLeft: 6,
-      color: themeColors.text,
-    },
-    scrollViewContent: {
-      flexGrow: 1,
-      paddingTop: 8,
-      backgroundColor: 'transparent',
-      paddingHorizontal: 16,
-      paddingBottom: 100,
-    },
-    searchContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderWidth: isDark ? 1 : 0,
-      borderRadius: 25,
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-      marginBottom: 16,
-      borderColor: themeColors.border,
-      backgroundColor: isDark ? themeColors.surface : '#F5F5F5',
-      shadowColor: themeColors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 4,
-      elevation: 3,
-    },
-    searchInput: {
-      flex: 1,
-      fontSize: 16,
-      paddingVertical: 0,
-      paddingHorizontal: 12,
-      backgroundColor: 'transparent',
-      color: themeColors.text,
-    },
-    bannerContainer: {
-      height: height * 0.22,
-      marginVertical: 12,
-      borderRadius: 20,
-      overflow: 'hidden',
-    },
-    bannerWrapper: {
-      position: 'relative',
-    },
-    bannerImage: {
-      width: '100%',
-      height: '100%',
-      borderRadius: 20,
-    },
-    bannerGradient: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: 16,
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
-    },
-    bannerTitle: {
-      fontSize: 22,
-      fontWeight: '700',
-      color: '#FFFFFF',
-      marginBottom: 4,
-    },
-    bannerDesc: {
-      fontSize: 14,
-      color: '#FFFFFF',
-      opacity: 0.9,
-    },
-    bannerIndicators: {
-      position: 'absolute',
-      bottom: 12,
-      right: 16,
-      flexDirection: 'row',
-    },
-    bannerIndicator: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      marginLeft: 4,
-      backgroundColor: 'rgba(255,255,255,0.5)',
-    },
-    bannerIndicatorActive: {
-      backgroundColor: '#FFFFFF',
-    },
-    sectionContainer: {
-      marginVertical: 12,
-    },
-    sectionHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 4,
-      marginBottom: 12,
-    },
-    sectionTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: themeColors.text,
-      letterSpacing: 0.1,
-    },
-    viewAllButton: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-    },
-    viewAllText: {
-      fontWeight: '600',
-      color: themeColors.primary,
-      fontSize: 14,
-    },
-    quickActionsGrid: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      paddingHorizontal: 4,
-      marginTop: 8,
-    },
-    quickActionCard: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: width * 0.20,
-      height: width * 0.20,
-      backgroundColor: themeColors.surface,
-      borderRadius: 16,
-      elevation: 3,
-      shadowColor: themeColors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.10,
-      shadowRadius: 4,
-      marginHorizontal: 2,
-    },
-    quickActionIcon: {
-      marginBottom: 8,
-    },
-    quickActionLabel: {
-      fontSize: 12,
-      fontWeight: '500',
-      color: themeColors.textSecondary,
-      textAlign: 'center',
-    },
-    carCard: {
-      width: width * 0.75,
-      marginRight: 16,
-      borderRadius: 20,
-      backgroundColor: themeColors.surface,
-      overflow: 'hidden',
-      elevation: 4,
-      shadowColor: themeColors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.12,
-      shadowRadius: 8,
-      borderWidth: isDark ? 1 : 0,
-      borderColor: themeColors.border,
-    },
-    carImageContainer: {
-      position: 'relative',
-    },
-    carImage: {
-      width: '100%',
-      height: width * 0.4,
-    },
-    discountBadge: {
-      position: 'absolute',
-      top: 12,
-      left: 12,
-      backgroundColor: '#FF3B30',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    discountText: {
-      color: '#FFFFFF',
-      fontSize: 12,
-      fontWeight: '700',
-    },
-    favoriteButton: {
-      position: 'absolute',
-      top: 12,
-      right: 12,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      borderRadius: 20,
-      padding: 8,
-    },
-    carContent: {
-      padding: 14,
-    },
-    carHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 4,
-    },
-    carTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: themeColors.text,
-      flex: 1,
-      marginRight: 8,
-    },
-    carBadges: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    badge: {
-      borderRadius: 12,
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      marginLeft: 4,
-    },
-    badgeSuccess: {
-      backgroundColor: '#30D158',
-    },
-    badgePrimary: {
-      backgroundColor: themeColors.primary,
-    },
-    badgeText: {
-      fontSize: 10,
-      fontWeight: '700',
-      color: '#FFFFFF',
-    },
-    badgePrimaryText: {
-      color: '#111827',
-    },
-    carSpecs: {
-      fontSize: 13,
-      color: themeColors.textSecondary,
-      marginTop: 4,
-    },
-    carFooter: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginTop: 12,
-      paddingTop: 8,
-      borderTopWidth: 1,
-      borderTopColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-    },
-    priceSection: {
-      flex: 1,
-    },
-    carPrice: {
-      fontSize: 18,
-      fontWeight: '700',
-      color: themeColors.primary,
-    },
-    originalPrice: {
-      fontSize: 12,
-      color: themeColors.textSecondary,
-      textDecorationLine: 'line-through',
-      marginTop: 2,
-    },
-    detailsButton: {
-      backgroundColor: themeColors.primary,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      borderRadius: 8,
-    },
-    detailsButtonText: {
-      fontSize: 14,
-      fontWeight: '700',
-      color: '#111827',
-    },
-    ratingContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 4,
-    },
-    ratingText: {
-      fontSize: 12,
-      color: themeColors.textSecondary,
-      marginLeft: 4,
-    },
-    bottomTabs: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      alignItems: 'center',
-      paddingVertical: 10,
-      paddingBottom: 18,
-      borderTopWidth: 1,
-      borderTopColor: themeColors.border,
-      backgroundColor: themeColors.surface,
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
-      elevation: 8,
-      borderTopLeftRadius: 16,
-      borderTopRightRadius: 16,
-    },
-    bottomTab: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      flex: 1,
-      position: 'relative',
-    },
-    tabNewBadge: {
-      position: 'absolute',
-      top: 2,
-      right: 16,
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: '#FF3B30',
-      zIndex: 2,
-    },
-    tabIcon: {
-      padding: 8,
-      borderRadius: 12,
-    },
-    tabIconActive: {
-      backgroundColor: `${themeColors.primary}20`,
-    },
-    tabLabel: {
-      fontSize: 12,
-      marginTop: 4,
-      color: themeColors.textSecondary,
-    },
-    tabLabelActive: {
-      fontWeight: '700',
-      color: themeColors.primary,
-    },
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    modalContent: {
-      width: 280,
-      backgroundColor: themeColors.surface,
-      borderRadius: 20,
-      paddingVertical: 20,
-      elevation: 10,
-      shadowColor: themeColors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.25,
-      shadowRadius: 16,
-      maxHeight: height * 0.6,
-    },
-    modalTitle: {
-      fontSize: 18,
-      fontWeight: '700',
-      color: themeColors.text,
-      textAlign: 'center',
-      marginBottom: 20,
-    },
-    cityItem: {
-      paddingVertical: 12,
-      paddingHorizontal: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: themeColors.border,
-    },
-    cityText: {
-      fontSize: 16,
-      color: themeColors.text,
-      textAlign: 'center',
-    },
-    cityTextSelected: {
-      color: themeColors.primary,
-      fontWeight: '600',
-    },
-    drawer: {
-      width: width * 0.75,
-      height: '100%',
-      backgroundColor: themeColors.surface,
-      padding: 20,
-      paddingTop: 50,
-      shadowColor: themeColors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.25,
-      shadowRadius: 8,
-      elevation: 8,
-      position: 'absolute',
-      right: 0,
-      borderTopLeftRadius: 16,
-      borderBottomLeftRadius: 16,
-    },
-    drawerTitle: {
-      fontSize: 22,
-      fontWeight: '700',
-      color: themeColors.text,
-      marginBottom: 20,
-    },
-    logoutButton: {
-      width: '100%',
-      height: 48,
-      backgroundColor: '#FF3B30',
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderRadius: 12,
-      marginVertical: 20,
-    },
-    logoutButtonText: {
-      color: '#FFFFFF',
-      fontWeight: '600',
-      fontSize: 16,
-    },
-    drawerOption: {
-      marginTop: 15,
-      paddingVertical: 12,
-      paddingHorizontal: 20,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#2c2c2c' : '#f0f0f0',
-    },
-    drawerOptionContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    drawerOptionText: {
-      fontSize: 16,
-      fontWeight: '500',
-      color: themeColors.text,
-      marginLeft: 12,
-    },
-  });
-
-  const Drawer = () => (
-    <Modal visible={isDrawerVisible} transparent animationType="fade">
-      <TouchableOpacity 
-        style={styles.modalOverlay} 
-        onPress={() => setDrawerVisible(false)} 
-        activeOpacity={1}
-      >
-        <Animatable.View 
-          animation="slideInRight" 
-          duration={300} 
-          style={styles.drawer}
-        >
-          <Text style={styles.drawerTitle}>CarBazar</Text>
-          {authorized && (
-            <TouchableOpacity 
-              style={styles.logoutButton}
-              onPress={handleLogout}
-            >
-              <Text style={styles.logoutButtonText}>Logout</Text>
-            </TouchableOpacity>
-          )}
-          
-          <View style={{ marginTop: 30 }}>
-            <TouchableOpacity style={styles.drawerOption} onPress={handleComingSoon}>
-              <View style={styles.drawerOptionContent}>
-                <AntDesign name="car" size={20} color={themeColors.text} />
-                <Text style={styles.drawerOptionText}>My Garage</Text>
-              </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.drawerOption} onPress={handleComingSoon}>
-              <View style={styles.drawerOptionContent}>
-                <AntDesign name="heart" size={20} color={themeColors.text} />
-                <Text style={styles.drawerOptionText}>Saved Cars</Text>
-              </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.drawerOption} onPress={handleComingSoon}>
-              <View style={styles.drawerOptionContent}>
-                <MaterialIcons name="history" size={20} color={themeColors.text} />
-                <Text style={styles.drawerOptionText}>View History</Text>
-              </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.drawerOption} onPress={handleComingSoon}>
-              <View style={styles.drawerOptionContent}>
-                <MaterialIcons name="support-agent" size={20} color={themeColors.text} />
-                <Text style={styles.drawerOptionText}>Support</Text>
-              </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.drawerOption} onPress={handleComingSoon}>
-              <View style={styles.drawerOptionContent}>
-                <AntDesign name="info-circle" size={20} color={themeColors.text} />
-                <Text style={styles.drawerOptionText}>About Us</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </Animatable.View>
-      </TouchableOpacity>
-    </Modal>
-  );
-
-  const CityModal = () => (
-    <Modal visible={isCityModalVisible} transparent animationType="fade">
-      <View style={styles.modalOverlay}>
-        <Animatable.View 
-          animation="zoomIn" 
-          duration={300} 
-          style={styles.modalContent}
-        >
-          <Text style={styles.modalTitle}>Select City</Text>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {CITIES.map((city) => (
-              <TouchableOpacity
-                key={city}
-                style={styles.cityItem}
-                onPress={() => {
-                  setSelectedCity(city);
-                  setCityModalVisible(false);
-                }}
-              >
-                <Text 
-                  style={[
-                    styles.cityText,
-                    selectedCity === city && styles.cityTextSelected
-                  ]}
-                >
-                  {city}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </Animatable.View>
-      </View>
-    </Modal>
-  );
-
-  const renderBanner = () => {
-    const banner = BANNERS[currentBannerIndex];
-    return (
-      <View style={styles.bannerContainer}>
-        <TouchableOpacity 
-          style={styles.bannerWrapper}
-          onPress={handleComingSoon}
-        >
-          <Image 
-            source={{ uri: banner.image }} 
-            style={styles.bannerImage} 
-          />
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.7)']}
-            style={styles.bannerGradient}
-          >
-            <Text style={styles.bannerTitle}>{banner.title}</Text>
-            <Text style={styles.bannerDesc}>{banner.desc}</Text>
-          </LinearGradient>
-          
-          <View style={styles.bannerIndicators}>
-            {BANNERS.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.bannerIndicator,
-                  index === currentBannerIndex && styles.bannerIndicatorActive,
-                ]}
-              />
-            ))}
-          </View>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
-  const renderQuickAction = (item: typeof QUICK_CARDS[0], index: number) => (
-    <TouchableOpacity 
+  const renderQuickAction = (item: typeof QUICK_ACTIONS[0], index: number) => (
+    <TouchableOpacity
       key={index}
-      style={styles.quickActionCard} 
+      style={styles.quickActionCard}
       onPress={() => {
         if (item.route) {
-          navigation.navigate(item.route as any);
+          navigation.navigate(item.route);
         } else {
           handleComingSoon();
         }
       }}
     >
-      <Animatable.View 
-        animation="fadeInUp" 
-        delay={index * 100} 
-        style={{ alignItems: 'center' }}
-      >
-        <View style={[styles.quickActionIcon, { backgroundColor: `${item.color}20` }]}>
-          <AntDesign name={item.icon as any} size={24} color={item.color} />
-        </View>
-        <Text style={styles.quickActionLabel}>{item.label}</Text>
-      </Animatable.View>
+      <MaterialIcons name={item.icon as any} size={24} color={themeColors.primary} />
+      <Text style={styles.quickActionLabel}>{item.label}</Text>
     </TouchableOpacity>
   );
 
-  const renderCarCard = ({ item, index }: { item: typeof CAR_LISTINGS[0], index: number }) => (
-    <TouchableOpacity 
-      style={styles.carCard} 
-      onPress={() => navigation.navigate('CarDetails', { carId: item.id })}
-    >
-      <View style={styles.carImageContainer}>
-        <Image source={{ uri: item.image }} style={styles.carImage} />
-        
-        <View style={styles.discountBadge}>
-          <Text style={styles.discountText}>{item.discount}</Text>
-        </View>
-        
-        <TouchableOpacity style={styles.favoriteButton}>
-          <AntDesign name="heart" size={16} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
-      
+  const renderCarCard = (item: typeof FEATURED_CARS[0]) => (
+    <Card key={item.id} style={styles.carCard} onPress={() => navigation.navigate('VehicleDetail', { carId: item.id })}>
+      <Image source={{ uri: item.image }} style={styles.carImage} />
       <View style={styles.carContent}>
-        <View style={styles.carHeader}>
-          <Text style={styles.carTitle}>{item.title}</Text>
-          <View style={styles.carBadges}>
-            {item.certified && (
-              <View style={[styles.badge, styles.badgeSuccess]}>
-                <Text style={styles.badgeText}>CERTIFIED</Text>
-              </View>
-            )}
-            {item.verified && (
-              <View style={[styles.badge, styles.badgePrimary]}>
-                <Text style={[styles.badgeText, styles.badgePrimaryText]}>VERIFIED</Text>
-              </View>
-            )}
-          </View>
-        </View>
-        
-        <Text style={styles.carSpecs}>
-          {item.year} â€¢ {item.km} â€¢ {item.fuel} â€¢ {item.location}
-        </Text>
-        
-        <View style={styles.ratingContainer}>
-          <AntDesign name="star" size={12} color="#FFD700" />
-          <Text style={styles.ratingText}>{item.rating} rating</Text>
-        </View>
-        
-        <View style={styles.carFooter}>
-          <View style={styles.priceSection}>
-            <Text style={styles.carPrice}>{item.price}</Text>
-            <Text style={styles.originalPrice}>{item.originalPrice}</Text>
-          </View>
-          
-          <TouchableOpacity 
-            style={styles.detailsButton}
-            onPress={() => navigation.navigate('CarDetails', { carId: item.id })}
-          >
-            <Text style={styles.detailsButtonText}>Details</Text>
-          </TouchableOpacity>
+        <Text style={styles.carTitle}>{item.title}</Text>
+        <Text style={styles.carPrice}>{item.price}</Text>
+        <View style={styles.carMeta}>
+          <Text style={styles.carMetaText}>{item.year} â€¢ {item.km} km â€¢ {item.fuel}</Text>
+          <Text style={styles.carLocation}>{item.location}</Text>
         </View>
       </View>
-    </TouchableOpacity>
-  );
-
-  const renderBottomTab = (tab: typeof BOTTOM_TABS[0], idx: number) => (
-    <TouchableOpacity 
-      key={idx} 
-      style={styles.bottomTab} 
-      onPress={() => {
-        if (tab.route) {
-          if (tab.label === 'SELL' && !authorized) {
-            showToast('error', 'Unauthorized', 'Please sign in to sell a car.');
-            navigation.replace('Login');
-          } else {
-            navigation.navigate(tab.route as any);
-          }
-        } else {
-          handleComingSoon();
-        }
-      }}
-    >
-      {tab.new && (
-        <View style={styles.tabNewBadge} />
-      )}
-      <View style={[styles.tabIcon, idx === 0 && styles.tabIconActive]}>
-        <AntDesign 
-          name={tab.icon as any} 
-          size={20} 
-          color={idx === 0 ? themeColors.primary : themeColors.textSecondary}
-        />
-      </View>
-      <Text style={[styles.tabLabel, idx === 0 && styles.tabLabelActive]}>
-        {tab.label}
-      </Text>
-    </TouchableOpacity>
+    </Card>
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-      />
-      
-      <Drawer />
-      <CityModal />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="default" />
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>CarBazar</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity 
-            style={styles.headerCityCard} 
-            onPress={() => setCityModalVisible(true)}
-          >
-            <MaterialIcons name="location-pin" size={18} color={themeColors.text} />
-            <Text style={styles.headerCityText}>{selectedCity}</Text>
-            <AntDesign name="caret-down" size={12} color={themeColors.text} style={{ marginLeft: 4 }} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={() => setDrawerVisible(true)}>
-            <AntDesign name="menu-unfold" size={24} color={themeColors.text} />
+        <View>
+          <Text style={styles.greeting}>Good morning! ðŸ‘‹</Text>
+          <TouchableOpacity style={styles.locationButton}>
+            <MaterialIcons name="location-on" size={16} color={themeColors.textSecondary} />
+            <Text style={styles.locationText}>{selectedCity}</Text>
+            <MaterialIcons name="keyboard-arrow-down" size={16} color={themeColors.textSecondary} />
           </TouchableOpacity>
         </View>
+        <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Profile')}>
+          <MaterialIcons name="account-circle" size={32} color={themeColors.primary} />
+        </TouchableOpacity>
       </View>
-  
-      <ScrollView 
-        showsVerticalScrollIndicator={false} 
-        contentContainerStyle={styles.scrollViewContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[themeColors.primary]}
-            tintColor={themeColors.primary}
-          />
-        }
+
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <AntDesign name="search" size={20} color={themeColors.textSecondary} />
-          <TextInput
-            placeholder="Search for cars..."
-            placeholderTextColor={themeColors.textSecondary}
-            style={styles.searchInput}
+        <View style={styles.searchSection}>
+          <Input
+            placeholder="Search cars, brands..."
             value={searchQuery}
             onChangeText={setSearchQuery}
+            leftIcon="search"
+            containerStyle={styles.searchInput}
           />
         </View>
-        
-        {/* Banner */}
-        {renderBanner()}
-        
+
+        {/* Hero Banner */}
+        <Card style={styles.heroCard}>
+          <LinearGradient
+            colors={['#FFD700', '#F7931E']}
+            style={styles.heroGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <View style={styles.heroContent}>
+              <Text style={styles.heroTitle}>Find Your Dream Car</Text>
+              <Text style={styles.heroSubtitle}>Browse thousands of verified cars</Text>
+              <Button
+                title="Browse Cars"
+                variant="secondary"
+                size="sm"
+                onPress={() => navigation.navigate('BrowseCars')}
+                style={styles.heroButton}
+              />
+            </View>
+            <MaterialIcons name="directions-car" size={64} color="rgba(26, 32, 44, 0.2)" />
+          </LinearGradient>
+        </Card>
+
         {/* Quick Actions */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-            <TouchableOpacity style={styles.viewAllButton}>
-              <Text style={styles.viewAllText}>View All</Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActionsGrid}>
-            {QUICK_CARDS.map((item, index) => renderQuickAction(item, index))}
+            {QUICK_ACTIONS.map(renderQuickAction)}
           </View>
         </View>
-        
+
         {/* Featured Cars */}
-        <View style={styles.sectionContainer}>
+        <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Featured Cars</Text>
-            <TouchableOpacity style={styles.viewAllButton}>
+            <TouchableOpacity onPress={() => navigation.navigate('BrowseCars')}>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
           </View>
-          <FlatList
-            horizontal
-            data={CAR_LISTINGS}
-            renderItem={renderCarCard}
-            keyExtractor={(item) => item.id.toString()}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingLeft: 4 }}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.carsList}>
+            {FEATURED_CARS.map(renderCarCard)}
+          </ScrollView>
+        </View>
+
+        {/* Bottom Actions */}
+        <View style={styles.bottomSection}>
+          <Button
+            title="Sell Your Car"
+            onPress={() => navigation.navigate('SellCar')}
+            fullWidth
+            style={styles.sellButton}
+          />
+          <Button
+            title="Settings"
+            variant="outline"
+            onPress={() => navigation.navigate('Settings')}
+            fullWidth
+            style={styles.settingsButton}
+          />
+          <Button
+            title="Logout"
+            variant="danger"
+            onPress={handleLogout}
+            fullWidth
+            style={styles.logoutButton}
           />
         </View>
       </ScrollView>
-      
-      {/* Bottom Tabs */}
-      <View style={styles.bottomTabs}>
-        {BOTTOM_TABS.map(renderBottomTab)}
-      </View>
     </SafeAreaView>
   );
 };
 
-// Wrap the component with network handling HOC
-const DashboardScreen = withOverlayNetworkHandling(DashboardScreenBase);
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 20,
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1A202C',
+    marginBottom: 4,
+  },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  locationText: {
+    fontSize: 14,
+    color: '#718096',
+    fontWeight: '500',
+  },
+  profileButton: {
+    marginTop: 4,
+  },
+  scrollView: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  searchSection: {
+    marginBottom: 20,
+  },
+  searchInput: {
+    marginBottom: 0,
+  },
+  heroCard: {
+    marginBottom: 24,
+    overflow: 'hidden',
+  },
+  heroGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    minHeight: 120,
+  },
+  heroContent: {
+    flex: 1,
+  },
+  heroTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1A202C',
+    marginBottom: 4,
+  },
+  heroSubtitle: {
+    fontSize: 14,
+    color: '#2D3748',
+    marginBottom: 16,
+  },
+  heroButton: {
+    alignSelf: 'flex-start',
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1A202C',
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFD700',
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  quickActionCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    gap: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  quickActionLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#4A5568',
+    textAlign: 'center',
+  },
+  carsList: {
+    marginHorizontal: -20,
+    paddingHorizontal: 20,
+  },
+  carCard: {
+    width: 240,
+    marginRight: 16,
+    padding: 0,
+  },
+  carImage: {
+    width: '100%',
+    height: 120,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  carContent: {
+    padding: 12,
+  },
+  carTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1A202C',
+    marginBottom: 4,
+  },
+  carPrice: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFD700',
+    marginBottom: 8,
+  },
+  carMeta: {
+    gap: 4,
+  },
+  carMetaText: {
+    fontSize: 12,
+    color: '#718096',
+  },
+  carLocation: {
+    fontSize: 12,
+    color: '#718096',
+    fontWeight: '500',
+  },
+  bottomSection: {
+    gap: 12,
+    paddingBottom: 32,
+  },
+  sellButton: {
+    marginBottom: 0,
+  },
+  settingsButton: {
+    marginBottom: 0,
+  },
+  logoutButton: {
+    marginBottom: 0,
+  },
+});
 
 export default DashboardScreen;
-
-
-

@@ -71,7 +71,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
   onResetFilters,
   totalResults = 0,
 }) => {
-  const { colors, spacing, borderRadius, shadows } = useTheme();
+  const { colors: themeColors, spacing, borderRadius, shadows } = useTheme();
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showSortModal, setShowSortModal] = useState(false);
 

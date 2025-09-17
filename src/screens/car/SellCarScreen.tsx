@@ -18,7 +18,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from '@react-native-vector-icons/material-icons';
 
 const SellCarScreen = ({ navigation }: { navigation: any }) => {
-  const { isDark, colors } = useTheme();
+  const { isDark, colors: themeColors } = useTheme();
   
   const [formData, setFormData] = useState({
     make: '',

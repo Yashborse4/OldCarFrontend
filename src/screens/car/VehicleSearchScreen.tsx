@@ -16,7 +16,6 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import { VehicleSearchNavigationProp, Vehicle } from '../../navigation/types';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';

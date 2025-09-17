@@ -66,7 +66,7 @@ const ThemeToggle = () => {
       color: interpolateColor(
         progress.value,
         [0, 1],
-        [themeColors.sun, themeColors.moon]
+        [colors.sun, colors.moon]
       ),
     };
   });

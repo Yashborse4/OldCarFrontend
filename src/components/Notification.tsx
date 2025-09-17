@@ -17,7 +17,7 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
 import { 
@@ -139,7 +139,7 @@ const NotificationItemComponent: React.FC<NotificationItemProps> = ({
   position,
   index,
 }) => {
-  const { colors, isDark } = useTheme();
+  const { colors: themeColors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const { deviceInfo } = useResponsive();
   

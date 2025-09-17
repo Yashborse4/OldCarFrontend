@@ -15,7 +15,6 @@ import { useTheme } from '../../theme';
 import * as Animatable from 'react-native-animatable';
 import { AntDesign } from '@react-native-vector-icons/ant-design';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import LinearGradient from 'react-native-linear-gradient';
 
 const { width } = Dimensions.get('window');
@@ -73,7 +72,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
   onRefresh,
   refreshing = false,
 }) => {
-  const { colors, spacing, borderRadius, shadows } = useTheme();
+  const { colors: themeColors, spacing, borderRadius, shadows } = useTheme();
   const [selectedCar, setSelectedCar] = useState<CarListing | null>(null);
   const [showActionsModal, setShowActionsModal] = useState(false);
 
@@ -193,7 +192,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
           {/* Verified Badge */}
           {item.verified && (
             <View style={[styles.verifiedBadge, { backgroundColor: themeColors.success }]}>
-              <AntDesign name="checkcircle1" size={10} color="#FFFFFF" />
+              <AntDesign name="check-circle" size={10} color="#FFFFFF" />
             </View>
           )}
 
@@ -294,7 +293,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
                   <AntDesign name="star" size={12} color={themeColors.primary} />
                 )}
                 {item.verified && (
-                  <AntDesign name="checkcircle1" size={12} color={themeColors.success} />
+                  <AntDesign name="check-circle" size={12} color={themeColors.success} />
                 )}
               </View>
             </View>

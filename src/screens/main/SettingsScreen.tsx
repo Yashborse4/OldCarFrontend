@@ -1,55 +1,115 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; 
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import * as Animatable from 'react-native-animatable';
 import { useTheme } from '../../theme';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 
-const SettingsScreen = () => {
+const SettingsScreen = ({ navigation }: { navigation?: any }) => {
   const { isDark, toggleTheme, colors } = useTheme();
 
+  const handleComingSoon = (feature: string) => {
+    Alert.alert('Coming Soon', `${feature} is under development.`);
+  };
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Settings</Text>
+        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={styles.headerSubtitle}>Manage your preferences</Text>
       </View>
 
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: themeColors.textSecondary }]}>Appearance</Text>
-        <Animatable.View 
-          animation={isDark ? "fadeIn" : "fadeIn"}
-          duration={500}
-          style={[styles.card, { backgroundColor: themeColors.surface }]}
-        >
-          <TouchableOpacity style={styles.row} onPress={toggleTheme}>
-            <MaterialIcons 
-              name={isDark ? "dark-mode" : "light-mode"} 
-              size={24} 
-              color={'#FFD700'} 
-            />
-            <Text style={[styles.rowLabel, { color: themeColors.text }]}>
-              {isDark ? "Dark Mode" : "Light Mode"}
-            </Text>
-            <Switch 
-              value={isDark} 
-              onValueChange={toggleTheme} 
-              trackColor={{ false: '#767577', true: '#FFD700' }} 
-              thumbColor={isDark ? '#f4f3f4' : '#f4f3f4'} 
-              ios_backgroundColor="#3e3e3e"
-            />
-          </TouchableOpacity>
-        </Animatable.View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: themeColors.textSecondary }]}>Premium Features</Text>
-        <View style={[styles.card, { backgroundColor: themeColors.surface }]}>
-          <TouchableOpacity style={styles.row}>
-            <MaterialIcons name="workspace-premium" size={24} color={'#FFD700'} />
-            <Text style={[styles.rowLabel, { color: themeColors.text }]}>Premium Midnight Gold</Text>
-            <MaterialIcons name="check-circle" size={24} color={'#FFD700'} />
-          </TouchableOpacity>
+      <View style={styles.content}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Appearance</Text>
+          <Card style={styles.settingCard}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingLeft}>
+                <MaterialIcons 
+                  name={isDark ? "dark-mode" : "light-mode"} 
+                  size={24} 
+                  color={colors.primary} 
+                />
+                <Text style={styles.settingLabel}>
+                  {isDark ? "Dark Mode" : "Light Mode"}
+                </Text>
+              </View>
+              <Switch 
+                value={isDark} 
+                onValueChange={toggleTheme} 
+                trackColor={{ false: '#E2E8F0', true: colors.primary }} 
+                thumbColor="#FFFFFF"
+              />
+            </View>
+          </Card>
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <Card style={styles.settingCard} onPress={() => handleComingSoon('Edit Profile')}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingLeft}>
+                <MaterialIcons name="person" size={24} color={colors.primary} />
+                <Text style={styles.settingLabel}>Edit Profile</Text>
+              </View>
+              <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+            </View>
+          </Card>
+
+          <Card style={styles.settingCard} onPress={() => handleComingSoon('Privacy Settings')}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingLeft}>
+                <MaterialIcons name="privacy-tip" size={24} color={colors.primary} />
+                <Text style={styles.settingLabel}>Privacy Settings</Text>
+              </View>
+              <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+            </View>
+          </Card>
+
+          <Card style={styles.settingCard} onPress={() => handleComingSoon('Notifications')}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingLeft}>
+                <MaterialIcons name="notifications" size={24} color={colors.primary} />
+                <Text style={styles.settingLabel}>Notifications</Text>
+              </View>
+              <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+            </View>
+          </Card>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Support</Text>
+          <Card style={styles.settingCard} onPress={() => handleComingSoon('Help Center')}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingLeft}>
+                <MaterialIcons name="help" size={24} color={colors.primary} />
+                <Text style={styles.settingLabel}>Help Center</Text>
+              </View>
+              <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+            </View>
+          </Card>
+
+          <Card style={styles.settingCard} onPress={() => handleComingSoon('Contact Us')}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingLeft}>
+                <MaterialIcons name="contact-support" size={24} color={colors.primary} />
+                <Text style={styles.settingLabel}>Contact Us</Text>
+              </View>
+              <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+            </View>
+          </Card>
+        </View>
+
+        {navigation && (
+          <Button
+            title="Back to Dashboard"
+            variant="outline"
+            onPress={() => navigation.navigate('Dashboard')}
+            fullWidth
+            style={styles.backButton}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -58,44 +118,62 @@ const SettingsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FAFAFA',
   },
   header: {
-    padding: 20,
+    padding: 24,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
+    borderBottomColor: '#E2E8F0',
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#1A202C',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#718096',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   section: {
-    marginTop: 20,
-    paddingHorizontal: 20,
+    marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    marginBottom: 10,
+    color: '#1A202C',
+    marginBottom: 16,
   },
-  card: {
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    marginBottom: 8,
+  settingCard: {
+    marginBottom: 12,
   },
-  row: {
+  settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
   },
-  rowLabel: {
-    fontSize: 18,
-    marginLeft: 15,
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
+  },
+  settingLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1A202C',
+    marginLeft: 12,
+  },
+  backButton: {
+    marginTop: 24,
+    marginBottom: 32,
   },
 });
 

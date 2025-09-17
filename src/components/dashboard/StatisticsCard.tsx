@@ -34,7 +34,7 @@ export const StatisticsCard: React.FC<StatisticsCardProps> = ({
   index,
   variant = 'gradient'
 }) => {
-  const { colors, spacing, borderRadius, shadows } = useTheme();
+  const { colors: themeColors, spacing, borderRadius, shadows } = useTheme();
   
   const cardWidth = (width - 48) / 2; // 2 cards per row with spacing
 

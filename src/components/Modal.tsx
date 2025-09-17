@@ -21,7 +21,7 @@ import {
   TextStyle,
   Text,
 } from 'react-native';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
 import { 
@@ -97,7 +97,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
   onBackButtonPress,
   onBackdropPress,
 }) => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
   const insets = useSafeAreaInsets();
   const { deviceInfo } = useResponsive();
   
@@ -463,7 +463,7 @@ const DialogComponent: React.FC<DialogProps> = ({
   maxHeight,
   ...modalProps
 }) => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
 
   const renderActions = () => {
     if (actions.length === 0) return null;
@@ -600,7 +600,7 @@ const BottomSheetComponent: React.FC<BottomSheetProps> = ({
   children,
   ...modalProps
 }) => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
   const insets = useSafeAreaInsets();
 
   return (
@@ -685,7 +685,7 @@ const LoadingDialogComponent: React.FC<LoadingDialogProps> = ({
   showProgress = false,
   ...modalProps
 }) => {
-  const { colors } = useTheme();
+  const { colors: themeColors } = useTheme();
 
   return (
     <BaseModal

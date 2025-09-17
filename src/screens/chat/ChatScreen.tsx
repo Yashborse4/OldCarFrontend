@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   TouchableOpacity,
   Modal,
@@ -14,16 +13,11 @@ import {
   TextInput,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
-// Note: These imports have been commented out as they need proper setup
-// import LinearGradient from 'react-native-linear-gradient';
-// import * as Animatable from 'react-native-animatable';
-// import { useTheme } from '../../hooks/useTheme';
-// import { Button } from '../../components/UI/Button';
-// import { Card } from '../../components/UI/Card';
-// import { ChatScreenRouteProp, ChatMessage, Vehicle } from '../../navigation/types';
-// import { carApi } from '../../services/CarApi';
+import { Button } from '../../components/UI/Button';
+import { Card } from '../../components/UI/Card';
+import { theme } from '../../theme';
 
 // Temporary interfaces until proper types are available
 interface ChatMessage {
@@ -60,6 +54,7 @@ interface Vehicle {
 const ChatScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const insets = useSafeAreaInsets();
   const { dealerId, dealerName } = route.params as { dealerId: string; dealerName: string };
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -441,21 +436,23 @@ const ChatScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <MaterialIcons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        
-        <View style={styles.headerInfo}>
-          <Text style={styles.dealerName}>{dealerName}</Text>
-          <Text style={styles.onlineStatus}>Online now</Text>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <Card style={styles.headerCard}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+          
+          <View style={styles.headerInfo}>
+            <Text style={styles.dealerName}>{dealerName}</Text>
+            <Text style={styles.onlineStatus}>Online now</Text>
+          </View>
+          
+          <TouchableOpacity style={styles.headerButton}>
+            <MaterialIcons name="phone" size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
         </View>
-        
-        <TouchableOpacity style={styles.headerButton}>
-          <MaterialIcons name="phone" size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
+      </Card>
 
       <KeyboardAvoidingView 
         style={styles.chatContainer}
@@ -472,34 +469,37 @@ const ChatScreen: React.FC = () => {
           onContentSizeChange={scrollToBottom}
         />
 
-        <View style={styles.inputContainer}>
-          <TouchableOpacity
-            style={styles.attachButton}
-            onPress={() => setShowAttachmentModal(true)}
-          >
-            <MaterialIcons name="add" size={24} color="#666" />
-          </TouchableOpacity>
-          
-          <TextInput
-            value={messageText}
-            onChangeText={setMessageText}
-            placeholder="Type a message..."
-            multiline
-            style={styles.messageInput}
-            onSubmitEditing={() => sendMessage('text')}
-          />
-          
-          <TouchableOpacity
-            style={[styles.sendButton, messageText.trim() && styles.sendButtonActive]}
-            onPress={() => sendMessage('text')}
-          >
-            <MaterialIcons 
-              name="send" 
-              size={20} 
-              color={messageText.trim() ? '#fff' : '#666'} 
+        <Card style={styles.inputCard}>
+          <View style={styles.inputContainer}>
+            <TouchableOpacity
+              style={styles.attachButton}
+              onPress={() => setShowAttachmentModal(true)}
+            >
+              <MaterialIcons name="add" size={24} color={theme.colors.textSecondary} />
+            </TouchableOpacity>
+            
+            <TextInput
+              value={messageText}
+              onChangeText={setMessageText}
+              placeholder="Type a message..."
+              placeholderTextColor={theme.colors.textSecondary}
+              multiline
+              style={styles.messageInput}
+              onSubmitEditing={() => sendMessage('text')}
             />
-          </TouchableOpacity>
-        </View>
+            
+            <TouchableOpacity
+              style={[styles.sendButton, messageText.trim() && styles.sendButtonActive]}
+              onPress={() => sendMessage('text')}
+            >
+              <MaterialIcons 
+                name="send" 
+                size={20} 
+                color={messageText.trim() ? theme.colors.surface : theme.colors.textSecondary} 
+              />
+            </TouchableOpacity>
+          </View>
+        </Card>
       </KeyboardAvoidingView>
 
       {/* Attachment Options Modal */}
@@ -580,14 +580,20 @@ const ChatScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.background,
+  },
+  headerCard: {
+    marginHorizontal: 0,
+    borderRadius: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
   header: {
     flexDirection: 'row',
@@ -595,9 +601,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   backButton: {
     padding: 4,
@@ -609,11 +612,11 @@ const styles = StyleSheet.create({
   dealerName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: theme.colors.text,
   },
   onlineStatus: {
     fontSize: 12,
-    color: '#4CAF50',
+    color: theme.colors.success,
     marginTop: 2,
   },
   headerButton: {
@@ -643,12 +646,12 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   ownMessage: {
-    backgroundColor: '#4ECDC4',
+    backgroundColor: theme.colors.primary,
     alignSelf: 'flex-end',
     borderBottomRightRadius: 4,
   },
   otherMessage: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     alignSelf: 'flex-start',
     borderBottomLeftRadius: 4,
   },
@@ -657,10 +660,10 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   ownMessageText: {
-    color: '#fff',
+    color: theme.colors.surface,
   },
   otherMessageText: {
-    color: '#333',
+    color: theme.colors.text,
   },
   messageStatus: {
     position: 'absolute',
@@ -739,14 +742,17 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 4,
   },
+  inputCard: {
+    marginHorizontal: 0,
+    borderRadius: 0,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
   },
   attachButton: {
     padding: 8,
@@ -759,26 +765,26 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     marginRight: 8,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: theme.colors.border,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
     fontSize: 16,
-    color: '#333',
-    backgroundColor: '#f8f9fa',
+    color: theme.colors.text,
+    backgroundColor: theme.colors.background,
     textAlignVertical: 'top',
   },
   sendButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: theme.colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
   },
   sendButtonActive: {
-    backgroundColor: '#4ECDC4',
+    backgroundColor: theme.colors.primary,
   },
   modalOverlay: {
     flex: 1,

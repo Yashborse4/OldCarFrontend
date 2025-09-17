@@ -8,11 +8,10 @@ import {
   Easing,
   Platform,
 } from 'react-native';
-import { useTheme } from '../../theme';
-import { spacing, borderRadius, typography, shadows } from '../../design-system/tokens';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import LinearGradient from 'react-native-linear-gradient';
-import { BlurView } from '@react-native-community/blur';
+import { theme } from '../../theme';
 
 interface NavigationItem {
   id: string;
@@ -34,7 +33,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   activeRoute,
   onPress,
 }) => {
-  const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const animationRefs = useRef<{ [key: string]: Animated.Value }>({});
 
   // Initialize animations for each item
@@ -97,7 +96,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           style={[
             styles.activeBackground,
             {
-              backgroundColor: themeColors.primary,
+              backgroundColor: theme.colors.primary,
               opacity: backgroundOpacity,
               transform: [{ scale: indicatorScale }],
             },
@@ -116,12 +115,12 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           <MaterialIcons
             name={item.icon as any}
             size={24}
-            color={isActive ? themeColors.primary : themeColors.textSecondary}
+            color={isActive ? theme.colors.primary : theme.colors.textSecondary}
           />
           
           {/* Badge */}
           {item.badge && item.badge > 0 && (
-            <View style={[styles.badge, { backgroundColor: themeColors.error }]}>
+            <View style={[styles.badge, { backgroundColor: theme.colors.error }]}>
               <Text style={styles.badgeText}>
                 {item.badge > 99 ? '99+' : item.badge.toString()}
               </Text>
@@ -130,7 +129,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
 
           {/* New indicator */}
           {item.isNew && (
-            <View style={[styles.newDot, { backgroundColor: themeColors.error }]} />
+            <View style={[styles.newDot, { backgroundColor: theme.colors.error }]} />
           )}
         </Animated.View>
 
@@ -139,11 +138,9 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           style={[
             styles.navLabel,
             {
-              color: isActive ? themeColors.primary : themeColors.textSecondary,
+              color: isActive ? theme.colors.primary : theme.colors.textSecondary,
               opacity: labelOpacity,
-              fontWeight: isActive 
-                ? typography.fontWeights.semibold 
-                : typography.fontWeights.medium,
+              fontWeight: isActive ? '600' : '500',
             },
           ]}
         >
@@ -156,7 +153,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
             style={[
               styles.activeDot,
               {
-                backgroundColor: themeColors.primary,
+                backgroundColor: theme.colors.primary,
                 transform: [{ scale: indicatorScale }],
               },
             ]}
@@ -164,26 +161,17 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         )}
       </TouchableOpacity>
     );
-  }, [activeRoute, colors, handlePress]);
+  }, [activeRoute, themeColors, handlePress]);
 
   return (
-    <View style={styles.container}>
-      {/* Glass morphism background for iOS, solid for Android */}
-      {Platform.OS === 'ios' ? (
-        <BlurView
-          style={StyleSheet.absoluteFillObject}
-          blurType={isDark ? 'dark' : 'light'}
-          blurAmount={20}
-          reducedTransparencyFallbackColor={themeColors.surface}
-        />
-      ) : (
-        <View
-          style={[
-            StyleSheet.absoluteFillObject,
-            { backgroundColor: themeColors.surface },
-          ]}
-        />
-      )}
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+      {/* Background */}
+      <View
+        style={[
+          StyleSheet.absoluteFillObject,
+          { backgroundColor: theme.colors.surface },
+        ]}
+      />
 
       {/* Navigation items */}
       <View style={styles.navContainer}>
@@ -194,7 +182,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
       <LinearGradient
         colors={[
           'transparent',
-          isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+          'rgba(0, 0, 0, 0.05)',
           'transparent',
         ]}
         start={{ x: 0, y: 0 }}
@@ -211,36 +199,40 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    ...shadows.xl,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     overflow: 'hidden',
   },
   navContainer: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: Platform.OS === 'ios' ? spacing.lg + spacing.md : spacing.lg,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   navItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.sm,
+    paddingVertical: 8,
     position: 'relative',
     minHeight: 60,
   },
   activeBackground: {
     position: 'absolute',
     top: 0,
-    left: spacing.sm,
-    right: spacing.sm,
+    left: 8,
+    right: 8,
     bottom: 0,
-    borderRadius: borderRadius.lg,
+    borderRadius: 12,
   },
   iconContainer: {
     position: 'relative',
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   badge: {
     position: 'absolute',
@@ -249,14 +241,13 @@ const styles = StyleSheet.create({
     minWidth: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#EF4444',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
   badgeText: {
     fontSize: 10,
-    fontWeight: typography.fontWeights.bold,
+    fontWeight: 'bold',
     color: '#FFFFFF',
   },
   newDot: {
@@ -266,12 +257,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#EF4444',
   },
   navLabel: {
-    fontSize: typography.fontSizes.xs,
+    fontSize: 11,
     textAlign: 'center',
-    letterSpacing: typography.letterSpacing.wide,
+    letterSpacing: 0.5,
   },
   activeDot: {
     position: 'absolute',

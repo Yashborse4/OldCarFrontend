@@ -15,7 +15,6 @@ import {
   TextInput,
   Switch,
 } from 'react-native';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { AntDesign } from '@react-native-vector-icons/ant-design';
 import LinearGradient from 'react-native-linear-gradient';
@@ -163,7 +162,7 @@ const deleteCar = async (carId: string) => {
 };
 
 const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
-  const { isDark, colors } = useTheme();
+  const { isDark, colors: themeColors } = useTheme();
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -336,7 +335,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       case 'inactive': return 'pause-circle';
       case 'sold': return 'check-circle-outline';
       case 'draft': return 'edit';
-      default: return 'help-circle';
+      default: return 'help';
     }
   };
 
@@ -748,10 +747,10 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
         <Animatable.View animation="zoomIn" duration={300} style={styles.modalContent}>
           <Text style={styles.modalTitle}>Sort by</Text>
           {[
-            { key: 'date', label: 'Last Updated', icon: 'clock-outline' },
-            { key: 'price', label: 'Price', icon: 'currency-inr' },
-            { key: 'views', label: 'Views', icon: 'eye-outline' },
-            { key: 'inquiries', label: 'Inquiries', icon: 'message-outline' },
+            { key: 'date', label: 'Last Updated', icon: 'access-time' },
+            { key: 'price', label: 'Price', icon: 'attach-money' },
+            { key: 'views', label: 'Views', icon: 'visibility' },
+            { key: 'inquiries', label: 'Inquiries', icon: 'message' },
           ].map((option) => (
             <TouchableOpacity
               key={option.key}
@@ -761,7 +760,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
               ]}
               onPress={() => setSortBy(option.key as any)}
             >
-              <MaterialCommunityIcons
+              <MaterialIcons
                 name={option.icon as any}
                 size={20}
                 color={sortBy === option.key ? '#111827' : themeColors.textSecondary}
@@ -775,7 +774,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                 {option.label}
               </Text>
               {sortBy === option.key && (
-                <MaterialCommunityIcons name="check" size={20} color="#111827" />
+                <MaterialIcons name="check" size={20} color="#111827" />
               )}
             </TouchableOpacity>
           ))}
@@ -806,7 +805,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <MaterialCommunityIcons name="loading" size={48} color={themeColors.primary} />
+            <MaterialIcons name="refresh" size={48} color={themeColors.primary} />
           <Text style={{ color: themeColors.textSecondary, marginTop: 12 }}>Loading your cars...</Text>
         </View>
       </SafeAreaView>
@@ -924,8 +923,8 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
         {/* Cars List */}
         {filteredCars.length === 0 ? (
           <View style={styles.emptyState}>
-            <MaterialCommunityIcons 
-              name="car-off" 
+            <MaterialIcons 
+              name="directions-car" 
               size={64} 
               color={themeColors.textSecondary} 
               style={styles.emptyIcon}
@@ -962,7 +961,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                   <Image source={{ uri: car.images[0] }} style={styles.carImage} />
                   
                   <View style={[styles.statusBadge, { backgroundColor: getStatusColor(car.status) + '20' }]}>
-                    <MaterialCommunityIcons 
+                    <MaterialIcons 
                       name={getStatusIcon(car.status) as any} 
                       size={12} 
                       color={getStatusColor(car.status)} 
@@ -1012,7 +1011,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                       style={[styles.actionButton, styles.primaryActionButton]}
                       onPress={() => handleCarAction(car, 'manage')}
                     >
-                      <MaterialCommunityIcons name="cog" size={14} color="#111827" />
+                      <MaterialIcons name="settings" size={14} color="#111827" />
                       <Text style={[styles.actionButtonText, styles.primaryActionText]}>
                         Manage
                       </Text>
@@ -1022,7 +1021,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                       style={[styles.actionButton, styles.secondaryActionButton]}
                       onPress={() => handleCarAction(car, 'edit')}
                     >
-                      <MaterialCommunityIcons name="pencil" size={14} color={themeColors.textSecondary} />
+                      <MaterialIcons name="edit" size={14} color={themeColors.textSecondary} />
                       <Text style={[styles.actionButtonText, styles.secondaryActionText]}>
                         Edit
                       </Text>
@@ -1032,7 +1031,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                       style={[styles.actionButton, styles.secondaryActionButton]}
                       onPress={() => handleCarAction(car, 'view')}
                     >
-                      <MaterialCommunityIcons name="eye" size={14} color={themeColors.textSecondary} />
+                      <MaterialIcons name="visibility" size={14} color={themeColors.textSecondary} />
                       <Text style={[styles.actionButtonText, styles.secondaryActionText]}>
                         View
                       </Text>

@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { BlurView } from '@react-native-community/blur';
-import { AntDesign, MaterialIcons } from '@react-native-vector-icons/ant-design';
+import { AntDesign } from '@react-native-vector-icons/ant-design';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import * as Animatable from 'react-native-animatable';
 import { useTheme } from '../../theme';
 
@@ -52,7 +53,7 @@ const ToastItem: React.FC<ToastItemProps> = ({
   onRemove,
   index,
 }) => {
-  const { colors, spacing, borderRadius, shadows } = useTheme();
+  const { colors: themeColors, spacing, borderRadius, shadows } = useTheme();
   const slideAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;

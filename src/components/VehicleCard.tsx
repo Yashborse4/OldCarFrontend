@@ -8,7 +8,6 @@ import {
   Dimensions,
 } from 'react-native';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../theme';
 import { Vehicle } from '../services/CarApi';
@@ -32,7 +31,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
   onBookmark,
   isBookmarked = false,
 }) => {
-  const { colors, spacing } = useTheme();
+  const { colors: themeColors, spacing } = useTheme();
   const [imageError, setImageError] = useState(false);
 
   const formatPrice = (price: number) => {
@@ -109,7 +108,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
               onPress={onBookmark}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Icon
+              <MaterialIcons
                 name={isBookmarked ? 'bookmark' : 'bookmark-border'}
                 size={20}
                 color={isBookmarked ? themeColors.primary : '#fff'}
@@ -135,7 +134,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
             </Text>
             {vehicle.isCoListed && (
               <View style={styles.coListedBadge}>
-                <MaterialCommunityIcons name="share-variant" size={12} color={themeColors.primary} />
+                <MaterialIcons name="share" size={12} color={themeColors.primary} />
               </View>
             )}
           </View>
@@ -146,7 +145,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
           {/* Details Row */}
           <View style={styles.detailsRow}>
             <View style={styles.detailItem}>
-              <MaterialCommunityIcons name="speedometer" size={16} color="#666" />
+              <MaterialIcons name="speed" size={16} color="#666" />
               <Text style={styles.detailText}>{formatMileage(vehicle.mileage)}</Text>
             </View>
             
@@ -156,7 +155,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
             </View>
             
             <View style={styles.detailItem}>
-              <MaterialCommunityIcons name="wrench" size={16} color="#666" />
+              <MaterialIcons name="build" size={16} color="#666" />
               <Text style={styles.detailText}>{vehicle.condition}</Text>
             </View>
           </View>
@@ -164,7 +163,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
           {/* Dealer Info */}
           <View style={styles.dealerRow}>
             <View style={styles.dealerInfo}>
-              <MaterialCommunityIcons name="store" size={14} color="#666" />
+              <MaterialIcons name="storefront" size={14} color="#666" />
               <Text style={styles.dealerText}>{vehicle.dealerName}</Text>
             </View>
             
@@ -175,7 +174,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
                 <Text style={styles.statText}>{vehicle.views}</Text>
               </View>
               <View style={styles.statItem}>
-                <MaterialCommunityIcons name="message" size={12} color="#666" />
+                <MaterialIcons name="message" size={12} color="#666" />
                 <Text style={styles.statText}>{vehicle.inquiries}</Text>
               </View>
             </View>
@@ -184,13 +183,13 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
           {/* Action Buttons */}
           <View style={styles.actionRow}>
             <TouchableOpacity style={styles.contactButton} onPress={onPress}>
-              <MaterialCommunityIcons name="phone" size={16} color={themeColors.primary} />
+              <MaterialIcons name="phone" size={16} color={themeColors.primary} />
               <Text style={styles.contactText}>Contact</Text>
             </TouchableOpacity>
             
             {showCoListButton && onCoList && (
               <TouchableOpacity style={styles.coListButton} onPress={onCoList}>
-                <MaterialCommunityIcons name="share-variant" size={16} color={themeColors.primary} />
+                <MaterialIcons name="share" size={16} color={themeColors.primary} />
                 <Text style={styles.coListText}>Co-List</Text>
               </TouchableOpacity>
             )}

@@ -15,7 +15,6 @@ import { useTheme } from '../../theme';
 import * as Animatable from 'react-native-animatable';
 import { AntDesign } from '@react-native-vector-icons/ant-design';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import LinearGradient from 'react-native-linear-gradient';
 
 // Import our custom components
@@ -31,7 +30,7 @@ interface Props {
 }
 
 const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
-  const { colors, spacing, borderRadius, shadows, isDark } = useTheme();
+  const { colors: themeColors, spacing, borderRadius, shadows, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedTimeRange, setSelectedTimeRange] = useState('30days');

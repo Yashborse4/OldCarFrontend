@@ -16,7 +16,6 @@ import {
   Share,
   Linking,
 } from 'react-native';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { AntDesign } from '@react-native-vector-icons/ant-design';
 import * as Animatable from 'react-native-animatable';
@@ -92,7 +91,7 @@ const renewCar = async (carId: string) => {
 };
 
 const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { isDark, colors } = useTheme();
+  const { isDark, colors: themeColors } = useTheme();
   const [car, setCar] = useState<Car>(route.params.car);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
@@ -237,7 +236,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       case 'inactive': return 'pause-circle';
       case 'sold': return 'check-circle-outline';
       case 'draft': return 'edit';
-      default: return 'help-circle';
+      default: return 'help';
     }
   };
 
@@ -256,7 +255,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       id: 'edit',
       title: 'Edit Details',
       description: 'Update car information, photos, and description',
-      icon: 'pencil',
+      icon: 'edit',
       color: themeColors.primary,
       onPress: () => navigation.navigate('EditCar', { carId: car.id }),
     },
@@ -264,7 +263,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       id: 'price',
       title: 'Change Price',
       description: 'Update your car\'s selling price',
-      icon: 'currency-inr',
+      icon: 'attach-money',
       color: themeColors.success,
       onPress: () => setShowPriceModal(true),
     },
@@ -272,7 +271,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       id: 'status',
       title: 'Change Status',
       description: 'Make active, inactive, or mark as sold',
-      icon: 'toggle-switch',
+      icon: 'toggle-on',
       color: themeColors.warning,
       onPress: () => setShowStatusModal(true),
     },
@@ -685,7 +684,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
               onPress={() => handleStatusChange(status.key as Car['status'])}
               disabled={loading}
             >
-              <MaterialCommunityIcons
+              <MaterialIcons
                 name={status.icon as any}
                 size={20}
                 color={getStatusColor(status.key as Car['status'])}
@@ -697,7 +696,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
                 </Text>
               </View>
               {car.status === status.key && (
-                <MaterialCommunityIcons name="check" size={20} color={themeColors.primary} />
+                <MaterialIcons name="check" size={20} color={themeColors.primary} />
               )}
             </TouchableOpacity>
           ))}
@@ -833,7 +832,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
             'Extended visibility period',
           ].map((feature, index) => (
             <View key={index} style={styles.promoteFeature}>
-              <MaterialCommunityIcons name="check-circle" size={16} color={themeColors.success} />
+              <MaterialIcons name="check-circle" size={16} color={themeColors.success} />
               <Text style={styles.promoteFeatureText}>{feature}</Text>
             </View>
           ))}
@@ -883,7 +882,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Manage Car</Text>
         <TouchableOpacity onPress={() => navigation.navigate('VehicleDetail', { carId: car.id })}>
-          <MaterialCommunityIcons name="eye" size={24} color={themeColors.text} />
+          <MaterialIcons name="visibility" size={24} color={themeColors.text} />
         </TouchableOpacity>
       </View>
 
@@ -893,7 +892,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
           <Image source={{ uri: car.images[0] }} style={styles.carImage} />
           
           <View style={[styles.statusOverlay, { backgroundColor: getStatusColor(car.status) + '20' }]}>
-            <MaterialCommunityIcons 
+            <MaterialIcons 
               name={getStatusIcon(car.status) as any} 
               size={16} 
               color={getStatusColor(car.status)} 
@@ -917,19 +916,19 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
           
           <View style={styles.carDetails}>
             <View style={styles.carDetailItem}>
-              <MaterialCommunityIcons name="calendar" size={16} color={themeColors.textSecondary} />
+              <MaterialIcons name="event" size={16} color={themeColors.textSecondary} />
               <Text style={styles.carDetailText}>{car.year}</Text>
             </View>
             <View style={styles.carDetailItem}>
-              <MaterialCommunityIcons name="speedometer" size={16} color={themeColors.textSecondary} />
+              <MaterialIcons name="speed" size={16} color={themeColors.textSecondary} />
               <Text style={styles.carDetailText}>{car.mileage}</Text>
             </View>
             <View style={styles.carDetailItem}>
-              <MaterialCommunityIcons name="gas-station" size={16} color={themeColors.textSecondary} />
+              <MaterialIcons name="local-gas-station" size={16} color={themeColors.textSecondary} />
               <Text style={styles.carDetailText}>{car.fuelType}</Text>
             </View>
             <View style={styles.carDetailItem}>
-              <MaterialCommunityIcons name="map-marker" size={16} color={themeColors.textSecondary} />
+              <MaterialIcons name="location-on" size={16} color={themeColors.textSecondary} />
               <Text style={styles.carDetailText}>{car.location}</Text>
             </View>
           </View>
@@ -967,7 +966,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
                 disabled={action.disabled || loading}
               >
                 <View style={[styles.actionIconContainer, { backgroundColor: action.color + '20' }]}>
-                  <MaterialCommunityIcons 
+                  <MaterialIcons 
                     name={action.icon as any} 
                     size={20} 
                     color={action.color} 
@@ -985,7 +984,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
                     }
                   </Text>
                 </View>
-                <MaterialCommunityIcons 
+                <MaterialIcons 
                   name="chevron-right" 
                   size={20} 
                   color={themeColors.textSecondary}

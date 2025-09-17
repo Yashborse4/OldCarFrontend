@@ -11,7 +11,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { useTheme } from '../../theme';
 import { launchImageLibrary, launchCamera, ImagePickerResponse, MediaType, PhotoQuality } from 'react-native-image-picker';
 import Geolocation from '@react-native-community/geolocation';
@@ -186,7 +186,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <View style={[styles.attachmentMenu, { backgroundColor: theme.card }]}>
           <TouchableOpacity style={styles.attachmentOption} onPress={takePhoto}>
             <View style={[styles.attachmentIconContainer, { backgroundColor: '#FF6B6B' }]}>
-              <MaterialCommunityIcons name="camera" size={24} color="#FFFFFF" />
+            <MaterialIcons name="camera-alt" size={24} color="#FFFFFF" />
             </View>
             <Text style={[styles.attachmentOptionText, { color: theme.text }]}>
               Take Photo
@@ -195,7 +195,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
           <TouchableOpacity style={styles.attachmentOption} onPress={pickImageFromLibrary}>
             <View style={[styles.attachmentIconContainer, { backgroundColor: '#4ECDC4' }]}>
-              <MaterialCommunityIcons name="image" size={24} color="#FFFFFF" />
+              <MaterialIcons name="image" size={24} color="#FFFFFF" />
             </View>
             <Text style={[styles.attachmentOptionText, { color: theme.text }]}>
               Gallery
@@ -204,7 +204,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
           <TouchableOpacity style={styles.attachmentOption} onPress={shareLocation}>
             <View style={[styles.attachmentIconContainer, { backgroundColor: '#45B7D1' }]}>
-              <MaterialCommunityIcons name="map-marker" size={24} color="#FFFFFF" />
+              <MaterialIcons name="location-on" size={24} color="#FFFFFF" />
             </View>
             <Text style={[styles.attachmentOptionText, { color: theme.text }]}>
               Location
@@ -220,7 +220,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
               }}
             >
               <View style={[styles.attachmentIconContainer, { backgroundColor: theme.primary }]}>
-                <MaterialCommunityIcons name="car" size={24} color="#FFFFFF" />
+                <MaterialIcons name="directions-car" size={24} color="#FFFFFF" />
               </View>
               <Text style={[styles.attachmentOptionText, { color: theme.text }]}>
                 Share Car
@@ -246,17 +246,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
               Share a Car
             </Text>
             <TouchableOpacity onPress={() => setShowCarShareModal(false)}>
-              <MaterialCommunityIcons name="close" size={24} color={theme.text} />
+              <Text style={{fontSize: 24, color: theme.text}}>×</Text>
             </TouchableOpacity>
           </View>
 
           {availableCars.length === 0 ? (
             <View style={styles.emptyStateContainer}>
-              <MaterialCommunityIcons
-                name="car-off"
-                size={48}
-                color={theme.textSecondary}
-              />
+              <Text style={{fontSize: 48, color: theme.textSecondary}}>🚗❌</Text>
               <Text style={[styles.emptyStateText, { color: theme.textSecondary }]}>
                 No cars available to share
               </Text>
@@ -280,11 +276,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                     {car.price}
                   </Text>
                 </View>
-                <MaterialCommunityIcons
-                  name="chevron-right"
-                  size={20}
-                  color={theme.textSecondary}
-                />
+                <Text style={{fontSize: 20, color: theme.textSecondary}}>›</Text>
               </TouchableOpacity>
             ))
           )}
@@ -435,11 +427,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onPress={showAttachmentOptions}
         disabled={disabled}
       >
-        <MaterialCommunityIcons
-          name="plus"
-          size={24}
-          color={disabled ? theme.textSecondary : theme.primary}
-        />
+        <Text style={{fontSize: 24, color: disabled ? theme.textSecondary : theme.primary}}>+</Text>
       </TouchableOpacity>
       
       <View style={styles.textInputContainer}>
@@ -463,11 +451,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onPress={sendMessage}
         disabled={!messageText.trim() || disabled}
       >
-        <MaterialCommunityIcons
-          name="send"
-          size={20}
-          color="#FFFFFF"
-        />
+        <Text style={{fontSize: 20, color: '#FFFFFF'}}>➤</Text>
       </TouchableOpacity>
 
       {renderAttachmentMenu()}

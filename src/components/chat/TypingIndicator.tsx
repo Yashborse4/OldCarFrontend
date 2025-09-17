@@ -6,7 +6,7 @@ import {
   Animated,
   Image,
 } from 'react-native';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { ThemeContext } from '../../theme/ThemeContext';
 
 interface TypingIndicatorProps {
@@ -164,8 +164,8 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({
           <Image source={{ uri: participantAvatar }} style={styles.avatar} />
         ) : (
           <View style={styles.avatarPlaceholder}>
-            <MaterialCommunityIcons
-              name={participantType === 'dealer' ? 'store' : 'account'}
+            <MaterialIcons
+              name={participantType === 'dealer' ? 'storefront' : 'person'}
               size={16}
               color="#FFFFFF"
             />

@@ -14,7 +14,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import { useTheme } from '../../theme';
 import { Button } from '../../components/ui/Button';
 import { RootStackParamList } from '../../navigation/types';
@@ -48,7 +47,7 @@ type NotificationsScreenNavigationProp = StackNavigationProp<RootStackParamList,
 
 const NotificationsScreen: React.FC = () => {
   const navigation = useNavigation<NotificationsScreenNavigationProp>();
-  const { colors, spacing } = useTheme();
+  const { colors: themeColors, spacing } = useTheme();
   
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
@@ -412,7 +411,7 @@ const NotificationsScreen: React.FC = () => {
               style={styles.headerButton}
               onPress={markAllAsRead}
             >
-              <MaterialCommunityIcons name="check-all" size={24} color={themeColors.primary} />
+              <Text style={{fontSize: 24, color: themeColors.primary}}>✓✓</Text>
             </TouchableOpacity>
           )}
         </View>

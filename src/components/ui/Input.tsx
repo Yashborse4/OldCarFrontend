@@ -1,39 +1,28 @@
-import React, { useState, useRef, useCallback, forwardRef } from 'react';
+import React, { useState, useCallback, forwardRef } from 'react';
 import {
   TextInput,
   View,
   Text,
   TouchableOpacity,
-  Animated,
   StyleSheet,
   TextInputProps,
   ViewStyle,
-  TextStyle,
-  Platform,
 } from 'react-native';
 import { useTheme } from '../../theme';
-import { spacing, borderRadius, typography, shadows } from '../../design-system/tokens';
-import * as Animatable from 'react-native-animatable';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 
 export interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
   hint?: string;
-  leftIcon?: string; // Icon name from MaterialIcons
-  rightIcon?: string; // Icon name from MaterialIcons
+  leftIcon?: string;
+  rightIcon?: string;
   onRightIconPress?: () => void;
-  variant?: 'default' | 'outline' | 'filled' | 'glass' | 'minimal';
+  variant?: 'default' | 'outline';
   size?: 'sm' | 'md' | 'lg';
-  radius?: keyof typeof borderRadius;
   containerStyle?: ViewStyle;
-  showCharacterCount?: boolean;
-  maxLength?: number;
-  floatingLabel?: boolean;
   required?: boolean;
   disabled?: boolean;
-  success?: boolean;
-  loading?: boolean;
   testID?: string;
 }
 
@@ -47,310 +36,216 @@ export const Input = forwardRef<TextInput, InputProps>((
     onRightIconPress,
     variant = 'default',
     size = 'md',
-    radius = 'lg',
     containerStyle,
-    showCharacterCount = false,
-    maxLength,
-    floatingLabel = true,
     required = false,
     disabled = false,
-    success = false,
-    loading = false,
     testID,
     value = '',
     onFocus,
     onBlur,
+    secureTextEntry,
     style,
     ...props
   }: InputProps,
   ref: React.ForwardedRef<TextInput>
 ) => {
-  const { colors, isDark } = useTheme();
+  const { colors: themeColors } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
-  const [characterCount, setCharacterCount] = useState(value?.length || 0);
   const [isPasswordVisible, setPasswordVisible] = useState(false);
-  const labelAnimation = useRef(new Animated.Value(value ? 1 : 0)).current;
-  const focusAnimation = useRef(new Animated.Value(0)).current;
 
   const handleFocus = useCallback((e: any) => {
     if (disabled) return;
-    
     setIsFocused(true);
-    
-    // Animate label and focus indicator
-    if (floatingLabel && label) {
-      Animated.timing(labelAnimation, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: false,
-      }).start();
-    }
-    
-    Animated.timing(focusAnimation, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-    
     onFocus?.(e);
-  }, [disabled, floatingLabel, label, labelAnimation, focusAnimation, onFocus]);
+  }, [disabled, onFocus]);
 
   const handleBlur = useCallback((e: any) => {
     setIsFocused(false);
-    
-    // Animate label back if no value
-    if (floatingLabel && label && !value) {
-      Animated.timing(labelAnimation, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: false,
-      }).start();
-    }
-    
-    Animated.timing(focusAnimation, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-    
     onBlur?.(e);
-  }, [floatingLabel, label, value, labelAnimation, focusAnimation, onBlur]);
+  }, [onBlur]);
 
-  const handleChangeText = useCallback((text: string) => {
-    setCharacterCount(text.length);
-    props.onChangeText?.(text);
-  }, [props.onChangeText]);
+  const handleRightIconPress = useCallback(() => {
+    if (secureTextEntry) {
+      setPasswordVisible(!isPasswordVisible);
+    } else {
+      onRightIconPress?.();
+    }
+  }, [secureTextEntry, isPasswordVisible, onRightIconPress]);
 
-  const togglePasswordVisibility = useCallback(() => {
-    setPasswordVisible(!isPasswordVisible);
-  }, [isPasswordVisible]);
-
-  const getContainerStyle = (): ViewStyle => {
-    const baseStyle: ViewStyle = {
-      marginBottom: spacing.md,
-    };
-
-    return {
-      ...baseStyle,
-      ...containerStyle,
-    };
+  const getBorderColor = () => {
+    if (error) return themeColors.error;
+    if (isFocused) return themeColors.primary;
+    return themeColors.border;
   };
 
-  const getInputContainerStyle = (): ViewStyle => {
-    const sizeStyles = {
-      sm: {
-        minHeight: 40,
-        paddingHorizontal: spacing.sm,
-      },
-      md: {
-        minHeight: 48,
-        paddingHorizontal: spacing.md,
-      },
-      lg: {
-        minHeight: 56,
-        paddingHorizontal: spacing.lg,
-      },
-    };
+  const getIconForSecureEntry = () => {
+    if (secureTextEntry) {
+      return isPasswordVisible ? 'visibility-off' : 'visibility';
+    }
+    return rightIcon;
+  };
 
-    type InputVariant = 'default' | 'outline' | 'filled' | 'glass' | 'minimal';
-    const variantStyles: Record<InputVariant, ViewStyle> = {
-      default: {
-        backgroundColor: (colors as any).background,
-        borderWidth: 1,
-        borderColor: error ? (colors as any).error : (isFocused ? (colors as any).primary : (colors as any).border),
-      },
-      outline: {
-        backgroundColor: 'transparent',
-        borderWidth: 1,
-        borderColor: error ? (colors as any).error : (isFocused ? (colors as any).primary : (colors as any).border),
-      },
-      filled: {
-        backgroundColor: (colors as any).background,
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-        borderWidth: 1,
-      },
-      glass: {
-        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-        borderWidth: 0,
-      },
-      minimal: {
-        backgroundColor: 'transparent',
-        borderWidth: 0,
-        borderBottomWidth: 1,
-        borderRadius: 0,
-        borderColor: error ? (colors as any).error : (isFocused ? (colors as any).primary : (colors as any).border),
-      },
-    };
-
-    return {
+  const styles = StyleSheet.create({
+    container: {
+      marginBottom: 16,
+      ...containerStyle,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: themeColors.text,
+      marginBottom: 8,
+    },
+    required: {
+      color: themeColors.error,
+    },
+    inputContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      borderRadius: radius === 'sm' ? 8 : radius === 'lg' ? 16 : 12,
-      ...sizeStyles[size],
-      ...variantStyles[variant],
-    };
-  };
-
-  const getInputStyle = (): TextStyle => {
-    const baseStyle: TextStyle = {
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: getBorderColor(),
+      opacity: disabled ? 0.6 : 1,
+      ...getVariantStyles(variant, themeColors),
+      ...getSizeStyles(size),
+    },
+    input: {
       flex: 1,
-      padding: 0,
-      margin: 0,
-      color: (colors as any).text || '#000000',
-      fontFamily: 'System',
-      fontSize: size === 'sm' ? (typography.fontSizes as any).sm || 14 : 
-               size === 'lg' ? (typography.fontSizes as any).lg || 18 : 
-               (typography.fontSizes as any).base || 16,
+      fontSize: size === 'sm' ? 14 : size === 'lg' ? 16 : 15,
+      fontWeight: '400',
+      color: themeColors.text,
+      paddingVertical: 0,
       ...(style as any),
-    };
-
-    if (variant === 'minimal') {
-      return {
-        ...baseStyle,
-        paddingVertical: 0,
-        paddingHorizontal: 0,
-      };
-    }
-
-    return baseStyle;
-  };
-
-  const getLabelStyle = (): any => {
-    if (!floatingLabel || !label) return {};
-    
-    const baseFontSize = size === 'sm' ? (typography.fontSizes as any).sm || 14 : 
-                        size === 'lg' ? (typography.fontSizes as any).lg || 18 : 
-                        (typography.fontSizes as any).base || 16;
-
-    return {
-      position: 'absolute',
-      left: leftIcon ? spacing.xl + spacing.md : spacing.md,
-      fontFamily: 'System',
-      fontSize: labelAnimation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [baseFontSize, (typography.fontSizes as any).sm || 12],
-      }),
-      color: error ? (colors as any).error : isFocused ? (colors as any).primary : (colors as any).textSecondary,
-      backgroundColor: (colors as any).background,
-      paddingHorizontal: spacing.xs,
-      zIndex: 1,
-      top: labelAnimation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [size === 'lg' ? 16 : size === 'md' ? 12 : 8, -8],
-      }),
-    };
-  };
+    },
+    leftIcon: {
+      marginRight: 12,
+    },
+    rightIconContainer: {
+      marginLeft: 12,
+      padding: 4,
+    },
+    errorText: {
+      fontSize: 12,
+      color: themeColors.error,
+      marginTop: 4,
+      fontWeight: '500',
+    },
+    hintText: {
+      fontSize: 12,
+      color: themeColors.textSecondary,
+      marginTop: 4,
+    },
+  });
 
   return (
-    <Animatable.View
-      animation="fadeInUp"
-      duration={400}
-      style={getContainerStyle()}
-    >
-      {!floatingLabel && label && (
-        <Text style={styles.staticLabel}>
+    <View style={styles.container}>
+      {label && (
+        <Text style={styles.label}>
           {label}
-          {required && <Text style={[styles.required, { color: (colors as any).error }]}>*</Text>}
+          {required && <Text style={styles.required}> *</Text>}
         </Text>
       )}
 
-      <View style={getInputContainerStyle()}>
+      <View style={styles.inputContainer}>
         {leftIcon && (
           <View style={styles.leftIcon}>
-            {leftIcon}
+            <MaterialIcons
+              name={leftIcon as any}
+              size={size === 'sm' ? 16 : 20}
+              color={isFocused ? themeColors.primary : themeColors.textSecondary}
+            />
           </View>
         )}
 
         <TextInput
+          ref={ref}
           {...props}
           value={value}
-          style={getInputStyle()}
+          style={styles.input}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          onChangeText={handleChangeText}
-          placeholder={floatingLabel ? undefined : props.placeholder}
-          placeholderTextColor={(colors as any).placeholder}
-          maxLength={maxLength}
+          placeholder={props.placeholder}
+          placeholderTextColor={themeColors.textSecondary}
+          editable={!disabled}
+          secureTextEntry={secureTextEntry && !isPasswordVisible}
           testID={testID}
         />
 
-        {rightIcon && (
+        {(rightIcon || secureTextEntry) && (
           <TouchableOpacity
-            onPress={onRightIconPress}
-            style={styles.rightIcon}
-            disabled={!onRightIconPress}
+            onPress={handleRightIconPress}
+            style={styles.rightIconContainer}
+            disabled={!onRightIconPress && !secureTextEntry}
+            activeOpacity={0.7}
           >
-            {rightIcon}
+            <MaterialIcons
+              name={getIconForSecureEntry() as any}
+              size={size === 'sm' ? 16 : 20}
+              color={isFocused ? themeColors.primary : themeColors.textSecondary}
+            />
           </TouchableOpacity>
-        )}
-
-        {floatingLabel && label && (
-          <Animated.Text style={getLabelStyle()}>
-            {label}
-            {required && <Text style={[styles.required, { color: (colors as any).error }]}>*</Text>}
-          </Animated.Text>
         )}
       </View>
 
       {error && (
-        <Text style={[styles.errorText, { color: (colors as any).error }]}>
-          {error}
-        </Text>
+        <Text style={styles.errorText}>{error}</Text>
       )}
 
       {hint && !error && (
-        <Text style={[styles.hintText, { color: (colors as any).textSecondary }]}>
-          {hint}
-        </Text>
+        <Text style={styles.hintText}>{hint}</Text>
       )}
-
-      {showCharacterCount && maxLength && (
-        <Text style={[styles.characterCount, { color: (colors as any).textTertiary }]}>
-          {characterCount}/{maxLength}
-        </Text>
-      )}
-    </Animatable.View>
+    </View>
   );
 });
 
-const styles = StyleSheet.create({
-  staticLabel: {
-    marginBottom: 8,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  required: {
-    fontSize: 14,
-  },
-  leftIcon: {
-    marginRight: 12,
-  },
-  rightIcon: {
-    marginLeft: 12,
-    padding: 4,
-  },
-  errorText: {
-    marginTop: 4,
-    fontSize: 12,
-    fontWeight: '400',
-  },
-  hintText: {
-    marginTop: 4,
-    fontSize: 12,
-    fontWeight: '400',
-  },
-  characterCount: {
-    marginTop: 4,
-    fontSize: 11,
-    textAlign: 'right',
-  },
-});
+// Helper functions
+const getVariantStyles = (variant: string, themeColors: any) => {
+  switch (variant) {
+    case 'default':
+      return {
+        backgroundColor: themeColors.surface,
+      };
+    case 'outline':
+      return {
+        backgroundColor: 'transparent',
+      };
+    default:
+      return {
+        backgroundColor: themeColors.surface,
+      };
+  }
+};
+
+const getSizeStyles = (size: string) => {
+  switch (size) {
+    case 'sm':
+      return {
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        height: 40,
+      };
+    case 'md':
+      return {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        height: 48,
+      };
+    case 'lg':
+      return {
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        height: 56,
+      };
+    default:
+      return {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        height: 48,
+      };
+  }
+};
+
+Input.displayName = 'Input';
 
 export default Input;
-
-
 

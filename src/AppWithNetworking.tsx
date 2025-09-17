@@ -20,7 +20,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NetworkProvider } from './context/NetworkContext';
 
 // Theme Context Provider (existing)
-import { ThemeProvider } from './theme/ThemeContext';
+import { ThemeProvider } from './theme';
 
 // Screens (with network handling already applied)
 import DashboardScreen from './screens/main/DashboardScreen';

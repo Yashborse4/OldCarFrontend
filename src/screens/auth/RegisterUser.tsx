@@ -2,23 +2,22 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StatusBar,
-  ScrollView,
   Platform,
   KeyboardAvoidingView,
-  ActivityIndicator,
   Modal,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
 import Toast from 'react-native-toast-message';
-import { AntDesign } from '@react-native-vector-icons/ant-design';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { useAuth } from '../../context/AuthContext';
-import { validateRegistrationForm, formatValidationErrors } from '../../utils/validation';
+import { validateRegistrationForm } from '../../utils/validation';
 import { ErrorHandler } from '../../components/ErrorHandler';
 import { getRoleName } from '../../utils/permissions';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
 
 import { RegisterScreenNavigationProp } from '../../navigation/types';
 
@@ -27,8 +26,7 @@ interface Props {
 }
 
 const RegisterUser: React.FC<Props> = ({ navigation }) => {
-
-  const { isDark, colors } = useTheme();
+  const { colors: themeColors } = useTheme();
   const { register, isLoading: authLoading } = useAuth();
 
   const [username, setUsername] = useState('');
@@ -42,20 +40,6 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPickerVisible, setPickerVisible] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-
-  // Adaptive color palette
-  const systemColors = {
-    background: themeColors.background,
-    card: themeColors.surface,
-    label: themeColors.text,
-    secondaryLabel: themeColors.textSecondary,
-    accent: themeColors.primary,
-    error: '#FF3B30',
-    warning: '#FFA000',
-    border: themeColors.border,
-    inputBg: isDark ? 'rgba(45, 45, 50, 0.8)' : themeColors.surface,
-    shadow: themeColors.shadow,
-  };
 
   const handleRegister = async () => {
     // Clear previous errors
@@ -111,370 +95,309 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: systemColors.background }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="default" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
+        style={styles.keyboardView}
       >
-        <ScrollView
-          contentContainerStyle={[styles.scrollViewContent]}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header (hidden for modern look) */}
-          {/* <View style={styles.header} /> */}
-          <View style={styles.headerSpacer} />
-          <View style={styles.titleSection}>
-            <Text style={[styles.textTitle, { color: systemColors.label }]}>Create an Account</Text>
-            <Text style={[styles.textSecondary, { color: systemColors.secondaryLabel, marginTop: 8 }]}>Join us to find your perfect car</Text>
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>Join us to find your perfect car</Text>
           </View>
-          <View style={[styles.card, { backgroundColor: systemColors.card, shadowColor: systemColors.shadow }]}> 
-            {/* Error Handler */}
+
+          <View style={styles.form}>
             <ErrorHandler 
               error={error} 
               onRetry={handleRetryRegistration}
               onDismiss={dismissError}
             />
-            
-            <View style={styles.formGroup}>
-              <View style={[styles.inputContainer, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}> 
-                <AntDesign name="user" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
-                <TextInput
-                  style={[styles.input, { color: systemColors.label }]}
-                  placeholder="Username *"
-                  placeholderTextColor={systemColors.secondaryLabel}
-                  value={username}
-                  onChangeText={setUsername}
-                  autoCapitalize="none"
+
+            <Input
+              label="Username"
+              value={username}
+              onChangeText={setUsername}
+              leftIcon="person"
+              placeholder="Enter your username"
+              autoCapitalize="none"
+              returnKeyType="next"
+              required
+            />
+
+            <View style={styles.row}>
+              <View style={styles.halfWidth}>
+                <Input
+                  label="First Name"
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  leftIcon="person"
+                  placeholder="First name"
                   returnKeyType="next"
+                  containerStyle={styles.halfInput}
+                />
+              </View>
+              <View style={styles.halfWidth}>
+                <Input
+                  label="Last Name"
+                  value={lastName}
+                  onChangeText={setLastName}
+                  leftIcon="person"
+                  placeholder="Last name"
+                  returnKeyType="next"
+                  containerStyle={styles.halfInput}
                 />
               </View>
             </View>
-            
-            <View style={styles.formRow}>
-              <View style={[styles.formGroup, styles.formGroupHalf]}>
-                <View style={[styles.inputContainer, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}> 
-                  <AntDesign name="user" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
-                  <TextInput
-                    style={[styles.input, { color: systemColors.label }]}
-                    placeholder="First Name"
-                    placeholderTextColor={systemColors.secondaryLabel}
-                    value={firstName}
-                    onChangeText={setFirstName}
-                    returnKeyType="next"
-                  />
-                </View>
-              </View>
-              <View style={[styles.formGroup, styles.formGroupHalf]}>
-                <View style={[styles.inputContainer, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}> 
-                  <AntDesign name="user" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
-                  <TextInput
-                    style={[styles.input, { color: systemColors.label }]}
-                    placeholder="Last Name"
-                    placeholderTextColor={systemColors.secondaryLabel}
-                    value={lastName}
-                    onChangeText={setLastName}
-                    returnKeyType="next"
-                  />
-                </View>
-              </View>
-            </View>
-            
-            <View style={styles.formGroup}>
-              <View style={[styles.inputContainer, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}> 
-                <AntDesign name="mail" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
-                <TextInput
-                  style={[styles.input, { color: systemColors.label }]}
-                  placeholder="Email Address *"
-                  placeholderTextColor={systemColors.secondaryLabel}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  returnKeyType="next"
-                />
-              </View>
-            </View>
-            
-            <View style={styles.formGroup}>
-              <View style={[styles.inputContainer, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}> 
-                <AntDesign name="phone" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
-                <TextInput
-                  style={[styles.input, { color: systemColors.label }]}
-                  placeholder="Phone Number"
-                  placeholderTextColor={systemColors.secondaryLabel}
-                  value={phoneNumber}
-                  onChangeText={setPhoneNumber}
-                  keyboardType="phone-pad"
-                  returnKeyType="next"
-                />
-              </View>
-            </View>
-            
-            <View style={styles.formGroup}>
-              <View style={[styles.inputContainer, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}> 
-                <AntDesign name="lock" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
-                <TextInput
-                  style={[styles.input, { color: systemColors.label }]}
-                  placeholder="Password *"
-                  placeholderTextColor={systemColors.secondaryLabel}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  returnKeyType="next"
-                />
-              </View>
-            </View>
-            
-            <View style={styles.formGroup}>
-              <View style={[styles.inputContainer, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}> 
-                <AntDesign name="lock" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
-                <TextInput
-                  style={[styles.input, { color: systemColors.label }]}
-                  placeholder="Confirm Password *"
-                  placeholderTextColor={systemColors.secondaryLabel}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry
-                  returnKeyType="next"
-                />
-              </View>
-            </View>
-            
+
+            <Input
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              leftIcon="email"
+              placeholder="Enter your email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              returnKeyType="next"
+              required
+            />
+
+            <Input
+              label="Phone Number"
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              leftIcon="phone"
+              placeholder="Enter your phone number"
+              keyboardType="phone-pad"
+              returnKeyType="next"
+            />
+
+            <Input
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              leftIcon="lock"
+              placeholder="Enter your password"
+              secureTextEntry
+              returnKeyType="next"
+              required
+            />
+
+            <Input
+              label="Confirm Password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              leftIcon="lock"
+              placeholder="Confirm your password"
+              secureTextEntry
+              returnKeyType="done"
+              required
+            />
+
             <TouchableOpacity
-              style={[styles.inputContainer, styles.rolePicker, { borderColor: systemColors.border, backgroundColor: systemColors.inputBg }]}
+              style={styles.rolePicker}
               onPress={() => setPickerVisible(true)}
             >
-              <AntDesign name="team" size={20} style={[styles.inputIcon, { color: systemColors.secondaryLabel }]} />
-              <Text style={[styles.input, { color: systemColors.label }]}>
-                {getRoleName(role)}
-              </Text>
-              <AntDesign name="down" size={16} style={{ color: systemColors.secondaryLabel }} />
-            </TouchableOpacity>
-          </View>
-          <Modal
-            animationType="fade"
-            transparent={true}
-            visible={isPickerVisible}
-            onRequestClose={() => setPickerVisible(false)}
-          >
-            <TouchableOpacity
-              style={styles.modalOverlay}
-              activeOpacity={1}
-              onPressOut={() => setPickerVisible(false)}
-            >
-              <View style={[styles.modalContent, { backgroundColor: systemColors.card, shadowColor: systemColors.shadow }]}> 
-                <TouchableOpacity
-                  style={[styles.listItem, { borderBottomColor: systemColors.border }]}
-                  onPress={() => {
-                    setRole('VIEWER');
-                    setPickerVisible(false);
-                  }}
-                >
-                  <Text style={[styles.textBody, { color: systemColors.label }]}>Viewer</Text>
-                  <Text style={[styles.textCaption, { color: systemColors.secondaryLabel }]}>Browse and view cars</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.listItem, { borderBottomColor: systemColors.border }]}
-                  onPress={() => {
-                    setRole('SELLER');
-                    setPickerVisible(false);
-                  }}
-                >
-                  <Text style={[styles.textBody, { color: systemColors.label }]}>Seller</Text>
-                  <Text style={[styles.textCaption, { color: systemColors.secondaryLabel }]}>List and sell your cars</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.listItem, styles.listItemLast]}
-                  onPress={() => {
-                    setRole('DEALER');
-                    setPickerVisible(false);
-                  }}
-                >
-                  <Text style={[styles.textBody, { color: systemColors.label }]}>Dealer</Text>
-                  <Text style={[styles.textCaption, { color: systemColors.secondaryLabel }]}>Professional car dealer</Text>
-                </TouchableOpacity>
+              <Text style={styles.roleLabel}>Role</Text>
+              <View style={styles.roleButton}>
+                <MaterialIcons name="group" size={20} color={themeColors.textSecondary} />
+                <Text style={styles.roleText}>{getRoleName(role)}</Text>
+                <MaterialIcons name="keyboard-arrow-down" size={20} color={themeColors.textSecondary} />
               </View>
             </TouchableOpacity>
-          </Modal>
-          <TouchableOpacity
+          </View>
+
+          <Button
+            title="Create Account"
             onPress={handleRegister}
-            style={[styles.buttonPrimary, { backgroundColor: systemColors.accent }, (isLoading || authLoading) && styles.buttonDisabled]}
+            loading={isLoading || authLoading}
             disabled={isLoading || authLoading}
-          >
-            {(isLoading || authLoading) ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.buttonText}>Create Account</Text>
-            )}
-          </TouchableOpacity>
+            fullWidth
+            style={styles.registerButton}
+          />
+
           <TouchableOpacity
             style={styles.signInLink}
             onPress={() => navigation.goBack()}
           >
-            <Text style={[styles.textSecondary, { color: systemColors.secondaryLabel }]}>Already have an account?{' '}
-              <Text style={[styles.textAccent, { color: systemColors.accent }]}>Sign In</Text>
+            <Text style={styles.signInText}>
+              Already have an account?{' '}
+              <Text style={styles.signInAccent}>Sign In</Text>
             </Text>
           </TouchableOpacity>
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={isPickerVisible}
+        onRequestClose={() => setPickerVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setPickerVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => {
+                setRole('VIEWER');
+                setPickerVisible(false);
+              }}
+            >
+              <Text style={styles.modalOptionTitle}>Viewer</Text>
+              <Text style={styles.modalOptionSubtitle}>Browse and view cars</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => {
+                setRole('SELLER');
+                setPickerVisible(false);
+              }}
+            >
+              <Text style={styles.modalOptionTitle}>Seller</Text>
+              <Text style={styles.modalOptionSubtitle}>List and sell your cars</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalOption, styles.modalOptionLast]}
+              onPress={() => {
+                setRole('DEALER');
+                setPickerVisible(false);
+              }}
+            >
+              <Text style={styles.modalOptionTitle}>Dealer</Text>
+              <Text style={styles.modalOptionSubtitle}>Professional car dealer</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 };
 
 import { StyleSheet } from 'react-native';
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#FAFAFA',
   },
-  scrollViewContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 24,
-    backgroundColor: 'transparent',
-  },
-  headerSpacer: {
-    height: 12,
-  },
-  titleSection: {
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  textTitle: {
-    fontSize: 26,
-    fontWeight: '700',
-    letterSpacing: 0.2,
-    marginBottom: 2,
-  },
-  textSecondary: {
-    fontSize: 15,
-    color: '#888',
-    opacity: 0.85,
-  },
-  card: {
-    width: '100%',
-    maxWidth: 400,
-    alignSelf: 'center',
-    borderRadius: 18,
-    padding: 20,
-    marginBottom: 16,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.10,
-    shadowRadius: 12,
-  },
-  formGroup: {
-    marginBottom: 16,
-  },
-  formRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  formGroupHalf: {
+  keyboardView: {
     flex: 1,
-    marginRight: 8,
-    marginBottom: 0,
   },
-  inputContainer: {
-    flexDirection: 'row',
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+    justifyContent: 'center',
+  },
+  header: {
     alignItems: 'center',
-    borderWidth: 1.2,
-    borderColor: '#e0e0e0',
-    borderRadius: 12,
-    backgroundColor: '#f7f7f7',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    marginBottom: 40,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#1A202C',
     marginBottom: 8,
   },
-  inputIcon: {
-    marginRight: 8,
-    color: '#888',
-  },
-  input: {
-    flex: 1,
+  subtitle: {
     fontSize: 16,
-    color: '#222',
-    paddingVertical: 8,
-    paddingHorizontal: 0,
-    backgroundColor: 'transparent',
+    color: '#718096',
+    textAlign: 'center',
+  },
+  form: {
+    gap: 20,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfWidth: {
+    flex: 1,
+  },
+  halfInput: {
+    marginBottom: 0,
   },
   rolePicker: {
-    marginBottom: 0,
-    minHeight: 44,
+    marginBottom: 16,
+  },
+  roleLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1A202C',
+    marginBottom: 8,
+  },
+  roleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F7FAFC',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    height: 48,
+  },
+  roleText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '400',
+    color: '#1A202C',
+    marginLeft: 12,
+  },
+  registerButton: {
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  signInLink: {
+    alignSelf: 'center',
+  },
+  signInText: {
+    fontSize: 15,
+    color: '#718096',
+  },
+  signInAccent: {
+    fontWeight: '600',
+    color: '#FFD700',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.18)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    width: 260,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    paddingVertical: 0,
-    elevation: 10,
+    width: '80%',
+    maxWidth: 300,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    overflow: 'hidden',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
   },
-  listItem: {
-    paddingHorizontal: 18,
-    paddingVertical: 16,
+  modalOption: {
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: 'transparent',
+    borderBottomColor: '#E2E8F0',
   },
-  listItemLast: {
+  modalOptionLast: {
     borderBottomWidth: 0,
   },
-  textBody: {
+  modalOptionTitle: {
     fontSize: 16,
-    color: '#222',
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#1A202C',
+    marginBottom: 4,
   },
-  buttonPrimary: {
-    width: '100%',
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-    marginBottom: 8,
-    flexDirection: 'row',
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 17,
-    letterSpacing: 0.2,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  signInLink: {
-    marginTop: 24,
-    alignSelf: 'center',
-  },
-  textAccent: {
-    fontWeight: '700',
-    fontSize: 15,
-  },
-  textCaption: {
-    fontSize: 12,
-    marginTop: 2,
-    opacity: 0.8,
+  modalOptionSubtitle: {
+    fontSize: 14,
+    color: '#718096',
   },
 });
 

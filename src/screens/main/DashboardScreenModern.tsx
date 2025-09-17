@@ -125,7 +125,7 @@ const BOTTOM_NAV_ITEMS = [
 ];
 
 const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
-  const { colors, isDark } = useTheme();
+  const { colors: themeColors, isDark } = useTheme();
   const [selectedCity, setSelectedCity] = useState('Mumbai');
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);

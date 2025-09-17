@@ -7,7 +7,6 @@ import {
   Image,
   Linking,
 } from 'react-native';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import { useTheme } from '../../theme';
 
 interface ChatMessage {
@@ -247,11 +246,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           <Image source={{ uri: senderAvatar }} style={styles.messageAvatar} />
         ) : (
           <View style={styles.avatarPlaceholder}>
-            <MaterialCommunityIcons
-              name="account"
-              size={16}
-              color="#FFFFFF"
-            />
+            <Text style={{color: '#FFFFFF', fontSize: 12, fontWeight: 'bold'}}>
+              {message.senderName?.charAt(0)?.toUpperCase() || '?'}
+            </Text>
           </View>
         )
       )}
@@ -295,12 +292,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               </Text>
               <View style={styles.carShareActions}>
                 <TouchableOpacity style={styles.carShareButton} onPress={openCarDetails}>
-                  <MaterialCommunityIcons
-                    name="car"
-                    size={12}
-                    color="#FFFFFF"
-                  />
-                  <Text style={styles.carShareButtonText}>View Details</Text>
+                  <Text style={styles.carShareButtonText}>🚗 View Details</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -310,22 +302,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         {message.type === 'location' && message.locationData && (
           <View>
             <View style={styles.locationContainer}>
-              <MaterialCommunityIcons
-                name="map-marker"
-                size={20}
-                color={isOwnMessage ? '#FFFFFF' : theme.primary}
-              />
+              <Text style={{fontSize: 20, marginRight: 4}}>📍</Text>
               <Text style={styles.locationText}>
                 {message.locationData.address}
               </Text>
             </View>
             <TouchableOpacity style={styles.locationButton} onPress={openLocation}>
-              <MaterialCommunityIcons
-                name="map"
-                size={12}
-                color="#FFFFFF"
-              />
-              <Text style={styles.locationButtonText}>Open in Maps</Text>
+              <Text style={styles.locationButtonText}>🗺️ Open in Maps</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -336,16 +319,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           </Text>
           
           {isOwnMessage && (
-            <MaterialCommunityIcons
-              name={
-                message.deliveryStatus === 'read' ? 'check-all' :
-                message.deliveryStatus === 'delivered' ? 'check-all' :
-                message.deliveryStatus === 'sent' ? 'check' : 'clock-outline'
-              }
-              size={12}
-              color={message.deliveryStatus === 'read' ? '#4CAF50' : '#FFFFFF'}
-              style={styles.deliveryIcon}
-            />
+            <Text style={[styles.deliveryIcon, {
+              fontSize: 12,
+              color: message.deliveryStatus === 'read' ? '#4CAF50' : '#FFFFFF'
+            }]}>
+              {message.deliveryStatus === 'read' ? '✓✓' :
+               message.deliveryStatus === 'delivered' ? '✓✓' :
+               message.deliveryStatus === 'sent' ? '✓' : '🕒'}
+            </Text>
           )}
         </View>
       </View>

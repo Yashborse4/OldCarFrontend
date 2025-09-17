@@ -11,7 +11,6 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import { ThemeContext } from '../../theme/ThemeContext';
 import AuthContext from '../../context/AuthContext';
 
@@ -232,7 +231,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
       ]}
       onPress={() => setSelectedTab(tab)}
     >
-      <MaterialCommunityIcons
+      <MaterialIcons
         name={icon as any}
         size={20}
         color={selectedTab === tab ? '#FFFFFF' : theme.text}
@@ -260,7 +259,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
           <Image source={{ uri: item.avatar }} style={styles.dealerAvatar} />
         ) : (
           <View style={[styles.dealerAvatarPlaceholder, { backgroundColor: theme.primary }]}>
-            <MaterialCommunityIcons name="store" size={24} color="#FFFFFF" />
+            <MaterialIcons name="store" size={24} color="#FFFFFF" />
           </View>
         )}
         
@@ -268,7 +267,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
         
         {item.isVerified && (
           <View style={styles.verifiedBadge}>
-            <MaterialCommunityIcons name="check-decagram" size={16} color="#4CAF50" />
+            <MaterialIcons name="verified" size={16} color="#4CAF50" />
           </View>
         )}
       </View>
@@ -298,13 +297,13 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
 
         <View style={styles.dealerStats}>
           <View style={styles.statItem}>
-            <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
+            <MaterialIcons name="star" size={16} color="#FFD700" />
             <Text style={[styles.statText, { color: theme.text }]}>
               {item.rating}
             </Text>
           </View>
           <View style={styles.statItem}>
-            <MaterialCommunityIcons name="handshake" size={16} color={theme.primary} />
+            <MaterialIcons name="handshake" size={16} color={theme.primary} />
             <Text style={[styles.statText, { color: theme.text }]}>
               {item.totalDeals} deals
             </Text>
@@ -334,12 +333,12 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
     >
       <View style={styles.messageHeader}>
         <View style={styles.messageTypeContainer}>
-          <MaterialCommunityIcons
+          <MaterialIcons
             name={
-              item.type === 'bulk_inquiry' ? 'cart-multiple' :
-              item.type === 'inventory_share' ? 'car-multiple' :
+              item.type === 'bulk_inquiry' ? 'shopping-cart' :
+              item.type === 'inventory_share' ? 'directions-car' :
               item.type === 'partnership' ? 'handshake' :
-              item.type === 'financing' ? 'bank' : 'message'
+              item.type === 'financing' ? 'account-balance' : 'message'
             }
             size={20}
             color={theme.primary}
@@ -368,7 +367,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
         </Text>
         
         <View style={styles.messageStats}>
-          <MaterialCommunityIcons name="reply" size={16} color={theme.secondaryText} />
+          <MaterialIcons name="reply" size={16} color={theme.secondaryText} />
           <Text style={[styles.responseCount, { color: theme.secondaryText }]}>
             {item.responses} responses
           </Text>
@@ -396,12 +395,12 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
         
         <View style={styles.inventoryActions}>
           <TouchableOpacity style={[styles.inventoryButton, { backgroundColor: theme.primary }]}>
-            <MaterialCommunityIcons name="eye" size={16} color="#FFFFFF" />
+            <MaterialIcons name="visibility" size={16} color="#FFFFFF" />
             <Text style={styles.inventoryButtonText}>View</Text>
           </TouchableOpacity>
           
           <TouchableOpacity style={[styles.inventoryButton, { backgroundColor: '#4CAF50' }]}>
-            <MaterialCommunityIcons name="share" size={16} color="#FFFFFF" />
+            <MaterialIcons name="share" size={16} color="#FFFFFF" />
             <Text style={styles.inventoryButtonText}>Share</Text>
           </TouchableOpacity>
         </View>
@@ -704,7 +703,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
         <Text style={styles.headerTitle}>Dealer Network</Text>
         
         <View style={styles.searchContainer}>
-          <MaterialCommunityIcons name="magnify" size={20} color={theme.secondaryText} />
+          <MaterialIcons name="search" size={20} color={theme.secondaryText} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search dealers, messages, inventory..."
@@ -717,8 +716,8 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
 
       <View style={styles.tabsContainer}>
         {renderTabButton('network', 'Network', 'forum')}
-        {renderTabButton('dealers', 'Dealers', 'account-group')}
-        {renderTabButton('inventory', 'Inventory', 'car-multiple')}
+        {renderTabButton('dealers', 'Dealers', 'group')}
+        {renderTabButton('inventory', 'Inventory', 'directions-car')}
       </View>
 
       <View style={styles.content}>
@@ -754,7 +753,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
         style={styles.fab}
         onPress={() => setShowBulkMessageModal(true)}
       >
-        <MaterialCommunityIcons name="plus" size={28} color="#FFFFFF" />
+        <MaterialIcons name="add" size={28} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
   );

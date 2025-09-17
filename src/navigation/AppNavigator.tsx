@@ -1,5 +1,7 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
+import { theme } from '../theme';
+
 // Authentication Screens
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterUser from '../screens/auth/RegisterUser';
@@ -9,8 +11,6 @@ import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import DashboardScreen from '../screens/main/DashboardScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
-
-// Main App Screens (additional)
 import NotificationsScreen from '../screens/main/NotificationsScreen';
 
 // Car-related Screens
@@ -29,8 +29,8 @@ import MessagesScreen from '../screens/chat/MessagesScreen';
 import ChatScreen from '../screens/chat/ChatScreen';
 import ChatListScreen from '../screens/chat/ChatListScreen';
 import ChatConversationScreen from '../screens/chat/ChatConversationScreen';
-import CreateGroupScreen from '../screens/chat/CreateGroupScreen';
-import GroupDetailsScreen from '../screens/chat/GroupDetailsScreen';
+// import CreateGroupScreen from '../screens/chat/CreateGroupScreen';
+// import GroupDetailsScreen from '../screens/chat/GroupDetailsScreen';
 
 // Dealer Networking Screens
 import DealerGroupsScreen from '../screens/dealer/DealerGroupsScreen';
@@ -44,53 +44,61 @@ import { RootStackParamList } from './types';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
+// Default screen options for modern navigation
+const defaultScreenOptions = {
+  headerShown: false,
+  cardStyle: { backgroundColor: theme.colors.background },
+  ...TransitionPresets.SlideFromRightIOS,
+};
+
 const AppNavigator = ({ initialRouteName }: { initialRouteName: keyof RootStackParamList }) => {
   return (
-    <Stack.Navigator initialRouteName={initialRouteName}>
+    <Stack.Navigator 
+      initialRouteName={initialRouteName}
+      screenOptions={defaultScreenOptions}
+    >
       {/* Authentication Screens */}
-      <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="RegisterUser" component={RegisterUser} options={{ headerShown: false }} />
-      <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} options={{ headerShown: false }} />
+      <Stack.Screen 
+        name="Login" 
+        component={LoginScreen} 
+        options={{
+          ...TransitionPresets.ModalSlideFromBottomIOS,
+          animationTypeForReplace: 'push'
+        }} 
+      />
+      <Stack.Screen name="RegisterUser" component={RegisterUser} />
+      <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
       
       {/* Main App Screens */}
-      <Stack.Screen name="Dashboard" component={DashboardScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Dashboard" component={DashboardScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
       
       {/* Car-related Screens */}
-      <Stack.Screen name="CarDetails" component={CarDetailsScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="SellCar" component={SellCarScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="CoListVehicle" component={CoListVehicleScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="VehicleSearch" component={VehicleSearchScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="VehicleDetail" component={VehicleDetailScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="SearchResults" component={SearchResultsScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="VehicleAnalytics" component={VehicleAnalyticsScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="ManageCar" component={ManageCarScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="MyGarage" component={MyGarageScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CarDetails" component={CarDetailsScreen} />
+      <Stack.Screen name="SellCar" component={SellCarScreen} />
+      <Stack.Screen name="CoListVehicle" component={CoListVehicleScreen} />
+      <Stack.Screen name="VehicleSearch" component={VehicleSearchScreen} />
+      <Stack.Screen name="VehicleDetail" component={VehicleDetailScreen} />
+      <Stack.Screen name="SearchResults" component={SearchResultsScreen} />
+      <Stack.Screen name="VehicleAnalytics" component={VehicleAnalyticsScreen} />
+      <Stack.Screen name="ManageCar" component={ManageCarScreen} />
+      <Stack.Screen name="MyGarage" component={MyGarageScreen} />
       
       {/* Chat/Messaging Screens */}
-      <Stack.Screen name="Messages" component={MessagesScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="ChatList" component={ChatListScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="ChatConversation" component={ChatConversationScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="GroupDetails" component={GroupDetailsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Messages" component={MessagesScreen} />
+      <Stack.Screen name="ChatScreen" component={ChatScreen} />
+      <Stack.Screen name="ChatListScreen" component={ChatListScreen} />
+      <Stack.Screen name="ChatConversationScreen" component={ChatConversationScreen} />
       
       {/* Dealer Networking Screens */}
-      <Stack.Screen name="DealerGroups" component={DealerGroupsScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="DealerAddCar" component={DealerAddCarScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="DealerDashboard" component={DealerDashboardScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="DealerInquiries" component={DealerInquiriesScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="DealerNetworkChat" component={DealerNetworkChatScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="DealerProfile" component={DealerProfileScreen} options={{ headerShown: false }} />
-      
-      {/* TODO: Add these screens when implemented in the future */}
-      {/* <Stack.Screen name="GroupMembers" component={GroupMembersScreen} options={{ headerShown: false }} /> */}
-      {/* <Stack.Screen name="InviteMembers" component={InviteMembersScreen} options={{ headerShown: false }} /> */}
-      {/* <Stack.Screen name="CoListedVehicles" component={CoListedVehiclesScreen} options={{ headerShown: false }} /> */}
-      {/* <Stack.Screen name="ListingPerformance" component={ListingPerformanceScreen} options={{ headerShown: false }} /> */}
-      {/* <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ headerShown: false }} /> */}
+      <Stack.Screen name="DealerGroups" component={DealerGroupsScreen} />
+      <Stack.Screen name="DealerAddCar" component={DealerAddCarScreen} />
+      <Stack.Screen name="DealerDashboard" component={DealerDashboardScreen} />
+      <Stack.Screen name="DealerInquiries" component={DealerInquiriesScreen} />
+      <Stack.Screen name="DealerNetworkChat" component={DealerNetworkChatScreen} />
+      <Stack.Screen name="DealerProfile" component={DealerProfileScreen} />
     </Stack.Navigator>
   );
 };

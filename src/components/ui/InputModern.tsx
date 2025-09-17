@@ -72,7 +72,7 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
     },
     ref
   ) => {
-    const { colors, isDark } = useTheme();
+    const { colors: themeColors, isDark } = useTheme();
     const [isFocused, setIsFocused] = useState(false);
     const [characterCount, setCharacterCount] = useState(value?.length || 0);
     const [isPasswordVisible, setPasswordVisible] = useState(false);
@@ -163,7 +163,7 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
       if (success) return themeColors.success;
       if (isFocused) return themeColors.primary;
       return isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-    }, [error, success, isFocused, colors, isDark]);
+    }, [error, success, isFocused, themeColors, isDark]);
 
     // Styles
     const styles = StyleSheet.create({
