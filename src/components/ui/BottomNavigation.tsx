@@ -9,9 +9,8 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import LinearGradient from 'react-native-linear-gradient';
-import { theme } from '../../theme';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
+import { Gradient } from './Gradient';
 
 interface NavigationItem {
   id: string;
@@ -34,6 +33,12 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   onPress,
 }) => {
   const insets = useSafeAreaInsets();
+  const colors = {
+    primary: '#FFD700',
+    textSecondary: '#6B7280',
+    error: '#F56565',
+    surface: '#FFFFFF',
+  };
   const animationRefs = useRef<{ [key: string]: Animated.Value }>({});
 
   // Initialize animations for each item
@@ -96,7 +101,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           style={[
             styles.activeBackground,
             {
-              backgroundColor: theme.colors.primary,
+              backgroundColor: colors.primary,
               opacity: backgroundOpacity,
               transform: [{ scale: indicatorScale }],
             },
@@ -115,12 +120,12 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           <MaterialIcons
             name={item.icon as any}
             size={24}
-            color={isActive ? theme.colors.primary : theme.colors.textSecondary}
+            color={isActive ? colors.primary : colors.textSecondary}
           />
-          
+
           {/* Badge */}
           {item.badge && item.badge > 0 && (
-            <View style={[styles.badge, { backgroundColor: theme.colors.error }]}>
+            <View style={[styles.badge, { backgroundColor: colors.error }]}>
               <Text style={styles.badgeText}>
                 {item.badge > 99 ? '99+' : item.badge.toString()}
               </Text>
@@ -129,7 +134,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
 
           {/* New indicator */}
           {item.isNew && (
-            <View style={[styles.newDot, { backgroundColor: theme.colors.error }]} />
+            <View style={[styles.newDot, { backgroundColor: colors.error }]} />
           )}
         </Animated.View>
 
@@ -138,7 +143,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           style={[
             styles.navLabel,
             {
-              color: isActive ? theme.colors.primary : theme.colors.textSecondary,
+              color: isActive ? colors.primary : colors.textSecondary,
               opacity: labelOpacity,
               fontWeight: isActive ? '600' : '500',
             },
@@ -153,7 +158,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
             style={[
               styles.activeDot,
               {
-                backgroundColor: theme.colors.primary,
+                backgroundColor: colors.primary,
                 transform: [{ scale: indicatorScale }],
               },
             ]}
@@ -161,7 +166,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         )}
       </TouchableOpacity>
     );
-  }, [activeRoute, themeColors, handlePress]);
+  }, [activeRoute, handlePress]);
 
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
@@ -169,7 +174,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
       <View
         style={[
           StyleSheet.absoluteFillObject,
-          { backgroundColor: theme.colors.surface },
+          { backgroundColor: colors.surface },
         ]}
       />
 
@@ -179,12 +184,11 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
       </View>
 
       {/* Top border */}
-      <LinearGradient
-        colors={[
-          'transparent',
-          'rgba(0, 0, 0, 0.05)',
-          'transparent',
-        ]}
+      <Gradient colors={[
+        'transparent',
+        'rgba(0, 0, 0, 0.05)',
+        'transparent',
+      ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.topBorder}
@@ -200,10 +204,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',

@@ -1,6 +1,5 @@
 import React, { memo } from 'react';
 import { View, ViewStyle, TouchableOpacity, StyleSheet } from 'react-native';
-import { useTheme } from '../../theme';
 
 export interface CardProps {
   children: React.ReactNode;
@@ -21,13 +20,17 @@ export const Card: React.FC<CardProps> = memo(({
   style,
   testID,
 }) => {
-  const { colors: themeColors } = useTheme();
+  // Hardcoded 
+  const colors = {
+    surface: '#FFFFFF',
+    border: '#E5E5E7',
+  };
 
   const styles = StyleSheet.create({
     card: {
       borderRadius: 12,
       opacity: disabled ? 0.6 : 1,
-      ...getVariantStyles(variant, themeColors),
+      ...getVariantStyles(variant, colors),
       ...getPaddingStyles(padding),
       ...style,
     },
@@ -55,40 +58,31 @@ export const Card: React.FC<CardProps> = memo(({
 });
 
 // Helper functions
-const getVariantStyles = (variant: string, themeColors: any) => {
+const getVariantStyles = (variant: string, colors: any) => {
   switch (variant) {
     case 'default':
       return {
-        backgroundColor: themeColors.surface,
+        backgroundColor: colors.surface,
         elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+
       };
     case 'elevated':
       return {
-        backgroundColor: themeColors.surface,
+        backgroundColor: colors.surface,
         elevation: 6,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
+
       };
     case 'outlined':
       return {
-        backgroundColor: themeColors.surface,
+        backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: themeColors.border,
+        borderColor: colors.border
       };
     default:
       return {
-        backgroundColor: themeColors.surface,
+        backgroundColor: colors.surface,
         elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+
       };
   }
 };

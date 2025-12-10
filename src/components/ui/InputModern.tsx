@@ -12,11 +12,11 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { useTheme } from '../../theme';
-import { spacing, borderRadius, typography, shadows } from '../../design-system/tokens';
+import { spacing, borderRadius, typography } from '../../design-system/tokens';
 import MaterialIcons from '@react-native-vector-icons/material-icons';
 import { BlurView } from '@react-native-community/blur';
-import * as Animatable from 'react-native-animatable';
+
+import { useTheme } from '../../theme';
 
 export interface ModernInputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
@@ -39,6 +39,7 @@ export interface ModernInputProps extends Omit<TextInputProps, 'style'> {
   loading?: boolean;
   animationDelay?: number;
   testID?: string;
+  textColor?: string;
 }
 
 export const ModernInput = forwardRef<TextInput, ModernInputProps>(
@@ -68,15 +69,17 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
       onFocus,
       onBlur,
       secureTextEntry,
+      textColor,
       ...props
     },
     ref
   ) => {
-    const { colors: themeColors, isDark } = useTheme();
+    const { theme, isDark } = useTheme();
+    const colors = theme.colors;
     const [isFocused, setIsFocused] = useState(false);
     const [characterCount, setCharacterCount] = useState(value?.length || 0);
     const [isPasswordVisible, setPasswordVisible] = useState(false);
-    
+
     // Animation values
     const labelAnimation = useRef(new Animated.Value(value ? 1 : 0)).current;
     const focusAnimation = useRef(new Animated.Value(0)).current;
@@ -84,7 +87,7 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
 
     // Handle password visibility for password inputs
     const isPasswordInput = secureTextEntry && !isPasswordVisible;
-    const finalRightIcon = secureTextEntry 
+    const finalRightIcon = secureTextEntry
       ? (isPasswordVisible ? 'visibility-off' : 'visibility')
       : rightIcon;
 
@@ -102,9 +105,9 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
 
     const handleFocus = useCallback((e: any) => {
       if (disabled) return;
-      
+
       setIsFocused(true);
-      
+
       // Animate label and focus indicator
       if (floatingLabel && label) {
         Animated.timing(labelAnimation, {
@@ -113,19 +116,19 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
           useNativeDriver: false,
         }).start();
       }
-      
+
       Animated.timing(focusAnimation, {
         toValue: 1,
         duration: 200,
         useNativeDriver: false,
       }).start();
-      
+
       onFocus?.(e);
     }, [disabled, floatingLabel, label, labelAnimation, focusAnimation, onFocus]);
 
     const handleBlur = useCallback((e: any) => {
       setIsFocused(false);
-      
+
       // Animate label back if no value
       if (floatingLabel && label && !value) {
         Animated.timing(labelAnimation, {
@@ -134,13 +137,13 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
           useNativeDriver: false,
         }).start();
       }
-      
+
       Animated.timing(focusAnimation, {
         toValue: 0,
         duration: 200,
         useNativeDriver: false,
       }).start();
-      
+
       onBlur?.(e);
     }, [floatingLabel, label, value, labelAnimation, focusAnimation, onBlur]);
 
@@ -159,13 +162,13 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
 
     // Get border color based on state
     const getBorderColor = useCallback(() => {
-      if (error) return themeColors.error;
-      if (success) return themeColors.success;
-      if (isFocused) return themeColors.primary;
+      if (error) return colors.error;
+      if (success) return colors.success;
+      if (isFocused) return colors.primary;
       return isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-    }, [error, success, isFocused, themeColors, isDark]);
+    }, [error, success, isFocused, colors.error, colors.success, colors.primary, isDark]);
 
-    // Styles
+    // Styles (cleaned up: fix malformed blocks and ensure theme usage)
     const styles = StyleSheet.create({
       container: {
         marginBottom: spacing.lg,
@@ -174,76 +177,33 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
       staticLabel: {
         fontSize: typography.fontSizes.sm,
         fontWeight: typography.fontWeights.semibold,
-        color: themeColors.textSecondary,
+        color: colors.textSecondary,
         marginBottom: spacing.sm,
       },
       required: {
-        color: themeColors.error,
+        color: colors.error,
         fontSize: typography.fontSizes.sm,
       },
       inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         position: 'relative',
-        ...(() => {
-          const sizeStyles = {
-            sm: {
-              minHeight: 44,
-              paddingHorizontal: spacing.md,
-              paddingVertical: spacing.sm,
-            },
-            md: {
-              minHeight: 52,
-              paddingHorizontal: spacing.lg,
-              paddingVertical: spacing.md,
-            },
-            lg: {
-              minHeight: 60,
-              paddingHorizontal: spacing.xl,
-              paddingVertical: spacing.lg,
-            },
-          };
-
-          const variantStyles = {
-            default: {
-              backgroundColor: themeColors.surface,
-              borderWidth: 1.5,
-              borderColor: getBorderColor(),
-              ...shadows.sm,
-            },
-            outline: {
-              backgroundColor: 'transparent',
-              borderWidth: 1.5,
-              borderColor: getBorderColor(),
-            },
-            filled: {
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-              borderWidth: 0,
-              ...shadows.sm,
-            },
-            glass: {
-              backgroundColor: 'transparent',
-              borderWidth: 1,
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-              overflow: 'hidden',
-            },
-            minimal: {
-              backgroundColor: 'transparent',
-              borderWidth: 0,
-              borderBottomWidth: 2,
-              borderBottomColor: getBorderColor(),
-              borderRadius: 0,
-              paddingHorizontal: 0,
-            },
-          };
-
-          return {
-            borderRadius: variant === 'minimal' ? 0 : borderRadius[radius],
-            opacity: disabled ? 0.6 : 1,
-            ...sizeStyles[size],
-            ...variantStyles[variant],
-          };
-        })(),
+        borderRadius: variant === 'minimal' ? 0 : borderRadius[radius],
+        opacity: disabled ? 0.6 : 1,
+        ...(size === 'sm'
+          ? { minHeight: 44, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }
+          : size === 'md'
+            ? { minHeight: 52, paddingHorizontal: spacing.lg, paddingVertical: spacing.md }
+            : { minHeight: 60, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg }),
+        ...(variant === 'default'
+          ? { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: getBorderColor() }
+          : variant === 'outline'
+            ? { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: getBorderColor() }
+            : variant === 'filled'
+              ? { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)', borderWidth: 0 }
+              : variant === 'glass'
+                ? { backgroundColor: 'transparent', borderWidth: 1, borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)', overflow: 'hidden' }
+                : { backgroundColor: 'transparent', borderWidth: 0, borderBottomWidth: 2, borderBottomColor: getBorderColor(), borderRadius: 0, paddingHorizontal: 0 }),
       },
       glassBackground: {
         ...StyleSheet.absoluteFillObject,
@@ -256,23 +216,19 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
       },
       input: {
         flex: 1,
-        fontSize: (() => {
-          const sizes = {
-            sm: typography.fontSizes.sm,
-            md: typography.fontSizes.base,
-            lg: typography.fontSizes.lg,
-          };
-          return sizes[size];
-        })(),
-        lineHeight: (() => {
-          const sizes = {
-            sm: typography.fontSizes.sm * 1.4,
-            md: typography.fontSizes.base * 1.4,
-            lg: typography.fontSizes.lg * 1.4,
-          };
-          return sizes[size];
-        })(),
-        color: themeColors.text,
+        fontSize:
+          size === 'sm'
+            ? typography.fontSizes.sm
+            : size === 'md'
+              ? typography.fontSizes.base
+              : typography.fontSizes.lg,
+        lineHeight:
+          size === 'sm'
+            ? typography.fontSizes.sm * 1.4
+            : size === 'md'
+              ? typography.fontSizes.base * 1.4
+              : typography.fontSizes.lg * 1.4,
+        color: textColor || colors.text,
         fontWeight: typography.fontWeights.medium,
         paddingVertical: 0,
         ...inputStyle,
@@ -286,32 +242,39 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
       floatingLabel: {
         position: 'absolute',
         left: leftIcon ? spacing.xl + spacing.md : spacing.lg,
-        backgroundColor: variant === 'minimal' ? 'transparent' : themeColors.background,
-        paddingHorizontal: variant === 'minimal' ? 0 : spacing.xs,
-        color: error ? themeColors.error : success ? themeColors.success : isFocused ? themeColors.primary : themeColors.textSecondary,
+        backgroundColor:
+          variant === 'minimal' || variant === 'outline' ? 'transparent' : colors.background,
+        paddingHorizontal: variant === 'minimal' || variant === 'outline' ? 0 : spacing.xs,
+        color: error
+          ? colors.error
+          : success
+            ? colors.success
+            : isFocused
+              ? colors.primary
+              : colors.textSecondary,
         fontWeight: isFocused ? typography.fontWeights.semibold : typography.fontWeights.medium,
         zIndex: 1,
       },
       errorText: {
         fontSize: typography.fontSizes.sm,
-        color: themeColors.error,
+        color: colors.error,
         marginTop: spacing.xs,
         fontWeight: typography.fontWeights.medium,
       },
       hintText: {
         fontSize: typography.fontSizes.sm,
-        color: themeColors.textSecondary,
+        color: colors.textSecondary,
         marginTop: spacing.xs,
       },
       successText: {
         fontSize: typography.fontSizes.sm,
-        color: themeColors.success,
+        color: colors.success,
         marginTop: spacing.xs,
         fontWeight: typography.fontWeights.medium,
       },
       characterCount: {
         fontSize: typography.fontSizes.xs,
-        color: characterCount === maxLength ? themeColors.warning : themeColors.textSecondary,
+        color: characterCount === maxLength ? colors.warning : colors.textSecondary,
         textAlign: 'right',
         marginTop: spacing.xs,
       },
@@ -321,17 +284,12 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
         left: 0,
         right: 0,
         height: variant === 'minimal' ? 2 : 1,
-        backgroundColor: themeColors.primary,
+        backgroundColor: colors.primary,
       },
     });
 
     return (
-      <Animatable.View
-        animation="fadeInUp"
-        duration={300}
-        delay={animationDelay}
-        style={styles.container}
-      >
+      <View style={styles.container}>
         {/* Static label */}
         {!floatingLabel && label && (
           <Text style={styles.staticLabel}>
@@ -355,7 +313,7 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
               style={styles.glassBackground}
               blurType={isDark ? 'dark' : 'light'}
               blurAmount={5}
-              reducedTransparencyFallbackColor={themeColors.surface}
+              reducedTransparencyFallbackColor={colors.surface}
             />
           )}
 
@@ -365,7 +323,7 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
               style={[
                 styles.focusIndicator,
                 {
-                  backgroundColor: error ? themeColors.error : success ? themeColors.success : themeColors.primary,
+                  backgroundColor: error ? colors.error : success ? colors.success : colors.primary,
                   transform: [
                     {
                       scaleX: focusAnimation.interpolate({
@@ -385,7 +343,7 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
               <MaterialIcons
                 name={leftIcon as any}
                 size={size === 'lg' ? 24 : 20}
-                color={isFocused ? themeColors.primary : themeColors.textSecondary}
+                color={isFocused ? colors.primary : colors.textSecondary}
               />
             </View>
           )}
@@ -400,7 +358,7 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
             onBlur={handleBlur}
             onChangeText={handleChangeText}
             placeholder={floatingLabel ? undefined : props.placeholder}
-            placeholderTextColor={themeColors.textSecondary}
+            placeholderTextColor={isDark ? 'rgba(255, 255, 255, 0.5)' : colors.textSecondary}
             maxLength={maxLength}
             editable={!disabled && !loading}
             secureTextEntry={isPasswordInput}
@@ -417,7 +375,7 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
             <View style={styles.rightIconContainer}>
               <ActivityIndicator
                 size="small"
-                color={themeColors.primary}
+                color={colors.primary}
               />
             </View>
           ) : finalRightIcon ? (
@@ -430,7 +388,7 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
               <MaterialIcons
                 name={finalRightIcon as any}
                 size={size === 'lg' ? 24 : 20}
-                color={isFocused ? themeColors.primary : themeColors.textSecondary}
+                color={isFocused ? colors.primary : colors.textSecondary}
               />
             </TouchableOpacity>
           ) : null}
@@ -463,24 +421,16 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
 
         {/* Error message */}
         {error && (
-          <Animatable.Text
-            animation="fadeInLeft"
-            duration={200}
-            style={styles.errorText}
-          >
+          <Text style={styles.errorText}>
             {error}
-          </Animatable.Text>
+          </Text>
         )}
 
         {/* Success message */}
         {success && !error && (
-          <Animatable.Text
-            animation="fadeInLeft"
-            duration={200}
-            style={styles.successText}
-          >
+          <Text style={styles.successText}>
             ✓ Looks good!
-          </Animatable.Text>
+          </Text>
         )}
 
         {/* Hint text */}
@@ -494,7 +444,7 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
             {characterCount}/{maxLength}
           </Text>
         )}
-      </Animatable.View>
+      </View>
     );
   }
 );

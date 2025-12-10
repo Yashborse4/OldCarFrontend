@@ -9,12 +9,11 @@ import {
   Platform,
   Easing,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+
 import { BlurView } from '@react-native-community/blur';
 import { AntDesign } from '@react-native-vector-icons/ant-design';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import * as Animatable from 'react-native-animatable';
-import { useTheme } from '../../theme';
+
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -53,12 +52,24 @@ const ToastItem: React.FC<ToastItemProps> = ({
   onRemove,
   index,
 }) => {
-  const { colors: themeColors, spacing, borderRadius, shadows } = useTheme();
+  const colors = {
+    surface: '#FFFFFF',
+    card: '#F3F4F6',
+    border: '#E5E7EB',
+    text: '#1F2937'
+  };
+  const spacing = {
+    lg: 16,
+    sm: 8
+  };
+  const borderRadius = {
+    lg: 16
+  };
   const slideAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
-  const getToastColors = () => {
+  const getToast = () => {
     switch (type) {
       case 'success':
         return {
@@ -94,10 +105,10 @@ const ToastItem: React.FC<ToastItemProps> = ({
         };
       default:
         return {
-          background: [themeColors.surface, themeColors.card],
-          border: themeColors.border,
-          icon: themeColors.text,
-          text: themeColors.text,
+          background: [colors.surface, colors.card],
+          border: colors.border,
+          icon: colors.text,
+          text: colors.text,
           glow: 'rgba(0, 0, 0, 0.1)',
         };
     }
@@ -105,22 +116,22 @@ const ToastItem: React.FC<ToastItemProps> = ({
 
   const getIcon = () => {
     if (icon) return icon;
-    
+
     switch (type) {
       case 'success':
-        return <AntDesign name="checkcircle1" size={24} color={toastColors.icon} />;
+        return <AntDesign name="check-circle" size={24} color={toast.icon} />;
       case 'error':
-        return <AntDesign name="closecircle" size={24} color={toastColors.icon} />;
+        return <AntDesign name="close-circle" size={24} color={toast.icon} />;
       case 'warning':
-        return <AntDesign name="exclamationcircle1" size={24} color={toastColors.icon} />;
+        return <AntDesign name="exclamation-circle" size={24} color={toast.icon} />;
       case 'info':
-        return <AntDesign name="infocircle1" size={24} color={toastColors.icon} />;
+        return <AntDesign name="info-circle" size={24} color={toast.icon} />;
       default:
-        return <MaterialIcons name="notifications" size={24} color={toastColors.icon} />;
+        return <MaterialIcons name="notifications" size={24} color={toast.icon} />;
     }
   };
 
-  const toastColors = getToastColors();
+  const toast = getToast();
 
   useEffect(() => {
     // Enter animation
@@ -181,7 +192,7 @@ const ToastItem: React.FC<ToastItemProps> = ({
 
   const getPositionStyle = () => {
     const baseOffset = spacing.lg + (index * (70 + spacing.sm));
-    
+
     switch (position) {
       case 'top':
         return {
@@ -242,7 +253,7 @@ const ToastItem: React.FC<ToastItemProps> = ({
           ]}
         />
       )}
-      
+
       <Animated.View
         style={[
           styles.container,
@@ -265,24 +276,19 @@ const ToastItem: React.FC<ToastItemProps> = ({
             style={styles.blurContainer}
             blurType="light"
             blurAmount={10}
-            reducedTransparencyFallbackColor={themeColors.surface}
+            reducedTransparencyFallbackColor={colors.surface}
           />
-          
+
           {/* Gradient overlay */}
-          <LinearGradient
-            colors={toastColors.background}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientOverlay}
-          />
-          
+          <View style={[styles.gradientOverlay, { backgroundColor: toast.background[0] }]} />
+
           {/* Glow effect */}
           <View
             style={[
               styles.glowEffect,
               {
-                shadowColor: toastColors.glow,
-                borderColor: toastColors.border,
+
+                borderColor: toast.border,
               },
             ]}
           />
@@ -290,20 +296,16 @@ const ToastItem: React.FC<ToastItemProps> = ({
           {/* Content */}
           <View style={styles.content}>
             <View style={styles.iconContainer}>
-              <Animatable.View
-                animation="pulse"
-                iterationCount="infinite"
-                duration={2000}
-              >
+              <View>
                 {getIcon()}
-              </Animatable.View>
+              </View>
             </View>
 
             <View style={styles.textContainer}>
               <Text
                 style={[
                   styles.title,
-                  { color: toastColors.text },
+                  { color: toast.text },
                 ]}
                 numberOfLines={2}
               >
@@ -313,7 +315,7 @@ const ToastItem: React.FC<ToastItemProps> = ({
                 <Text
                   style={[
                     styles.message,
-                    { color: toastColors.text, opacity: 0.9 },
+                    { color: toast.text, opacity: 0.9 },
                   ]}
                   numberOfLines={3}
                 >
@@ -330,7 +332,7 @@ const ToastItem: React.FC<ToastItemProps> = ({
               <AntDesign
                 name="close"
                 size={18}
-                color={toastColors.text}
+                color={toast.text}
                 style={{ opacity: 0.8 }}
               />
             </TouchableOpacity>
@@ -373,9 +375,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: 16,
     borderWidth: 1,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
+
     elevation: 12,
   },
   content: {

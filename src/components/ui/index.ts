@@ -8,8 +8,8 @@ export { Input, ModernInput } from './InputModern';
 export { BottomNavigation } from './BottomNavigation';
 
 // Toast System
-export { Toast } from './Toast';
-export { ToastManager, useNotifications } from './ToastManager';
+export { default as Toast } from './Toast';
+export { ToastProvider as ToastManager, useNotifications } from './ToastManager';
 
 // Micro-interactions and Performance
 export {
@@ -21,12 +21,11 @@ export {
   useStaggerAnimation,
   useParallaxScroll,
   hapticFeedback,
-  ADVANCED_ANIMATIONS,
 } from './MicroInteractionsModern';
 
 // Legacy components (for backward compatibility during transition)
 // These will be gradually phased out
-export { default as LegacyInput } from './Input';
+// export { default as LegacyInput } from './Input';
 
 // Export types
 export type { ButtonProps } from './Button';
@@ -38,8 +37,8 @@ export {
   spacing, 
   borderRadius, 
   typography, 
-  shadows, 
-  colors 
+
+   
 } from '../../design-system/tokens';
 
 

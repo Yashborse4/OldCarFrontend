@@ -6,10 +6,11 @@ import {
   TextStyle,
   ActivityIndicator,
   StyleSheet,
+  StyleProp,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { Gradient } from './Gradient';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 import { useTheme } from '../../theme';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 
 export interface ButtonProps {
   title: string;
@@ -20,7 +21,7 @@ export interface ButtonProps {
   loading?: boolean;
   icon?: string;
   fullWidth?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   testID?: string;
 }
 
@@ -36,7 +37,8 @@ export const Button: React.FC<ButtonProps> = memo(({
   style,
   testID,
 }) => {
-  const { colors: themeColors, isDark } = useTheme();
+  const { theme } = useTheme();
+  const colors = theme.colors;
 
   const styles = StyleSheet.create({
     button: {
@@ -46,12 +48,12 @@ export const Button: React.FC<ButtonProps> = memo(({
       borderRadius: 12,
       opacity: disabled ? 0.6 : 1,
       ...(fullWidth && { width: '100%' }),
-      ...getVariantStyles(variant, themeColors, isDark),
+      ...getVariantStyles(variant, colors),
       ...getSizeStyles(size),
     },
     text: {
       fontWeight: '600',
-      ...getTextStyles(variant, size, themeColors),
+      ...getTextStyles(variant, size, colors),
     },
     icon: {
       marginRight: 8,
@@ -63,9 +65,7 @@ export const Button: React.FC<ButtonProps> = memo(({
 
   if (variant === 'primary' && !disabled) {
     return (
-      <LinearGradient
-        colors={['#FFD700', '#F7931E']}
-        style={[styles.button, style]}
+      <Gradient colors={[colors.primary, colors.secondary]} style={[styles.button, style]}
       >
         <TouchableOpacity
           style={{
@@ -83,7 +83,7 @@ export const Button: React.FC<ButtonProps> = memo(({
           {loading && (
             <ActivityIndicator
               size={size === 'sm' ? 'small' : 'small'}
-              color="#1A202C"
+              color={colors.onPrimary}
               style={styles.loader}
             />
           )}
@@ -91,13 +91,13 @@ export const Button: React.FC<ButtonProps> = memo(({
             <MaterialIcons
               name={icon as any}
               size={size === 'sm' ? 16 : 20}
-              color="#1A202C"
+              color={colors.onPrimary}
               style={styles.icon}
             />
           )}
           <Text style={styles.text}>{title}</Text>
         </TouchableOpacity>
-      </LinearGradient>
+      </Gradient>
     );
   }
 
@@ -112,7 +112,7 @@ export const Button: React.FC<ButtonProps> = memo(({
       {loading && (
         <ActivityIndicator
           size={size === 'sm' ? 'small' : 'small'}
-          color={getLoaderColor(variant, themeColors)}
+          color={getLoaderColor(variant, colors)}
           style={styles.loader}
         />
       )}
@@ -120,7 +120,7 @@ export const Button: React.FC<ButtonProps> = memo(({
         <MaterialIcons
           name={icon as any}
           size={size === 'sm' ? 16 : 20}
-          color={getIconColor(variant, themeColors)}
+          color={getIconColor(variant, colors)}
           style={styles.icon}
         />
       )}
@@ -130,28 +130,25 @@ export const Button: React.FC<ButtonProps> = memo(({
 });
 
 // Helper functions
-const getVariantStyles = (variant: string, themeColors: any, isDark: boolean) => {
+const getVariantStyles = (variant: string, colors: any) => {
   switch (variant) {
     case 'primary':
       return {
-        backgroundColor: themeColors.primary,
+        backgroundColor: colors.primary,
         elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+
       };
     case 'secondary':
       return {
-        backgroundColor: themeColors.surface,
+        backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: themeColors.border,
+        borderColor: colors.border
       };
     case 'outline':
       return {
         backgroundColor: 'transparent',
         borderWidth: 1.5,
-        borderColor: themeColors.primary,
+        borderColor: colors.primary
       };
     case 'ghost':
       return {
@@ -159,12 +156,9 @@ const getVariantStyles = (variant: string, themeColors: any, isDark: boolean) =>
       };
     case 'danger':
       return {
-        backgroundColor: themeColors.error,
+        backgroundColor: colors.error,
         elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+
       };
     default:
       return {};
@@ -200,7 +194,7 @@ const getSizeStyles = (size: string) => {
   }
 };
 
-const getTextStyles = (variant: string, size: string, themeColors: any) => {
+const getTextStyles = (variant: string, size: string, colors: any) => {
   const baseStyles = {
     fontSize: size === 'sm' ? 14 : size === 'lg' ? 16 : 15,
     textAlign: 'center' as const,
@@ -208,43 +202,43 @@ const getTextStyles = (variant: string, size: string, themeColors: any) => {
 
   switch (variant) {
     case 'primary':
-      return { ...baseStyles, color: '#1A202C' };
+      return { ...baseStyles, color: colors.onPrimary };
     case 'secondary':
-      return { ...baseStyles, color: themeColors.text };
+      return { ...baseStyles, color: colors.text };
     case 'outline':
-      return { ...baseStyles, color: themeColors.primary };
+      return { ...baseStyles, color: colors.primary };
     case 'ghost':
-      return { ...baseStyles, color: themeColors.text };
+      return { ...baseStyles, color: colors.text };
     case 'danger':
       return { ...baseStyles, color: '#FFFFFF' };
     default:
-      return { ...baseStyles, color: themeColors.text };
+      return { ...baseStyles, color: colors.text };
   }
 };
 
-const getLoaderColor = (variant: string, themeColors: any) => {
+const getLoaderColor = (variant: string, colors: any) => {
   switch (variant) {
     case 'primary':
-      return '#1A202C';
+      return colors.onPrimary;
     case 'outline':
-      return themeColors.primary;
+      return colors.primary;
     case 'danger':
       return '#FFFFFF';
     default:
-      return themeColors.text;
+      return colors.text;
   }
 };
 
-const getIconColor = (variant: string, themeColors: any) => {
+const getIconColor = (variant: string, colors: any) => {
   switch (variant) {
     case 'primary':
-      return '#1A202C';
+      return colors.onPrimary;
     case 'outline':
-      return themeColors.primary;
+      return colors.primary;
     case 'danger':
       return '#FFFFFF';
     default:
-      return themeColors.text;
+      return colors.text;
   }
 };
 

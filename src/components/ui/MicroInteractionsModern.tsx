@@ -1,18 +1,10 @@
 import React, { useRef, useEffect, useCallback } from 'react';
-import {
-  Animated,
-  Easing,
-  Vibration,
-  Platform,
-  ViewStyle,
-  PanGestureHandler,
-  TapGestureHandler,
-  State,
-} from 'react-native';
+import { Animated, Easing, Vibration, Platform, ViewStyle, StyleProp } from 'react-native';
+import { PanGestureHandler, TapGestureHandler, State } from 'react-native-gesture-handler';
 import { spacing, typography } from '../../design-system/tokens';
 
 // Haptic feedback utility
-export const hapticFeedback = {
+const hapticFeedback = {
   light: () => {
     if (Platform.OS === 'ios') {
       // iOS haptic feedback would go here
@@ -68,7 +60,7 @@ interface AnimatedPressableProps {
   onPress?: () => void;
   onLongPress?: () => void;
   disabled?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   scaleValue?: number;
   hapticType?: 'light' | 'medium' | 'heavy';
   animationType?: 'scale' | 'bounce' | 'glow' | 'lift';
@@ -161,11 +153,11 @@ export const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
 
     return {
       transform: baseTransform,
-      opacity: animationType === 'glow' 
+      opacity: animationType === 'glow'
         ? glowAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [1, 0.8],
-          })
+          inputRange: [0, 1],
+          outputRange: [1, 0.8],
+        })
         : disabled ? 0.6 : 1,
     };
   };
@@ -194,7 +186,7 @@ interface SwipeableCardProps {
   children: React.ReactNode;
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   threshold?: number;
 }
 
@@ -220,9 +212,9 @@ export const SwipeableCard: React.FC<SwipeableCardProps> = ({
       if (Math.abs(translationX) > threshold || Math.abs(velocityX) > 500) {
         // Swipe detected
         const direction = translationX > 0 ? 'right' : 'left';
-        
+
         hapticFeedback.medium();
-        
+
         // Animate out
         Animated.parallel([
           Animated.timing(translateX, {
@@ -240,7 +232,7 @@ export const SwipeableCard: React.FC<SwipeableCardProps> = ({
           } else {
             onSwipeLeft?.();
           }
-          
+
           // Reset position
           translateX.setValue(0);
           opacity.setValue(1);
@@ -277,10 +269,10 @@ export const SwipeableCard: React.FC<SwipeableCardProps> = ({
 
 // Loading skeleton component
 interface SkeletonProps {
-  width?: number | string;
-  height?: number | string;
+  width?: number | "auto" | `${number}%`;
+  height?: number | "auto" | `${number}%`;
   borderRadius?: number;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({
@@ -290,6 +282,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   style,
 }) => {
   const shimmerAnim = useRef(new Animated.Value(-1)).current;
+  const containerWidthRef = useRef(0);
 
   useEffect(() => {
     const shimmer = () => {
@@ -306,11 +299,14 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 
   return (
     <Animated.View
+      onLayout={(e) => {
+        containerWidthRef.current = e.nativeEvent.layout.width;
+      }}
       style={[
         {
           width,
           height,
-          borderRadius,
+          borderRadius: borderRadius as number,
           backgroundColor: '#E1E9EE',
           overflow: 'hidden',
         },
@@ -318,16 +314,17 @@ export const Skeleton: React.FC<SkeletonProps> = ({
       ]}
     >
       <Animated.View
+        pointerEvents="none"
         style={{
-          width: '100%',
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '35%',
           height: '100%',
-          backgroundColor: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+          backgroundColor: 'rgba(255,255,255,0.35)',
           transform: [
             {
-              translateX: shimmerAnim.interpolate({
-                inputRange: [-1, 1],
-                outputRange: ['-100%', '100%'],
-              }),
+              translateX: Animated.multiply(shimmerAnim, containerWidthRef.current || 0),
             },
           ],
         }}
@@ -428,7 +425,7 @@ export const useParallaxScroll = (scrollY: Animated.Value) => {
 interface FloatingActionButtonProps {
   onPress: () => void;
   icon: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   size?: number;
 }
 
@@ -452,7 +449,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 
   const handlePress = useCallback(() => {
     hapticFeedback.medium();
-    
+
     Animated.sequence([
       Animated.spring(bounceAnim, {
         toValue: 1.2,
@@ -482,10 +479,6 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
           backgroundColor: '#007AFF',
           alignItems: 'center',
           justifyContent: 'center',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
           elevation: 8,
         },
         style,
@@ -505,7 +498,6 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 };
 
 export {
-  ADVANCED_ANIMATIONS,
   hapticFeedback,
 };
 
