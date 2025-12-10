@@ -6,12 +6,11 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
-  Modal,
   Alert,
   Image,
   ScrollView,
 } from 'react-native';
-import { ThemeContext } from '../../theme/ThemeContext';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 import AuthContext from '../../context/AuthContext';
 
 interface DealerContact {
@@ -59,21 +58,31 @@ interface InventoryItem {
 }
 
 const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
-  const { theme } = useContext(ThemeContext);
-  const { user } = useContext(AuthContext);
+  const colors = {
+    primary: '#FFD700',
+    text: '#1A202C',
+    textSecondary: '#4A5568',
+    surface: '#FFFFFF',
+    background: '#FAFBFC',
+    border: '#E2E8F0',
+  };
+  const authContext = useContext(AuthContext);
+  
+  if (!authContext) {
+    throw new Error('Component must be used within AuthProvider');
+  }
+  
+  const user = authContext.user;
   
   const [dealers, setDealers] = useState<DealerContact[]>([]);
   const [networkMessages, setNetworkMessages] = useState<NetworkMessage[]>([]);
   const [selectedTab, setSelectedTab] = useState<'dealers' | 'network' | 'inventory'>('network');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showBulkMessageModal, setShowBulkMessageModal] = useState(false);
-  const [showInventoryShareModal, setShowInventoryShareModal] = useState(false);
   const [selectedDealers, setSelectedDealers] = useState<string[]>([]);
-  const [bulkMessage, setBulkMessage] = useState('');
   const [sharedInventory, setSharedInventory] = useState<InventoryItem[]>([]);
 
   // Mock data
-  const mockDealers: DealerContact[] = [
+  const mockDealers = React.useMemo<DealerContact[]>(() => [
     {
       id: 'dealer1',
       dealerName: 'Rajesh Motors',
@@ -115,9 +124,9 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
       isVerified: true,
       businessType: 'premium'
     }
-  ];
+  ], []);
 
-  const mockNetworkMessages: NetworkMessage[] = [
+  const mockNetworkMessages = React.useMemo<NetworkMessage[]>(() => [
     {
       id: 'msg1',
       type: 'bulk_inquiry',
@@ -160,9 +169,9 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
       responses: 12,
       isRead: true
     }
-  ];
+  ], []);
 
-  const mockInventory: InventoryItem[] = [
+  const mockInventory = React.useMemo<InventoryItem[]>(() => [
     {
       id: 'inv1',
       title: '2022 BMW X5 xDrive40i',
@@ -185,48 +194,21 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
       availability: 1,
       dealerId: 'dealer2'
     }
-  ];
+  ], []);
 
   useEffect(() => {
     setDealers(mockDealers);
     setNetworkMessages(mockNetworkMessages);
     setSharedInventory(mockInventory);
-  }, []);
-
-  const sendBulkMessage = () => {
-    if (!bulkMessage.trim() || selectedDealers.length === 0) {
-      Alert.alert('Error', 'Please select dealers and enter a message.');
-      return;
-    }
-
-    const newMessage: NetworkMessage = {
-      id: Date.now().toString(),
-      type: 'general',
-      title: 'Bulk Message',
-      content: bulkMessage,
-      senderId: user?.id || 'current_user',
-      senderName: user?.name || 'You',
-      timestamp: new Date(),
-      priority: 'medium',
-      responses: 0,
-      isRead: false
-    };
-
-    setNetworkMessages(prev => [newMessage, ...prev]);
-    setBulkMessage('');
-    setSelectedDealers([]);
-    setShowBulkMessageModal(false);
-    
-    Alert.alert('Success', `Message sent to ${selectedDealers.length} dealers.`);
-  };
+  }, [mockDealers, mockNetworkMessages, mockInventory]);
 
   const renderTabButton = (tab: 'dealers' | 'network' | 'inventory', label: string, icon: string) => (
     <TouchableOpacity
       style={[
         styles.tabButton,
         {
-          backgroundColor: selectedTab === tab ? theme.primary : 'transparent',
-          borderBottomColor: selectedTab === tab ? theme.primary : 'transparent'
+          backgroundColor: selectedTab === tab ? colors.primary : 'transparent',
+          borderBottomColor: selectedTab === tab ? colors.primary : 'transparent'
         }
       ]}
       onPress={() => setSelectedTab(tab)}
@@ -234,11 +216,11 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
       <MaterialIcons
         name={icon as any}
         size={20}
-        color={selectedTab === tab ? '#FFFFFF' : theme.text}
+        color={selectedTab === tab ? '#000000' : colors.text}
       />
       <Text style={[
         styles.tabButtonText,
-        { color: selectedTab === tab ? '#FFFFFF' : theme.text }
+        { color: selectedTab === tab ? '#000000' : colors.text }
       ]}>
         {label}
       </Text>
@@ -247,7 +229,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
 
   const renderDealerItem = ({ item }: { item: DealerContact }) => (
     <TouchableOpacity
-      style={[styles.dealerItem, { backgroundColor: theme.cardBackground }]}
+      style={[styles.dealerItem, { backgroundColor: colors.surface }]}
       onPress={() => navigation.navigate('ChatConversation', {
         participantId: item.id,
         participantName: item.dealerName,
@@ -258,15 +240,15 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
         {item.avatar ? (
           <Image source={{ uri: item.avatar }} style={styles.dealerAvatar} />
         ) : (
-          <View style={[styles.dealerAvatarPlaceholder, { backgroundColor: theme.primary }]}>
-            <MaterialIcons name="store" size={24} color="#FFFFFF" />
+          <View style={[styles.dealerAvatarPlaceholder, { backgroundColor: colors.primary }]}>
+            <MaterialIcons name="store" size={24} color="#000000" />
           </View>
         )}
         
-        {item.isOnline && <View style={styles.onlineIndicator} />}
+        {item.isOnline && <View style={[styles.onlineIndicator, { borderColor: colors.surface }]} />}
         
         {item.isVerified && (
-          <View style={styles.verifiedBadge}>
+          <View style={[styles.verifiedBadge, { backgroundColor: colors.surface }]}>
             <MaterialIcons name="verified" size={16} color="#4CAF50" />
           </View>
         )}
@@ -274,7 +256,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
 
       <View style={styles.dealerInfo}>
         <View style={styles.dealerHeader}>
-          <Text style={[styles.dealerName, { color: theme.text }]}>
+          <Text style={[styles.dealerName, { color: colors.text }]}>
             {item.dealerName}
           </Text>
           <View style={[
@@ -287,24 +269,24 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
           </View>
         </View>
 
-        <Text style={[styles.showroomName, { color: theme.secondaryText }]}>
+        <Text style={[styles.showroomName, { color: colors.textSecondary }]}>
           {item.showroomName}
         </Text>
         
-        <Text style={[styles.dealerLocation, { color: theme.secondaryText }]}>
+        <Text style={[styles.dealerLocation, { color: colors.textSecondary }]}>
           📍 {item.location}
         </Text>
 
         <View style={styles.dealerStats}>
           <View style={styles.statItem}>
             <MaterialIcons name="star" size={16} color="#FFD700" />
-            <Text style={[styles.statText, { color: theme.text }]}>
+            <Text style={[styles.statText, { color: colors.text }]}>
               {item.rating}
             </Text>
           </View>
           <View style={styles.statItem}>
-            <MaterialIcons name="handshake" size={16} color={theme.primary} />
-            <Text style={[styles.statText, { color: theme.text }]}>
+            <MaterialIcons name="handshake" size={16} color={colors.primary} />
+            <Text style={[styles.statText, { color: colors.text }]}>
               {item.totalDeals} deals
             </Text>
           </View>
@@ -312,7 +294,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.specializationsContainer}>
           {item.specializations.map((spec, index) => (
-            <View key={index} style={[styles.specializationTag, { backgroundColor: theme.primary }]}>
+            <View key={index} style={[styles.specializationTag, { backgroundColor: colors.primary }]}>
               <Text style={styles.specializationText}>{spec}</Text>
             </View>
           ))}
@@ -326,7 +308,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
       style={[
         styles.networkMessageItem,
         {
-          backgroundColor: theme.cardBackground,
+          backgroundColor: colors.surface,
           borderLeftColor: item.priority === 'high' ? '#FF3B30' : item.priority === 'medium' ? '#FF9800' : '#4CAF50'
         }
       ]}
@@ -341,34 +323,34 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
               item.type === 'financing' ? 'account-balance' : 'message'
             }
             size={20}
-            color={theme.primary}
+            color={colors.primary}
           />
-          <Text style={[styles.messageType, { color: theme.primary }]}>
+          <Text style={[styles.messageType, { color: colors.primary }]}>
             {item.type.replace('_', ' ').toUpperCase()}
           </Text>
         </View>
         
-        <Text style={[styles.messageTimestamp, { color: theme.secondaryText }]}>
+        <Text style={[styles.messageTimestamp, { color: colors.textSecondary }]}>
           {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </Text>
       </View>
 
-      <Text style={[styles.messageTitle, { color: theme.text }]}>
+      <Text style={[styles.messageTitle, { color: colors.text }]}>
         {item.title}
       </Text>
       
-      <Text style={[styles.messageContent, { color: theme.secondaryText }]} numberOfLines={2}>
+      <Text style={[styles.messageContent, { color: colors.textSecondary }]} numberOfLines={2}>
         {item.content}
       </Text>
 
       <View style={styles.messageFooter}>
-        <Text style={[styles.messageSender, { color: theme.secondaryText }]}>
+        <Text style={[styles.messageSender, { color: colors.textSecondary }]}>
           By {item.senderName}
         </Text>
         
         <View style={styles.messageStats}>
-          <MaterialIcons name="reply" size={16} color={theme.secondaryText} />
-          <Text style={[styles.responseCount, { color: theme.secondaryText }]}>
+          <MaterialIcons name="reply" size={16} color={colors.textSecondary} />
+          <Text style={[styles.responseCount, { color: colors.textSecondary }]}>
             {item.responses} responses
           </Text>
         </View>
@@ -377,26 +359,26 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
   );
 
   const renderInventoryItem = ({ item }: { item: InventoryItem }) => (
-    <TouchableOpacity style={[styles.inventoryItem, { backgroundColor: theme.cardBackground }]}>
+    <TouchableOpacity style={[styles.inventoryItem, { backgroundColor: colors.surface }]}>
       <Image source={{ uri: item.image }} style={styles.inventoryImage} />
       
       <View style={styles.inventoryDetails}>
-        <Text style={[styles.inventoryTitle, { color: theme.text }]}>
+        <Text style={[styles.inventoryTitle, { color: colors.text }]}>
           {item.title}
         </Text>
         
-        <Text style={[styles.inventoryPrice, { color: theme.primary }]}>
+        <Text style={[styles.inventoryPrice, { color: colors.primary }]}>
           {item.price}
         </Text>
         
-        <Text style={[styles.inventoryAvailability, { color: theme.secondaryText }]}>
+        <Text style={[styles.inventoryAvailability, { color: colors.textSecondary }]}>
           {item.availability} units available
         </Text>
         
         <View style={styles.inventoryActions}>
-          <TouchableOpacity style={[styles.inventoryButton, { backgroundColor: theme.primary }]}>
-            <MaterialIcons name="visibility" size={16} color="#FFFFFF" />
-            <Text style={styles.inventoryButtonText}>View</Text>
+          <TouchableOpacity style={[styles.inventoryButton, { backgroundColor: colors.primary }]}>
+            <MaterialIcons name="visibility" size={16} color="#000000" />
+            <Text style={[styles.inventoryButtonText, { backgroundColor: '#000000' }]}>View</Text>
           </TouchableOpacity>
           
           <TouchableOpacity style={[styles.inventoryButton, { backgroundColor: '#4CAF50' }]}>
@@ -408,313 +390,26 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
     </TouchableOpacity>
   );
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background,
-    },
-    header: {
-      padding: 16,
-      backgroundColor: theme.cardBackground,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border,
-    },
-    headerTitle: {
-      fontSize: 24,
-      fontWeight: '700',
-      color: theme.text,
-      marginBottom: 16,
-    },
-    searchContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: theme.background,
-      borderRadius: 12,
-      paddingHorizontal: 12,
-      marginBottom: 16,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    searchInput: {
-      flex: 1,
-      height: 40,
-      color: theme.text,
-      fontSize: 16,
-      marginLeft: 8,
-    },
-    tabsContainer: {
-      flexDirection: 'row',
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border,
-    },
-    tabButton: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 12,
-      gap: 8,
-      borderBottomWidth: 2,
-    },
-    tabButtonText: {
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    content: {
-      flex: 1,
-    },
-    dealerItem: {
-      flexDirection: 'row',
-      padding: 16,
-      marginHorizontal: 16,
-      marginVertical: 8,
-      borderRadius: 12,
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
-      shadowRadius: 2,
-    },
-    dealerAvatarContainer: {
-      position: 'relative',
-      marginRight: 12,
-    },
-    dealerAvatar: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
-    },
-    dealerAvatarPlaceholder: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    onlineIndicator: {
-      position: 'absolute',
-      bottom: 2,
-      right: 2,
-      width: 16,
-      height: 16,
-      borderRadius: 8,
-      backgroundColor: '#4CAF50',
-      borderWidth: 2,
-      borderColor: theme.cardBackground,
-    },
-    verifiedBadge: {
-      position: 'absolute',
-      top: -2,
-      right: -2,
-      backgroundColor: theme.cardBackground,
-      borderRadius: 12,
-      padding: 2,
-    },
-    dealerInfo: {
-      flex: 1,
-    },
-    dealerHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 4,
-    },
-    dealerName: {
-      fontSize: 16,
-      fontWeight: '600',
-      flex: 1,
-    },
-    businessTypeBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 10,
-    },
-    businessTypeText: {
-      fontSize: 10,
-      fontWeight: '700',
-      color: '#000',
-    },
-    showroomName: {
-      fontSize: 14,
-      marginBottom: 4,
-    },
-    dealerLocation: {
-      fontSize: 12,
-      marginBottom: 8,
-    },
-    dealerStats: {
-      flexDirection: 'row',
-      gap: 16,
-      marginBottom: 8,
-    },
-    statItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    statText: {
-      fontSize: 12,
-      fontWeight: '500',
-    },
-    specializationsContainer: {
-      maxHeight: 24,
-    },
-    specializationTag: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 12,
-      marginRight: 8,
-    },
-    specializationText: {
-      fontSize: 10,
-      fontWeight: '500',
-      color: '#FFFFFF',
-    },
-    networkMessageItem: {
-      backgroundColor: theme.cardBackground,
-      marginHorizontal: 16,
-      marginVertical: 8,
-      borderRadius: 12,
-      padding: 16,
-      borderLeftWidth: 4,
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
-      shadowRadius: 2,
-    },
-    messageHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 8,
-    },
-    messageTypeContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    messageType: {
-      fontSize: 10,
-      fontWeight: '700',
-    },
-    messageTimestamp: {
-      fontSize: 12,
-    },
-    messageTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      marginBottom: 8,
-    },
-    messageContent: {
-      fontSize: 14,
-      lineHeight: 20,
-      marginBottom: 12,
-    },
-    messageFooter: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    messageSender: {
-      fontSize: 12,
-      fontStyle: 'italic',
-    },
-    messageStats: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    responseCount: {
-      fontSize: 12,
-    },
-    inventoryItem: {
-      flexDirection: 'row',
-      marginHorizontal: 16,
-      marginVertical: 8,
-      borderRadius: 12,
-      overflow: 'hidden',
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
-      shadowRadius: 2,
-    },
-    inventoryImage: {
-      width: 120,
-      height: 90,
-    },
-    inventoryDetails: {
-      flex: 1,
-      padding: 12,
-    },
-    inventoryTitle: {
-      fontSize: 14,
-      fontWeight: '600',
-      marginBottom: 4,
-    },
-    inventoryPrice: {
-      fontSize: 16,
-      fontWeight: '700',
-      marginBottom: 4,
-    },
-    inventoryAvailability: {
-      fontSize: 12,
-      marginBottom: 8,
-    },
-    inventoryActions: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-    inventoryButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 16,
-      gap: 4,
-    },
-    inventoryButtonText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: '#FFFFFF',
-    },
-    fab: {
-      position: 'absolute',
-      bottom: 20,
-      right: 20,
-      backgroundColor: theme.primary,
-      borderRadius: 28,
-      width: 56,
-      height: 56,
-      justifyContent: 'center',
-      alignItems: 'center',
-      elevation: 8,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 8,
-    },
-  });
-
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Dealer Network</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface,
+          borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Dealer Network</Text>
         
-        <View style={styles.searchContainer}>
-          <MaterialIcons name="search" size={20} color={theme.secondaryText} />
+        <View style={[styles.searchContainer, { backgroundColor: colors.background,
+          borderColor: colors.border }]}>
+          <MaterialIcons name="search" size={20} color={colors.textSecondary} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search dealers, messages, inventory..."
-            placeholderTextColor={theme.secondaryText}
+            placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
         </View>
       </View>
 
-      <View style={styles.tabsContainer}>
+      <View style={[styles.tabsContainer, { borderBottomColor: colors.border }]}>
         {renderTabButton('network', 'Network', 'forum')}
         {renderTabButton('dealers', 'Dealers', 'group')}
         {renderTabButton('inventory', 'Inventory', 'directions-car')}
@@ -750,15 +445,278 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
       </View>
 
       <TouchableOpacity
-        style={styles.fab}
-        onPress={() => setShowBulkMessageModal(true)}
+        style={[styles.fab, { backgroundColor: colors.primary }]}
+        onPress={() => Alert.alert('Add', 'Add new message or inventory')}
       >
-        <MaterialIcons name="add" size={28} color="#FFFFFF" />
+        <MaterialIcons name="add" size={28} color="#000000" />
       </TouchableOpacity>
     </View>
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    padding: 16,
+    borderBottomWidth: 1,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 16,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+  },
+  tabButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 8,
+    borderBottomWidth: 2,
+  },
+  tabButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  content: {
+    flex: 1,
+  },
+  dealerItem: {
+    flexDirection: 'row',
+    padding: 16,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    elevation: 2,
+
+  },
+  dealerAvatarContainer: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  dealerAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
+  dealerAvatarPlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  onlineIndicator: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    color: '#4CAF50',
+    borderWidth: 2,
+  },
+  verifiedBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    borderRadius: 12,
+    padding: 2,
+  },
+  dealerInfo: {
+    flex: 1,
+  },
+  dealerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  dealerName: {
+    fontSize: 16,
+    fontWeight: '600',
+    flex: 1,
+  },
+  businessTypeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  businessTypeText: {
+    fontSize: 10,
+    fontWeight: '700',
+
+  },
+  showroomName: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  dealerLocation: {
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  dealerStats: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 8,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  specializationsContainer: {
+    maxHeight: 24,
+  },
+  specializationTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  specializationText: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#000000',
+  },
+  networkMessageItem: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    padding: 16,
+    borderLeftWidth: 4,
+    elevation: 2,
+
+  },
+  messageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  messageTypeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  messageType: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  messageTimestamp: {
+    fontSize: 12,
+  },
+  messageTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  messageContent: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  messageFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  messageSender: {
+    fontSize: 12,
+    fontStyle: 'italic',
+  },
+  messageStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  responseCount: {
+    fontSize: 12,
+  },
+  inventoryItem: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 2,
+
+  },
+  inventoryImage: {
+    width: 120,
+    height: 90,
+  },
+  inventoryDetails: {
+    flex: 1,
+    padding: 12,
+  },
+  inventoryTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  inventoryPrice: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  inventoryAvailability: {
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  inventoryActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  inventoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4,
+  },
+  inventoryButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    borderRadius: 28,
+    width: 56,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+
+  },
+});
+
 export default DealerNetworkChatScreen;
-
-

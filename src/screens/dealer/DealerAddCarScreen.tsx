@@ -16,11 +16,10 @@ import {
   Platform,
   FlatList,
 } from 'react-native';
-import { useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { AntDesign } from '@react-native-vector-icons/ant-design';
-import LinearGradient from 'react-native-linear-gradient';
-import * as Animatable from 'react-native-animatable';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -124,7 +123,17 @@ const ENTERTAINMENT_FEATURES = [
 ];
 
 const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
-  const { isDark, colors: themeColors } = useTheme();
+  const isDark = false;
+  const colors = {
+    background: '#FAFBFC',
+    surface: '#FFFFFF',
+    text: '#1A202C',
+    textSecondary: '#4A5568',
+    primary: '#FFD700',
+    border: '#E2E8F0',
+    error: '#F56565',
+    success: '#48BB78',
+  };
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
@@ -225,20 +234,20 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const renderStepIndicator = () => (
-    <View style={[styles.stepIndicator, { backgroundColor: themeColors.surface }]}>
+    <View style={[styles.stepIndicator, { backgroundColor: colors.surface }]}>
       {steps.map((step, index) => (
         <TouchableOpacity
           key={index}
           style={[
             styles.stepItem,
-            index <= activeStep && [styles.stepItemActive, { backgroundColor: themeColors.primary }],
+            index <= activeStep && [styles.stepItemActive, { backgroundColor: colors.primary }],
           ]}
           onPress={() => setActiveStep(index)}
         >
           <MaterialIcons
             name={step.icon as any}
             size={16}
-            color={index <= activeStep ? '#111827' : themeColors.textSecondary}
+            color={index <= activeStep ? '#111827' : colors.textSecondary}
           />
         </TouchableOpacity>
       ))}
@@ -247,27 +256,27 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderBasicInfo = () => (
     <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: themeColors.text }]}>Basic Information</Text>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>Basic Information</Text>
       
       <View style={styles.formRow}>
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Make *</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Make *</Text>
           <View style={[styles.dropdown, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}>
-            <Text style={[styles.dropdownText, { color: formData.make ? themeColors.text : themeColors.textSecondary }]}>
+            <Text style={[styles.dropdownText, { color: formData.make ? colors.text : colors.textSecondary }]}>
               {formData.make || 'Select Make'}
             </Text>
-            <MaterialIcons name="keyboard-arrow-down" size={20} color={themeColors.textSecondary} />
+            <MaterialIcons name="keyboard-arrow-down" size={20} color={colors.textSecondary} />
           </View>
         </View>
 
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Year *</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Year *</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
             value={formData.year}
             onChangeText={(text) => handleInputChange('year', text)}
             placeholder="e.g., 2020"
-            placeholderTextColor={themeColors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             keyboardType="number-pad"
             maxLength={4}
           />
@@ -275,48 +284,48 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: themeColors.text }]}>Model *</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Model *</Text>
         <TextInput
-          style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+          style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
           value={formData.model}
           onChangeText={(text) => handleInputChange('model', text)}
           placeholder="e.g., Swift, i20, Nexon"
-          placeholderTextColor={themeColors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
         />
       </View>
 
       <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: themeColors.text }]}>Variant</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Variant</Text>
         <TextInput
-          style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+          style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
           value={formData.variant}
           onChangeText={(text) => handleInputChange('variant', text)}
           placeholder="e.g., VXI, Sportz, XM"
-          placeholderTextColor={themeColors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
         />
       </View>
 
       <View style={styles.formRow}>
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Price (₹) *</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Price (₹) *</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
             value={formData.price}
             onChangeText={(text) => handleInputChange('price', text)}
             placeholder="e.g., 500000"
-            placeholderTextColor={themeColors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             keyboardType="number-pad"
           />
         </View>
 
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Mileage *</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Mileage *</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
             value={formData.mileage}
             onChangeText={(text) => handleInputChange('mileage', text)}
             placeholder="e.g., 45000"
-            placeholderTextColor={themeColors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             keyboardType="number-pad"
           />
         </View>
@@ -330,33 +339,33 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           <MaterialIcons
             name={formData.negotiable ? 'check-box' : 'check-box-outline-blank'}
             size={24}
-            color={themeColors.primary}
+            color={colors.primary}
           />
-          <Text style={[styles.checkboxText, { color: themeColors.text }]}>Price is negotiable</Text>
+          <Text style={[styles.checkboxText, { color: colors.text }]}>Price is negotiable</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.formRow}>
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Registration No.</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Registration No.</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
             value={formData.registrationNumber}
             onChangeText={(text) => handleInputChange('registrationNumber', text)}
             placeholder="e.g., MH12AB1234"
-            placeholderTextColor={themeColors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             autoCapitalize="characters"
           />
         </View>
 
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Reg. State</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Reg. State</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
             value={formData.registrationState}
             onChangeText={(text) => handleInputChange('registrationState', text)}
             placeholder="e.g., Maharashtra"
-            placeholderTextColor={themeColors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
           />
         </View>
       </View>
@@ -365,11 +374,11 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderSpecifications = () => (
     <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: themeColors.text }]}>Technical Specifications</Text>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>Technical Specifications</Text>
       
       <View style={styles.formRow}>
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Fuel Type *</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Fuel Type *</Text>
           <View style={styles.optionsContainer}>
             {FUEL_TYPES.map((type) => (
               <TouchableOpacity
@@ -377,15 +386,15 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
                 style={[
                   styles.optionChip,
                   { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                  formData.fuelType === type && { backgroundColor: themeColors.primary },
+                  formData.fuelType === type && { backgroundColor: colors.primary },
                 ]}
                 onPress={() => handleInputChange('fuelType', type)}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    { color: themeColors.text },
-                    formData.fuelType === type && { color: '#111827' },
+                    { color: colors.text },
+                    formData.fuelType === type && { backgroundColor: '#111827' },
                   ]}
                 >
                   {type}
@@ -398,7 +407,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
       <View style={styles.formRow}>
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Transmission *</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Transmission *</Text>
           <View style={styles.optionsContainer}>
             {TRANSMISSION_TYPES.map((type) => (
               <TouchableOpacity
@@ -406,15 +415,15 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
                 style={[
                   styles.optionChip,
                   { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                  formData.transmission === type && { backgroundColor: themeColors.primary },
+                  formData.transmission === type && { backgroundColor: colors.primary },
                 ]}
                 onPress={() => handleInputChange('transmission', type)}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    { color: themeColors.text },
-                    formData.transmission === type && { color: '#111827' },
+                    { color: colors.text },
+                    formData.transmission === type && { backgroundColor: '#111827' },
                   ]}
                 >
                   {type}
@@ -427,7 +436,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
       <View style={styles.formRow}>
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Body Type</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Body Type</Text>
           <View style={styles.optionsContainer}>
             {BODY_TYPES.map((type) => (
               <TouchableOpacity
@@ -435,15 +444,15 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
                 style={[
                   styles.optionChip,
                   { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                  formData.bodyType === type && { backgroundColor: themeColors.primary },
+                  formData.bodyType === type && { backgroundColor: colors.primary },
                 ]}
                 onPress={() => handleInputChange('bodyType', type)}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    { color: themeColors.text },
-                    formData.bodyType === type && { color: '#111827' },
+                    { color: colors.text },
+                    formData.bodyType === type && { backgroundColor: '#111827' },
                   ]}
                 >
                   {type}
@@ -456,23 +465,23 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
       <View style={styles.formRow}>
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Color</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Color</Text>
           <View style={styles.optionsContainer}>
-            {themeColors.map((color) => (
+            {COLORS.map((color) => (
               <TouchableOpacity
                 key={color}
                 style={[
                   styles.optionChip,
                   { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                  formData.color === color && { backgroundColor: themeColors.primary },
+                  formData.color === color && { backgroundColor: colors.primary },
                 ]}
                 onPress={() => handleInputChange('color', color)}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    { color: themeColors.text },
-                    formData.color === color && { color: '#111827' },
+                    { color: colors.text },
+                  formData.color === color && { color: '#111827' },
                   ]}
                 >
                   {color}
@@ -485,25 +494,25 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
       <View style={styles.formRow}>
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Engine Capacity (cc)</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Engine Capacity (cc)</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
             value={formData.engineCapacity}
             onChangeText={(text) => handleInputChange('engineCapacity', text)}
             placeholder="e.g., 1200"
-            placeholderTextColor={themeColors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             keyboardType="number-pad"
           />
         </View>
 
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Seating Capacity</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Seating Capacity</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
             value={formData.seatingCapacity}
             onChangeText={(text) => handleInputChange('seatingCapacity', text)}
             placeholder="e.g., 5"
-            placeholderTextColor={themeColors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             keyboardType="number-pad"
           />
         </View>
@@ -511,25 +520,25 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
       <View style={styles.formRow}>
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Max Power (bhp)</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Max Power (bhp)</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
             value={formData.maxPower}
             onChangeText={(text) => handleInputChange('maxPower', text)}
             placeholder="e.g., 90"
-            placeholderTextColor={themeColors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             keyboardType="number-pad"
           />
         </View>
 
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Max Torque (Nm)</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Max Torque (Nm)</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
             value={formData.maxTorque}
             onChangeText={(text) => handleInputChange('maxTorque', text)}
             placeholder="e.g., 113"
-            placeholderTextColor={themeColors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             keyboardType="number-pad"
           />
         </View>
@@ -539,11 +548,11 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderFeatures = () => (
     <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: themeColors.text }]}>Car Features</Text>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>Car Features</Text>
       
       {/* Exterior Features */}
       <View style={styles.featureSection}>
-        <Text style={[styles.featureSectionTitle, { color: themeColors.text }]}>Exterior Features</Text>
+        <Text style={[styles.featureSectionTitle, { color: colors.text }]}>Exterior Features</Text>
         <View style={styles.featuresGrid}>
           {EXTERIOR_FEATURES.map((feature) => (
             <TouchableOpacity
@@ -551,14 +560,14 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
               style={[
                 styles.featureChip,
                 { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                formData.exteriorFeatures.includes(feature) && { backgroundColor: themeColors.primary },
+                formData.exteriorFeatures.includes(feature) && { backgroundColor: colors.primary },
               ]}
               onPress={() => toggleFeature('exteriorFeatures', feature)}
             >
               <Text
                 style={[
                   styles.featureText,
-                  { color: themeColors.text },
+                  { color: colors.text },
                   formData.exteriorFeatures.includes(feature) && { color: '#111827' },
                 ]}
               >
@@ -571,7 +580,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Interior Features */}
       <View style={styles.featureSection}>
-        <Text style={[styles.featureSectionTitle, { color: themeColors.text }]}>Interior Features</Text>
+        <Text style={[styles.featureSectionTitle, { color: colors.text }]}>Interior Features</Text>
         <View style={styles.featuresGrid}>
           {INTERIOR_FEATURES.map((feature) => (
             <TouchableOpacity
@@ -579,14 +588,14 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
               style={[
                 styles.featureChip,
                 { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                formData.interiorFeatures.includes(feature) && { backgroundColor: themeColors.primary },
+                formData.interiorFeatures.includes(feature) && { backgroundColor: colors.primary },
               ]}
               onPress={() => toggleFeature('interiorFeatures', feature)}
             >
               <Text
                 style={[
                   styles.featureText,
-                  { color: themeColors.text },
+                  { color: colors.text },
                   formData.interiorFeatures.includes(feature) && { color: '#111827' },
                 ]}
               >
@@ -599,7 +608,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Safety Features */}
       <View style={styles.featureSection}>
-        <Text style={[styles.featureSectionTitle, { color: themeColors.text }]}>Safety Features</Text>
+        <Text style={[styles.featureSectionTitle, { color: colors.text }]}>Safety Features</Text>
         <View style={styles.featuresGrid}>
           {SAFETY_FEATURES.map((feature) => (
             <TouchableOpacity
@@ -607,14 +616,14 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
               style={[
                 styles.featureChip,
                 { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                formData.safetyFeatures.includes(feature) && { backgroundColor: themeColors.primary },
+                formData.safetyFeatures.includes(feature) && { backgroundColor: colors.primary },
               ]}
               onPress={() => toggleFeature('safetyFeatures', feature)}
             >
               <Text
                 style={[
                   styles.featureText,
-                  { color: themeColors.text },
+                  { color: colors.text },
                   formData.safetyFeatures.includes(feature) && { color: '#111827' },
                 ]}
               >
@@ -629,10 +638,10 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderHistory = () => (
     <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: themeColors.text }]}>Vehicle History</Text>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>Vehicle History</Text>
       
       <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: themeColors.text }]}>Owner Number</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Owner Number</Text>
         <View style={styles.optionsContainer}>
           {[1, 2, 3, 4].map((num) => (
             <TouchableOpacity
@@ -640,14 +649,14 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
               style={[
                 styles.optionChip,
                 { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                formData.ownerNumber === num.toString() && { backgroundColor: themeColors.primary },
+                formData.ownerNumber === num.toString() && { backgroundColor: colors.primary },
               ]}
               onPress={() => handleInputChange('ownerNumber', num.toString())}
             >
               <Text
                 style={[
                   styles.optionText,
-                  { color: themeColors.text },
+                  { color: colors.text },
                   formData.ownerNumber === num.toString() && { color: '#111827' },
                 ]}
               >
@@ -666,9 +675,9 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           <MaterialIcons
             name={formData.accidentHistory ? 'check-box' : 'check-box-outline-blank'}
             size={24}
-            color={themeColors.primary}
+            color={colors.primary}
           />
-          <Text style={[styles.checkboxText, { color: themeColors.text }]}>Has accident history</Text>
+          <Text style={[styles.checkboxText, { color: colors.text }]}>Has accident history</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -678,14 +687,14 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           <MaterialIcons
             name={formData.floodHistory ? 'check-box' : 'check-box-outline-blank'}
             size={24}
-            color={themeColors.primary}
+            color={colors.primary}
           />
-          <Text style={[styles.checkboxText, { color: themeColors.text }]}>Has flood history</Text>
+          <Text style={[styles.checkboxText, { color: colors.text }]}>Has flood history</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: themeColors.text }]}>Service History</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Service History</Text>
         <View style={styles.optionsContainer}>
           {[
             { key: 'dealer', label: 'Dealer Service' },
@@ -698,15 +707,15 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
               style={[
                 styles.optionChip,
                 { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                formData.serviceHistory === option.key && { backgroundColor: themeColors.primary },
+                formData.serviceHistory === option.key && { backgroundColor: colors.primary },
               ]}
               onPress={() => handleInputChange('serviceHistory', option.key as any)}
             >
               <Text
                 style={[
                   styles.optionText,
-                  { color: themeColors.text },
-                  formData.serviceHistory === option.key && { color: '#111827' },
+                  { color: colors.text },
+                  formData.serviceHistory === option.key && { backgroundColor: '#111827' },
                 ]}
               >
                 {option.label}
@@ -718,24 +727,24 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
       <View style={styles.formRow}>
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Last Service Date</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Last Service Date</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
             value={formData.lastServiceDate}
             onChangeText={(text) => handleInputChange('lastServiceDate', text)}
             placeholder="DD/MM/YYYY"
-            placeholderTextColor={themeColors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
           />
         </View>
 
         <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Service Kms</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Service Kms</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
             value={formData.lastServiceKms}
             onChangeText={(text) => handleInputChange('lastServiceKms', text)}
             placeholder="e.g., 40000"
-            placeholderTextColor={themeColors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             keyboardType="number-pad"
           />
         </View>
@@ -745,7 +754,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderWarranty = () => (
     <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: themeColors.text }]}>Warranty & Certification</Text>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>Warranty & Certification</Text>
       
       <View style={styles.checkboxGroup}>
         <TouchableOpacity
@@ -755,9 +764,9 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           <MaterialIcons
             name={formData.manufacturerWarranty ? 'check-box' : 'check-box-outline-blank'}
             size={24}
-            color={themeColors.primary}
+            color={colors.primary}
           />
-          <Text style={[styles.checkboxText, { color: themeColors.text }]}>Manufacturer warranty available</Text>
+          <Text style={[styles.checkboxText, { color: colors.text }]}>Manufacturer warranty available</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -767,9 +776,9 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           <MaterialIcons
             name={formData.extendedWarranty ? 'check-box' : 'check-box-outline-blank'}
             size={24}
-            color={themeColors.primary}
+            color={colors.primary}
           />
-          <Text style={[styles.checkboxText, { color: themeColors.text }]}>Extended warranty available</Text>
+          <Text style={[styles.checkboxText, { color: colors.text }]}>Extended warranty available</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -779,9 +788,9 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           <MaterialIcons
             name={formData.dealerWarranty ? 'check-box' : 'check-box-outline-blank'}
             size={24}
-            color={themeColors.primary}
+            color={colors.primary}
           />
-          <Text style={[styles.checkboxText, { color: themeColors.text }]}>Dealer warranty included</Text>
+          <Text style={[styles.checkboxText, { color: colors.text }]}>Dealer warranty included</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -791,9 +800,9 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           <MaterialIcons
             name={formData.rtoCleared ? 'check-box' : 'check-box-outline-blank'}
             size={24}
-            color={themeColors.primary}
+            color={colors.primary}
           />
-          <Text style={[styles.checkboxText, { color: themeColors.text }]}>RTO clearance available</Text>
+          <Text style={[styles.checkboxText, { color: colors.text }]}>RTO clearance available</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -803,14 +812,14 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           <MaterialIcons
             name={formData.inspectionReport ? 'check-box' : 'check-box-outline-blank'}
             size={24}
-            color={themeColors.primary}
+            color={colors.primary}
           />
-          <Text style={[styles.checkboxText, { color: themeColors.text }]}>Professional inspection report</Text>
+          <Text style={[styles.checkboxText, { color: colors.text }]}>Professional inspection report</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: themeColors.text }]}>Dealer Warranty Period</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Dealer Warranty Period</Text>
         <View style={styles.optionsContainer}>
           {['3 months', '6 months', '1 year', '2 years'].map((period) => (
             <TouchableOpacity
@@ -818,15 +827,15 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
               style={[
                 styles.optionChip,
                 { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                formData.dealerWarrantyPeriod === period && { backgroundColor: themeColors.primary },
+                formData.dealerWarrantyPeriod === period && { backgroundColor: colors.primary },
               ]}
               onPress={() => handleInputChange('dealerWarrantyPeriod', period)}
             >
               <Text
                 style={[
                   styles.optionText,
-                  { color: themeColors.text },
-                  formData.dealerWarrantyPeriod === period && { color: '#111827' },
+                  { color: colors.text },
+                  formData.dealerWarrantyPeriod === period && { backgroundColor: '#111827' },
                 ]}
               >
                 {period}
@@ -837,7 +846,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: themeColors.text }]}>Certification Level</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Certification Level</Text>
         <View style={styles.optionsContainer}>
           {[
             { key: 'basic', label: 'Basic Check' },
@@ -849,15 +858,15 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
               style={[
                 styles.optionChip,
                 { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                formData.certificationLevel === level.key && { backgroundColor: themeColors.primary },
+                formData.certificationLevel === level.key && { backgroundColor: colors.primary },
               ]}
               onPress={() => handleInputChange('certificationLevel', level.key as any)}
             >
               <Text
                 style={[
                   styles.optionText,
-                  { color: themeColors.text },
-                  formData.certificationLevel === level.key && { color: '#111827' },
+                  { color: colors.text },
+                  formData.certificationLevel === level.key && { backgroundColor: '#111827' },
                 ]}
               >
                 {level.label}
@@ -871,18 +880,18 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderMedia = () => (
     <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: themeColors.text }]}>Images & Description</Text>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>Images & Description</Text>
       
       {/* Image Upload Section */}
       <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: themeColors.text }]}>Car Images</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Car Images</Text>
         <TouchableOpacity
           style={[styles.imageUpload, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}
           onPress={() => setShowImagePicker(true)}
         >
-          <MaterialIcons name="add-a-photo" size={32} color={themeColors.primary} />
-          <Text style={[styles.imageUploadText, { color: themeColors.text }]}>Add Images</Text>
-          <Text style={[styles.imageUploadSubtext, { color: themeColors.textSecondary }]}>
+          <MaterialIcons name="add-a-photo" size={32} color={colors.primary} />
+          <Text style={[styles.imageUploadText, { color: colors.text }]}>Add Images</Text>
+          <Text style={[styles.imageUploadSubtext, { color: colors.textSecondary }]}>
             Upload high-quality images (Max 10)
           </Text>
         </TouchableOpacity>
@@ -890,13 +899,13 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Description */}
       <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: themeColors.text }]}>Description</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Description</Text>
         <TextInput
-          style={[styles.input, styles.textArea, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+          style={[styles.input, styles.textArea, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
           value={formData.description}
           onChangeText={(text) => handleInputChange('description', text)}
           placeholder="Describe the car's condition, unique features, recent maintenance, etc."
-          placeholderTextColor={themeColors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           multiline
           numberOfLines={6}
           textAlignVertical="top"
@@ -905,11 +914,11 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Key Features */}
       <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: themeColors.text }]}>Key Highlights</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Key Highlights</Text>
         <TextInput
-          style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+          style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
           placeholder="Enter key features (comma separated)"
-          placeholderTextColor={themeColors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           multiline
         />
       </View>
@@ -929,7 +938,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar
         translucent
         backgroundColor="transparent"
@@ -937,12 +946,12 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
       />
 
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: themeColors.surface }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <AntDesign name="left" size={24} color={themeColors.text} />
+          <AntDesign name="left" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Add New Car</Text>
-        <Text style={[styles.stepCounter, { color: themeColors.textSecondary }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Add New Car</Text>
+        <Text style={[styles.stepCounter, { color: colors.textSecondary }]}>
           {activeStep + 1} of {steps.length}
         </Text>
       </View>
@@ -962,7 +971,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
         </ScrollView>
 
         {/* Navigation Buttons */}
-        <View style={[styles.navigationButtons, { backgroundColor: themeColors.surface }]}>
+        <View style={[styles.navigationButtons, { backgroundColor: colors.surface }]}>
           <TouchableOpacity
             style={[
               styles.navButton,
@@ -973,17 +982,17 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
             onPress={previousStep}
             disabled={activeStep === 0}
           >
-            <Text style={[styles.navButtonText, { color: activeStep === 0 ? themeColors.textSecondary : themeColors.text }]}>
+            <Text style={[styles.navButtonText, { color: activeStep === 0 ? colors.textSecondary : colors.text }]}>
               Previous
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.navButton, styles.primaryButton, { backgroundColor: themeColors.primary }]}
+            style={[styles.navButton, styles.Button, { backgroundColor: colors.primary }]}
             onPress={activeStep === steps.length - 1 ? handleSubmit : nextStep}
             disabled={loading}
           >
-            <Text style={styles.primaryButtonText}>
+            <Text style={styles.ButtonText}>
               {loading ? 'Creating...' : activeStep === steps.length - 1 ? 'Create Listing' : 'Next'}
             </Text>
           </TouchableOpacity>
@@ -1005,10 +1014,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 16,
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
   },
   headerTitle: {
     fontSize: 18,
@@ -1033,7 +1039,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: '#E0E0E0',
+    color: '#E0E0E0',
   },
   stepItemActive: {
     borderColor: 'transparent',
@@ -1168,10 +1174,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 12,
     elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
   },
   navButton: {
     flex: 1,
@@ -1181,16 +1184,16 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    color: '#E0E0E0',
   },
-  primaryButton: {
+  Button: {
     // backgroundColor set dynamically
   },
   navButtonText: {
     fontSize: 16,
     fontWeight: '600',
   },
-  primaryButtonText: {
+  ButtonText: {
     fontSize: 16,
     fontWeight: '700',
     color: '#111827',

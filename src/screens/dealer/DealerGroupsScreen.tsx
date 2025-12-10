@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,6 @@ import {
   TouchableOpacity,
   SafeAreaView,
   RefreshControl,
-  Modal,
-  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
@@ -18,10 +16,10 @@ const DealerGroupsScreen: React.FC = () => {
   const navigation = useNavigation<DealerGroupsNavigationProp>();
   const [groups, setGroups] = useState<DealerGroup[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
 
   // Mock data - replace with API calls later
-  const mockGroups: DealerGroup[] = [
+  const mockGroups = React.useMemo<DealerGroup[]>(() => [
     {
       id: '1',
       name: 'Luxury Car Dealers Network',
@@ -61,13 +59,13 @@ const DealerGroupsScreen: React.FC = () => {
       ],
       createdAt: new Date().toISOString(),
     },
-  ];
+  ], []);
 
   useEffect(() => {
     loadGroups();
   }, []);
 
-  const loadGroups = async () => {
+  const loadGroups = useCallback(async () => {
     try {
       setLoading(true);
       // Simulate API call
@@ -79,7 +77,7 @@ const DealerGroupsScreen: React.FC = () => {
       console.error('Error loading groups:', error);
       setLoading(false);
     }
-  };
+  }, [mockGroups]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -110,7 +108,7 @@ const DealerGroupsScreen: React.FC = () => {
         </View>
         <View style={styles.groupMeta}>
           <View style={styles.privacyIndicator}>
-            <Icon
+            <MaterialIcons
               name={item.isPrivate ? 'lock' : 'public'}
               size={16}
               color={item.isPrivate ? '#FF6B6B' : '#4ECDC4'}
@@ -214,10 +212,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
     elevation: 3,
   },
   groupHeader: {

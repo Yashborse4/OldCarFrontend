@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,28 +9,34 @@ import {
   StatusBar,
   RefreshControl,
   Dimensions,
-  Alert,
+  Platform,
 } from 'react-native';
-import { useTheme } from '../../theme';
-import * as Animatable from 'react-native-animatable';
-import { AntDesign } from '@react-native-vector-icons/ant-design';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import LinearGradient from 'react-native-linear-gradient';
+import AntDesign from '@react-native-vector-icons/ant-design';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
+
 
 // Import our custom components
 import StatisticsCard, { StatisticData } from '../../components/dashboard/StatisticsCard';
 import FilterSystem, { FilterOptions } from '../../components/dashboard/FilterSystem';
 import CarListingsGrid, { CarListing } from '../../components/dashboard/CarListingsGrid';
 import SimpleChart, { ChartDataPoint } from '../../components/dashboard/SimpleChart';
-
-const { width, height } = Dimensions.get('window');
+import { useTheme } from '../../theme';
+import { 
+  scaleSize, 
+  getResponsiveSpacing, 
+  getResponsiveTypography, 
+  getResponsiveBorderRadius,
+  wp,
+  hp
+} from '../../utils/responsiveEnhanced';
 
 interface Props {
   navigation: any;
 }
 
 const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
-  const { colors: themeColors, spacing, borderRadius, shadows, isDark } = useTheme();
+  const { theme, isDark } = useTheme();
+  const { colors } = theme;
   const [refreshing, setRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedTimeRange, setSelectedTimeRange] = useState('30days');
@@ -231,12 +237,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
     { label: 'Jun', value: 290 },
   ];
 
-  useEffect(() => {
-    // Load initial data
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     // Mock API calls - replace with real implementation
     try {
       // await fetchStatistics();
@@ -245,7 +246,12 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Load initial data
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -255,12 +261,9 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
     setFilters(newFilters);
-    // Apply filters to car listings
-    // applyFiltersToListings(newFilters);
   };
 
   const handleApplyFilters = () => {
-    // Apply current filters
     console.log('Applying filters:', filters);
   };
 
@@ -287,336 +290,235 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleDeleteCar = (car: CarListing) => {
-    // Remove car from listings
-    setCarListings(prev => prev.filter(item => item.id !== car.id));
-    Alert.alert('Success', 'Car listing deleted successfully');
+    console.log('Delete car:', car.id);
   };
 
-  const handleToggleStatus = (car: CarListing) => {
-    // Toggle car status
-    const newStatus = car.status === 'active' ? 'expired' : 'active';
-    setCarListings(prev =>
-      prev.map(item =>
-        item.id === car.id ? { ...item, status: newStatus } : item
-      )
-    );
-  };
-
-  const handleToggleFeatured = (car: CarListing) => {
-    // Toggle featured status
-    setCarListings(prev =>
-      prev.map(item =>
-        item.id === car.id ? { ...item, featured: !item.featured } : item
-      )
-    );
+  const handleFeatureCar = (car: CarListing) => {
+    console.log('Feature car:', car.id);
   };
 
   const renderHeader = () => (
-    <LinearGradient
-      colors={isDark ? ['#1a1a1a', '#2d2d2d'] : ['#667eea', '#764ba2']}
-      style={styles.headerGradient}
-    >
-      <View style={styles.headerContent}>
-        <View>
-          <Text style={styles.welcomeText}>Welcome back,</Text>
-          <Text style={styles.dealerName}>AutoDealer Pro</Text>
-        </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={[styles.headerButton, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
-            onPress={() => navigation.navigate('Notifications')}
-          >
-            <MaterialIcons name="notifications" size={20} color="#FFFFFF" />
-            <View style={styles.notificationBadge}>
-              <Text style={styles.badgeText}>3</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.headerButton, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
-            onPress={() => navigation.navigate('Settings')}
-          >
-            <MaterialIcons name="settings" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+    <View style={styles.headerContainer}>
+      <View>
+        <Text style={[styles.greeting, { color: colors.text }]}>Dealer Dashboard</Text>
+        <Text style={[styles.subGreeting, { color: colors.textSecondary }]}>Manage your inventory & performance</Text>
       </View>
-    </LinearGradient>
-  );
-
-  const renderQuickActions = () => (
-    <View style={styles.quickActionsContainer}>
-      <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Quick Actions</Text>
-      <View style={styles.quickActionsGrid}>
-        <TouchableOpacity
-          style={[styles.quickActionCard, { backgroundColor: themeColors.surface }, shadows.sm]}
-          onPress={() => navigation.navigate('AddCar')}
-        >
-          <LinearGradient
-            colors={['#4facfe', '0x00f2fe']}
-            style={styles.quickActionIcon}
-          >
-            <AntDesign name="plus" size={20} color="#FFFFFF" />
-          </LinearGradient>
-          <Text style={[styles.quickActionText, { color: themeColors.text }]}>Add New Car</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.quickActionCard, { backgroundColor: themeColors.surface }, shadows.sm]}
-          onPress={() => navigation.navigate('ManageCars')}
-        >
-          <LinearGradient
-            colors={['#667eea', '#764ba2']}
-            style={styles.quickActionIcon}
-          >
-            <AntDesign name="edit" size={20} color="#FFFFFF" />
-          </LinearGradient>
-          <Text style={[styles.quickActionText, { color: themeColors.text }]}>Manage Cars</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.quickActionCard, { backgroundColor: themeColors.surface }, shadows.sm]}
-          onPress={() => navigation.navigate('Analytics')}
-        >
-          <LinearGradient
-            colors={['#f093fb', '#f5576c']}
-            style={styles.quickActionIcon}
-          >
-            <MaterialIcons name="analytics" size={20} color="#FFFFFF" />
-          </LinearGradient>
-          <Text style={[styles.quickActionText, { color: themeColors.text }]}>View Analytics</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.quickActionCard, { backgroundColor: themeColors.surface }, shadows.sm]}
-          onPress={() => navigation.navigate('Inquiries')}
-        >
-          <LinearGradient
-            colors={['#43e97b', '#38f9d7']}
-            style={styles.quickActionIcon}
-          >
-            <AntDesign name="message" size={20} color="#FFFFFF" />
-          </LinearGradient>
-          <Text style={[styles.quickActionText, { color: themeColors.text }]}>Inquiries</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity 
+        style={[styles.profileButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : colors.surface }]}
+        onPress={() => navigation.navigate('Profile')}
+      >
+        <AntDesign name="user" size={scaleSize(20)} color={colors.primary} />
+      </TouchableOpacity>
     </View>
   );
 
-  const renderStatistics = () => (
-    <View style={styles.statisticsContainer}>
-      <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Dashboard Overview</Text>
-      <View style={styles.statisticsGrid}>
-        {statisticsData.map((stat, index) => (
-          <StatisticsCard
-            key={index}
-            data={stat}
-            index={index}
-            variant="gradient"
+  const renderCharts = () => (
+    <View style={styles.chartsContainer}>
+      <View style={styles.chartRow}>
+        <SimpleChart
+          title="Sales Trend"
+          data={salesTrendData}
+          type="line"
+          height={scaleSize(200)}
+          width={wp(90)}
+          showLegend
+        />
+      </View>
+      
+      <View style={styles.chartRow}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <SimpleChart
+            title="Top Brands"
+            data={topBrandsData}
+            type="pie"
+            height={scaleSize(200)}
+            width={scaleSize(280)}
+            showLegend
+            style={{ marginRight: getResponsiveSpacing('md') }}
           />
-        ))}
+          <SimpleChart
+            title="Monthly Revenue (Lakhs)"
+            data={monthlyRevenueData}
+            type="bar"
+            height={scaleSize(200)}
+            width={scaleSize(280)}
+          />
+        </ScrollView>
       </View>
     </View>
   );
-
-  const renderAnalytics = () => (
-    <View style={styles.analyticsContainer}>
-      <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Performance Analytics</Text>
-      
-      <SimpleChart
-        data={salesTrendData}
-        type="line"
-        title="Sales Trend"
-        subtitle="Cars sold per month"
-        height={180}
-      />
-
-      <SimpleChart
-        data={topBrandsData}
-        type="pie"
-        title="Top Performing Brands"
-        subtitle="Distribution of sales by brand"
-        height={220}
-      />
-
-      <SimpleChart
-        data={monthlyRevenueData}
-        type="bar"
-        title="Monthly Revenue"
-        subtitle="Revenue in lakhs (₹)"
-        height={180}
-      />
-    </View>
-  );
-
-  const renderListingsSection = () => (
-    <View style={styles.listingsContainer}>
-      <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Your Car Listings</Text>
-      
-      <FilterSystem
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-        onApplyFilters={handleApplyFilters}
-        onResetFilters={handleResetFilters}
-        totalResults={carListings.length}
-      />
-
-      <CarListingsGrid
-        listings={carListings}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        onCarPress={handleCarPress}
-        onEditCar={handleEditCar}
-        onDeleteCar={handleDeleteCar}
-        onToggleStatus={handleToggleStatus}
-        onToggleFeatured={handleToggleFeatured}
-        onRefresh={handleRefresh}
-        refreshing={refreshing}
-      />
-    </View>
-  );
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: themeColors.background,
-    },
-    headerGradient: {
-      paddingTop: 50,
-      paddingBottom: 20,
-      paddingHorizontal: 20,
-    },
-    headerContent: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    welcomeText: {
-      fontSize: 16,
-      color: 'rgba(255,255,255,0.8)',
-      fontWeight: '500',
-    },
-    dealerName: {
-      fontSize: 24,
-      color: '#FFFFFF',
-      fontWeight: '700',
-      marginTop: 4,
-    },
-    headerActions: {
-      flexDirection: 'row',
-    },
-    headerButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginLeft: 12,
-      position: 'relative',
-    },
-    notificationBadge: {
-      position: 'absolute',
-      top: -2,
-      right: -2,
-      backgroundColor: '#FF3B30',
-      width: 16,
-      height: 16,
-      borderRadius: 8,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    badgeText: {
-      color: '#FFFFFF',
-      fontSize: 10,
-      fontWeight: '600',
-    },
-    scrollContent: {
-      paddingBottom: 100,
-    },
-    sectionTitle: {
-      fontSize: 20,
-      fontWeight: '600',
-      marginBottom: 16,
-      paddingHorizontal: 16,
-    },
-    quickActionsContainer: {
-      marginTop: 20,
-      marginBottom: 24,
-    },
-    quickActionsGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      paddingHorizontal: 16,
-      justifyContent: 'space-between',
-    },
-    quickActionCard: {
-      width: (width - 48) / 2,
-      padding: 16,
-      borderRadius: 12,
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    quickActionIcon: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 8,
-    },
-    quickActionText: {
-      fontSize: 14,
-      fontWeight: '500',
-      textAlign: 'center',
-    },
-    statisticsContainer: {
-      marginBottom: 24,
-    },
-    statisticsGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      paddingHorizontal: 16,
-      justifyContent: 'space-between',
-    },
-    analyticsContainer: {
-      marginBottom: 24,
-      paddingHorizontal: 16,
-    },
-    listingsContainer: {
-      flex: 1,
-    },
-  });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle={isDark ? 'light-content' : 'light-content'}
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
       />
       
-      {renderHeader()}
-
       <ScrollView
-        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={[themeColors.primary]}
-            tintColor={themeColors.primary}
+            tintColor={colors.primary}
           />
         }
       >
-        {renderQuickActions()}
-        {renderStatistics()}
-        {renderAnalytics()}
-        {renderListingsSection()}
+        {renderHeader()}
+        
+        <View style={styles.statsGrid}>
+          {statisticsData.map((stat, index) => (
+            <StatisticsCard
+              key={index}
+              data={stat}
+              index={index}
+              variant="gradient"
+            />
+          ))}
+        </View>
+
+        {renderCharts()}
+
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Inventory Management</Text>
+          <View style={styles.viewToggle}>
+            <TouchableOpacity
+              style={[
+                styles.viewOption,
+                viewMode === 'grid' && { backgroundColor: colors.primary }
+              ]}
+              onPress={() => setViewMode('grid')}
+            >
+              <MaterialIcons 
+                name="grid-view" 
+                size={scaleSize(20)} 
+                color={viewMode === 'grid' ? '#FFFFFF' : colors.textSecondary} 
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.viewOption,
+                viewMode === 'list' && { backgroundColor: colors.primary }
+              ]}
+              onPress={() => setViewMode('list')}
+            >
+              <MaterialIcons 
+                name="view-list" 
+                size={scaleSize(20)} 
+                color={viewMode === 'list' ? '#FFFFFF' : colors.textSecondary} 
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <FilterSystem
+          filters={filters}
+          onFilterChange={handleFiltersChange}
+          onApply={handleApplyFilters}
+          onReset={handleResetFilters}
+        />
+
+        <CarListingsGrid
+          listings={carListings}
+          viewMode={viewMode}
+          onPress={handleCarPress}
+          onEdit={handleEditCar}
+          onDelete={handleDeleteCar}
+          onFeature={handleFeatureCar}
+          isLoading={refreshing}
+        />
       </ScrollView>
+      
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: colors.primary }]}
+        onPress={() => navigation.navigate('AddCar')}
+      >
+        <AntDesign name="plus" size={scaleSize(24)} color="#FFFFFF" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
 
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: hp(10),
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: getResponsiveSpacing('lg'),
+    paddingTop: getResponsiveSpacing('md'),
+    marginBottom: getResponsiveSpacing('lg'),
+  },
+  greeting: {
+    fontSize: getResponsiveTypography('2xl'),
+    fontWeight: 'bold',
+    letterSpacing: -0.5,
+  },
+  subGreeting: {
+    fontSize: getResponsiveTypography('sm'),
+    marginTop: scaleSize(4),
+  },
+  profileButton: {
+    width: scaleSize(40),
+    height: scaleSize(40),
+    borderRadius: getResponsiveBorderRadius('full'),
+    justifyContent: 'center',
+    alignItems: 'center',
+
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: getResponsiveSpacing('lg'),
+    marginBottom: getResponsiveSpacing('lg'),
+    justifyContent: 'space-between', // Changed to handle 2 columns properly
+  },
+  chartsContainer: {
+    marginBottom: getResponsiveSpacing('xl'),
+  },
+  chartRow: {
+    marginBottom: getResponsiveSpacing('lg'),
+    paddingHorizontal: getResponsiveSpacing('lg'),
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: getResponsiveSpacing('lg'),
+    marginBottom: getResponsiveSpacing('md'),
+  },
+  sectionTitle: {
+    fontSize: getResponsiveTypography('xl'),
+    fontWeight: '700',
+  },
+  viewToggle: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: getResponsiveBorderRadius('lg'),
+    padding: scaleSize(4),
+  },
+  viewOption: {
+    padding: scaleSize(8),
+    borderRadius: getResponsiveBorderRadius('md'),
+  },
+  fab: {
+    position: 'absolute',
+    bottom: getResponsiveSpacing('xl'),
+    right: getResponsiveSpacing('xl'),
+    width: scaleSize(56),
+    height: scaleSize(56),
+    borderRadius: getResponsiveBorderRadius('full'),
+    justifyContent: 'center',
+    alignItems: 'center',
+ 
+  },
+});
+
 export default DealerDashboardScreen;
-
-
-

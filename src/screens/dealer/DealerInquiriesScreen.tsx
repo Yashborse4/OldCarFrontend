@@ -14,10 +14,10 @@ import {
   FlatList,
   RefreshControl,
 } from 'react-native';
-import { useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
-import { AntDesign } from '@react-native-vector-icons/ant-design';
-import * as Animatable from 'react-native-animatable';
+import AntDesign from '@react-native-vector-icons/ant-design';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -90,7 +90,7 @@ const MOCK_INQUIRIES: Inquiry[] = [
     buyerPhone: '+91 9876543210',
     buyerEmail: 'arjun.sharma@email.com',
     location: 'Mumbai',
-    message: 'Hi, I am interested in this car. Can we schedule a test drive?',
+    message: 'Hi, I am interested in this car. Can we schedule a test drive? ',
     inquiryType: 'form',
     status: 'new',
     priority: 'high',
@@ -108,7 +108,7 @@ const MOCK_INQUIRIES: Inquiry[] = [
     buyerName: 'Priya Patel',
     buyerPhone: '+91 9765432109',
     location: 'Pune',
-    message: 'What is the final price? Is it negotiable?',
+    message: 'What is the final price? Is it negotiable? ',
     inquiryType: 'phone',
     status: 'contacted',
     priority: 'medium',
@@ -149,7 +149,7 @@ const MOCK_INQUIRIES: Inquiry[] = [
     buyerName: 'Sneha Reddy',
     buyerPhone: '+91 9543210987',
     location: 'Bangalore',
-    message: 'Can you send more photos of the interior?',
+    message: 'Can you send more photos of the interior? ',
     inquiryType: 'email',
     status: 'not_interested',
     priority: 'low',
@@ -162,7 +162,17 @@ const MOCK_INQUIRIES: Inquiry[] = [
 ];
 
 const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
-  const { isDark, colors: themeColors } = useTheme();
+  const isDark = false;
+  const colors = {
+    background: '#FAFBFC',
+    surface: '#FFFFFF',
+    text: '#1A202C',
+    textSecondary: '#4A5568',
+    primary: '#FFD700',
+    border: '#E2E8F0',
+    error: '#F56565',
+    success: '#48BB78',
+  };
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -171,7 +181,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
   const [showActionModal, setShowActionModal] = useState(false);
-  
+
   const [inquiries, setInquiries] = useState<Inquiry[]>(MOCK_INQUIRIES);
   const [inquiryStats, setInquiryStats] = useState<InquiryStats>({
     total: 145,
@@ -184,7 +194,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
 
   const filteredInquiries = inquiries.filter(inquiry => {
     const matchesFilter = selectedFilter === 'all' || inquiry.status === selectedFilter;
-    const matchesSearch = searchQuery === '' || 
+    const matchesSearch = searchQuery === '' ||
       inquiry.buyerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       inquiry.carTitle.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
@@ -204,8 +214,8 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleStatusUpdate = (inquiryId: string, newStatus: Inquiry['status']) => {
-    setInquiries(prev => prev.map(inquiry => 
-      inquiry.id === inquiryId 
+    setInquiries(prev => prev.map(inquiry =>
+      inquiry.id === inquiryId
         ? { ...inquiry, status: newStatus, lastContactAt: new Date().toISOString() }
         : inquiry
     ));
@@ -240,7 +250,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 1) return 'Today';
     if (diffDays === 2) return 'Yesterday';
     if (diffDays <= 7) return `${diffDays} days ago`;
@@ -248,29 +258,29 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const renderStatsCard = (title: string, value: string | number, subtitle: string, icon: string, color: string) => (
-    <Animatable.View animation="fadeInUp" style={[styles.statsCard, { backgroundColor: themeColors.surface }]}>
+    <View style={[styles.statsCard, { backgroundColor: colors.surface }]}>
       <View style={[styles.statsIconContainer, { backgroundColor: `${color}15` }]}>
         <MaterialIcons name={icon as any} size={20} color={color} />
       </View>
       <View style={styles.statsContent}>
-        <Text style={[styles.statsValue, { color: themeColors.text }]}>{value}</Text>
-        <Text style={[styles.statsTitle, { color: themeColors.text }]}>{title}</Text>
-        <Text style={[styles.statsSubtitle, { color: themeColors.textSecondary }]}>{subtitle}</Text>
+        <Text style={[styles.statsValue, { color: colors.text }]}>{value}</Text>
+        <Text style={[styles.statsTitle, { color: colors.text }]}>{title}</Text>
+        <Text style={[styles.statsSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
       </View>
-    </Animatable.View>
+    </View>
   );
 
   const renderInquiryItem = ({ item, index }: { item: Inquiry; index: number }) => (
-    <Animatable.View animation="fadeInUp" delay={index * 100}>
+    <View>
       <TouchableOpacity
-        style={[styles.inquiryCard, { backgroundColor: themeColors.surface }]}
+        style={[styles.inquiryCard, { backgroundColor: colors.surface }]}
         onPress={() => handleInquiryPress(item)}
       >
         {/* Header */}
         <View style={styles.inquiryHeader}>
           <View style={styles.inquiryHeaderLeft}>
-            <Text style={[styles.buyerName, { color: themeColors.text }]}>{item.buyerName}</Text>
-            <Text style={[styles.inquiryTime, { color: themeColors.textSecondary }]}>
+            <Text style={[styles.buyerName, { color: colors.text }]}>{item.buyerName}</Text>
+            <Text style={[styles.inquiryTime, { color: colors.textSecondary }]}>
               {formatTime(item.createdAt)}
             </Text>
           </View>
@@ -286,24 +296,24 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
         {/* Car Info */}
         <View style={styles.carInfo}>
           <View style={styles.carDetails}>
-            <Text style={[styles.carTitle, { color: themeColors.text }]}>{item.carTitle}</Text>
-            <Text style={[styles.carPrice, { color: themeColors.primary }]}>{item.carPrice}</Text>
+            <Text style={[styles.carTitle, { color: colors.text }]}>{item.carTitle}</Text>
+            <Text style={[styles.carPrice, { color: colors.primary }]}>{item.carPrice}</Text>
           </View>
-          <MaterialIcons name="chevron-right" size={20} color={themeColors.textSecondary} />
+          <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
         </View>
 
         {/* Message Preview */}
-        <Text style={[styles.messagePreview, { color: themeColors.textSecondary }]} numberOfLines={2}>
+        <Text style={[styles.messagePreview, { color: colors.textSecondary }]} numberOfLines={2}>
           {item.message}
         </Text>
 
         {/* Status and Actions */}
         <View style={styles.inquiryFooter}>
           <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}15` }]}>
-            <MaterialIcons 
-              name={item.status === 'new' ? 'new-releases' : item.status === 'contacted' ? 'phone' : item.status === 'interested' ? 'favorite' : item.status === 'not_interested' ? 'favorite-border' : 'check-circle'} 
-              size={14} 
-              color={getStatusColor(item.status)} 
+            <MaterialIcons
+              name={item.status === 'new' ? 'new-releases' : item.status === 'contacted' ? 'phone' : item.status === 'interested' ? 'favorite' : item.status === 'not_interested' ? 'favorite-border' : 'check-circle'}
+              size={14}
+              color={getStatusColor(item.status)}
             />
             <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
               {item.status.replace('_', ' ').toUpperCase()}
@@ -328,81 +338,81 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Lead Score */}
         <View style={styles.leadScoreContainer}>
-          <Text style={[styles.leadScoreLabel, { color: themeColors.textSecondary }]}>Lead Score: </Text>
+          <Text style={[styles.leadScoreLabel, { color: colors.textSecondary }]}>Lead Score: </Text>
           <View style={[styles.leadScoreBar, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}>
-            <View 
+            <View
               style={[
-                styles.leadScoreFill, 
-                { 
+                styles.leadScoreFill,
+                {
                   backgroundColor: item.leadScore >= 70 ? '#4CAF50' : item.leadScore >= 50 ? '#FF9800' : '#FF3B30',
                   width: `${item.leadScore}%`
                 }
-              ]} 
+              ]}
             />
           </View>
-          <Text style={[styles.leadScoreValue, { color: themeColors.text }]}>{item.leadScore}%</Text>
+          <Text style={[styles.leadScoreValue, { color: colors.text }]}>{item.leadScore}%</Text>
         </View>
       </TouchableOpacity>
-    </Animatable.View>
+    </View>
   );
 
   const renderInquiryModal = () => (
     <Modal visible={showInquiryModal} animationType="slide" presentationStyle="pageSheet">
       {selectedInquiry && (
-        <SafeAreaView style={[styles.modalContainer, { backgroundColor: themeColors.background }]}>
-          <View style={[styles.modalHeader, { backgroundColor: themeColors.surface }]}>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.modalHeader, { backgroundColor: colors.surface }]}>
             <TouchableOpacity onPress={() => setShowInquiryModal(false)}>
-              <AntDesign name="close" size={24} color={themeColors.text} />
+              <AntDesign name="close" size={24} color={colors.text} />
             </TouchableOpacity>
-            <Text style={[styles.modalHeaderTitle, { color: themeColors.text }]}>Inquiry Details</Text>
+            <Text style={[styles.modalHeaderTitle, { color: colors.text }]}>Inquiry Details</Text>
             <TouchableOpacity onPress={() => setShowActionModal(true)}>
-              <MaterialIcons name="more-vert" size={24} color={themeColors.text} />
+              <MaterialIcons name="more-vert" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalContent}>
             {/* Buyer Information */}
-            <View style={[styles.modalSection, { backgroundColor: themeColors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Buyer Information</Text>
+            <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Buyer Information</Text>
               <View style={styles.buyerInfoRow}>
-                <MaterialIcons name="person" size={20} color={themeColors.primary} />
-                <Text style={[styles.buyerInfoText, { color: themeColors.text }]}>{selectedInquiry.buyerName}</Text>
+                <MaterialIcons name="person" size={20} color={colors.primary} />
+                <Text style={[styles.buyerInfoText, { color: colors.text }]}>{selectedInquiry.buyerName}</Text>
               </View>
               <View style={styles.buyerInfoRow}>
-                <MaterialIcons name="phone" size={20} color={themeColors.primary} />
-                <Text style={[styles.buyerInfoText, { color: themeColors.text }]}>{selectedInquiry.buyerPhone}</Text>
+                <MaterialIcons name="phone" size={20} color={colors.primary} />
+                <Text style={[styles.buyerInfoText, { color: colors.text }]}>{selectedInquiry.buyerPhone}</Text>
               </View>
               {selectedInquiry.buyerEmail && (
                 <View style={styles.buyerInfoRow}>
-                  <MaterialIcons name="email" size={20} color={themeColors.primary} />
-                  <Text style={[styles.buyerInfoText, { color: themeColors.text }]}>{selectedInquiry.buyerEmail}</Text>
+                  <MaterialIcons name="email" size={20} color={colors.primary} />
+                  <Text style={[styles.buyerInfoText, { color: colors.text }]}>{selectedInquiry.buyerEmail}</Text>
                 </View>
               )}
               <View style={styles.buyerInfoRow}>
-                <MaterialIcons name="location-on" size={20} color={themeColors.primary} />
-                <Text style={[styles.buyerInfoText, { color: themeColors.text }]}>{selectedInquiry.location}</Text>
+                <MaterialIcons name="location-on" size={20} color={colors.primary} />
+                <Text style={[styles.buyerInfoText, { color: colors.text }]}>{selectedInquiry.location}</Text>
               </View>
             </View>
 
             {/* Car Information */}
-            <View style={[styles.modalSection, { backgroundColor: themeColors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Car Details</Text>
-              <Text style={[styles.carModalTitle, { color: themeColors.text }]}>{selectedInquiry.carTitle}</Text>
-              <Text style={[styles.carModalPrice, { color: themeColors.primary }]}>{selectedInquiry.carPrice}</Text>
+            <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Car Details</Text>
+              <Text style={[styles.carModalTitle, { color: colors.text }]}>{selectedInquiry.carTitle}</Text>
+              <Text style={[styles.carModalPrice, { color: colors.primary }]}>{selectedInquiry.carPrice}</Text>
             </View>
 
             {/* Message */}
-            <View style={[styles.modalSection, { backgroundColor: themeColors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Message</Text>
-              <Text style={[styles.messageText, { color: themeColors.text }]}>{selectedInquiry.message}</Text>
+            <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Message</Text>
+              <Text style={[styles.messageText, { color: colors.text }]}>{selectedInquiry.message}</Text>
             </View>
 
             {/* Notes */}
             {selectedInquiry.notes.length > 0 && (
-              <View style={[styles.modalSection, { backgroundColor: themeColors.surface }]}>
-                <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Notes</Text>
+              <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Notes</Text>
                 {selectedInquiry.notes.map((note, index) => (
-                  <Text key={index} style={[styles.noteText, { color: themeColors.textSecondary }]}>
+                  <Text key={index} style={[styles.noteText, { color: colors.textSecondary }]}>
                     • {note}
                   </Text>
                 ))}
@@ -410,8 +420,8 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
             )}
 
             {/* Quick Actions */}
-            <View style={[styles.modalSection, { backgroundColor: themeColors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Quick Actions</Text>
+            <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
               <View style={styles.quickActions}>
                 <TouchableOpacity
                   style={[styles.quickActionButton, { backgroundColor: '#4CAF5015' }]}
@@ -420,7 +430,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
                   <MaterialIcons name="phone" size={20} color="#4CAF50" />
                   <Text style={[styles.quickActionText, { color: '#4CAF50' }]}>Call</Text>
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity
                   style={[styles.quickActionButton, { backgroundColor: '#FF980015' }]}
                   onPress={() => handleWhatsAppBuyer(selectedInquiry.buyerPhone)}
@@ -430,14 +440,14 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.quickActionButton, { backgroundColor: themeColors.primary + '15' }]}
+                  style={[styles.quickActionButton, { backgroundColor: colors.primary + '15' }]}
                   onPress={() => {
                     setShowInquiryModal(false);
                     navigation.navigate('CarDetails', { carId: selectedInquiry.carId });
                   }}
                 >
-                  <MaterialIcons name="directions-car" size={20} color={themeColors.primary} />
-                  <Text style={[styles.quickActionText, { color: themeColors.primary }]}>View Car</Text>
+                  <MaterialIcons name="directions-car" size={20} color={colors.primary} />
+                  <Text style={[styles.quickActionText, { color: colors.primary }]}>View Car</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -450,9 +460,9 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
   const renderActionModal = () => (
     <Modal visible={showActionModal} transparent animationType="fade">
       <View style={styles.actionModalOverlay}>
-        <View style={[styles.actionModalContent, { backgroundColor: themeColors.surface }]}>
-          <Text style={[styles.actionModalTitle, { color: themeColors.text }]}>Update Status</Text>
-          
+        <View style={[styles.actionModalContent, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.actionModalTitle, { color: colors.text }]}>Update Status</Text>
+
           {[
             { key: 'contacted', label: 'Mark as Contacted', icon: 'phone' },
             { key: 'interested', label: 'Mark as Interested', icon: 'favorite' },
@@ -464,16 +474,16 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
               style={styles.actionModalButton}
               onPress={() => selectedInquiry && handleStatusUpdate(selectedInquiry.id, action.key as Inquiry['status'])}
             >
-              <MaterialIcons name={action.icon as any} size={20} color={themeColors.text} />
-              <Text style={[styles.actionModalButtonText, { color: themeColors.text }]}>{action.label}</Text>
+              <MaterialIcons name={action.icon as any} size={20} color={colors.text} />
+              <Text style={[styles.actionModalButtonText, { color: colors.text }]}>{action.label}</Text>
             </TouchableOpacity>
           ))}
-          
+
           <TouchableOpacity
             style={[styles.actionModalButton, styles.cancelButton]}
             onPress={() => setShowActionModal(false)}
           >
-            <Text style={[styles.actionModalButtonText, { color: themeColors.textSecondary }]}>Cancel</Text>
+            <Text style={[styles.actionModalButtonText, { color: colors.textSecondary }]}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -481,7 +491,7 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar
         translucent
         backgroundColor="transparent"
@@ -489,13 +499,13 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
       />
 
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: themeColors.surface }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <AntDesign name="left" size={24} color={themeColors.text} />
+          <AntDesign name="left" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Inquiries</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Inquiries</Text>
         <TouchableOpacity onPress={() => navigation.navigate('DealerInquiryAnalytics')}>
-          <MaterialIcons name="trending-up" size={24} color={themeColors.primary} />
+          <MaterialIcons name="trending-up" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -504,8 +514,8 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[themeColors.primary]}
-            tintColor={themeColors.primary}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -522,12 +532,12 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Search and Filters */}
         <View style={styles.filtersContainer}>
-          <View style={[styles.searchContainer, { backgroundColor: themeColors.surface }]}>
-            <MaterialIcons name="search" size={20} color={themeColors.textSecondary} />
+          <View style={[styles.searchContainer, { backgroundColor: colors.surface }]}>
+            <MaterialIcons name="search" size={20} color={colors.textSecondary} />
             <TextInput
-              style={[styles.searchInput, { color: themeColors.text }]}
+              style={[styles.searchInput, { color: colors.text }]}
               placeholder="Search inquiries..."
-              placeholderTextColor={themeColors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
@@ -540,14 +550,14 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
                 style={[
                   styles.filterButton,
                   { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                  selectedFilter === filter.key && { backgroundColor: themeColors.primary },
+                  selectedFilter === filter.key && { backgroundColor: colors.primary },
                 ]}
                 onPress={() => setSelectedFilter(filter.key)}
               >
                 <Text
                   style={[
                     styles.filterButtonText,
-                    { color: themeColors.text },
+                    { color: colors.text },
                     selectedFilter === filter.key && { color: '#111827' },
                   ]}
                 >
@@ -561,14 +571,14 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
         {/* Inquiries List */}
         {filteredInquiries.length === 0 ? (
           <View style={styles.emptyState}>
-            <MaterialIcons 
-              name="message" 
-              size={64} 
-              color={themeColors.textSecondary} 
+            <MaterialIcons
+              name="message"
+              size={64}
+              color={colors.textSecondary}
             />
-            <Text style={[styles.emptyTitle, { color: themeColors.text }]}>No inquiries found</Text>
-            <Text style={[styles.emptyMessage, { color: themeColors.textSecondary }]}>
-              {searchQuery.trim() 
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No inquiries found</Text>
+            <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
+              {searchQuery.trim()
                 ? `No inquiries match "${searchQuery}"`
                 : 'No inquiries in this category'
               }
@@ -605,10 +615,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 16,
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
   },
   headerTitle: {
     fontSize: 18,
@@ -629,10 +636,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -672,10 +676,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 12,
     elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+
   },
   searchInput: {
     flex: 1,
@@ -720,10 +721,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
   },
   inquiryHeader: {
     flexDirection: 'row',
@@ -841,11 +839,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
   },
   modalHeaderTitle: {
     fontSize: 18,
@@ -860,10 +854,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
   },
   sectionTitle: {
     fontSize: 16,

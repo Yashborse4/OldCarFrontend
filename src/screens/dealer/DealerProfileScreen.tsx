@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import { Card } from '../../components/UI/Card';
-import { Button } from '../../components/UI/Button';
-import { theme } from '../../theme';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { colors } from '../../design-system';
 
 interface Props {
   navigation: any;
@@ -38,6 +38,16 @@ interface DealerProfile {
 
 const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const colors = {
+    success: '#48BB78',
+    warning: '#ED8936',
+    error: '#F56565',
+    textSecondary: '#4A5568',
+    text: '#1A202C',
+    primary: '#FFD700',
+    background: '#FAFBFC',
+    border: '#E2E8F0',
+  };
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -62,13 +72,13 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
   const getVerificationIcon = () => {
     switch (profile.verificationStatus) {
       case 'verified':
-        return <MaterialIcons name="verified" size={20} color={theme.colors.success} />;
+        return <MaterialIcons name="verified" size={20} color={colors.success} />;
       case 'pending':
-        return <MaterialIcons name="schedule" size={20} color={theme.colors.warning} />;
+        return <MaterialIcons name="schedule" size={20} color={colors.warning} />;
       case 'rejected':
-        return <MaterialIcons name="error" size={20} color={theme.colors.error} />;
+        return <MaterialIcons name="error" size={20} color={colors.error} />;
       default:
-        return <MaterialIcons name="help" size={20} color={theme.colors.textSecondary} />;
+        return <MaterialIcons name="help" size={20} color={colors.textSecondary} />;
     }
   };
 
@@ -102,7 +112,7 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
       <Card style={styles.headerCard}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
+            <MaterialIcons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Dealer Profile</Text>
           <TouchableOpacity
@@ -112,7 +122,7 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
             <MaterialIcons
               name={editMode ? 'check' : 'edit'}
               size={24}
-              color={loading ? theme.colors.textSecondary : theme.colors.primary}
+              color={loading ? colors.textSecondary : colors.primary }
             />
           </TouchableOpacity>
         </View>
@@ -162,7 +172,7 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={(text) => setTempProfile({ ...tempProfile, dealerName: text })}
               editable={editMode}
               placeholder="Enter dealer name"
-              placeholderTextColor={theme.colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
             />
           </View>
 
@@ -174,7 +184,7 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={(text) => setTempProfile({ ...tempProfile, showroomName: text })}
               editable={editMode}
               placeholder="Enter showroom name"
-              placeholderTextColor={theme.colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
             />
           </View>
 
@@ -186,7 +196,7 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={(text) => setTempProfile({ ...tempProfile, ownerName: text })}
               editable={editMode}
               placeholder="Enter owner name"
-              placeholderTextColor={theme.colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
             />
           </View>
 
@@ -198,7 +208,7 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={(text) => setTempProfile({ ...tempProfile, email: text })}
               editable={editMode}
               placeholder="Enter email address"
-              placeholderTextColor={theme.colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               keyboardType="email-address"
               autoCapitalize="none"
             />
@@ -212,7 +222,7 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={(text) => setTempProfile({ ...tempProfile, phone: text })}
               editable={editMode}
               placeholder="Enter phone number"
-              placeholderTextColor={theme.colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               keyboardType="phone-pad"
             />
           </View>
@@ -225,7 +235,7 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={(text) => setTempProfile({ ...tempProfile, address: text })}
               editable={editMode}
               placeholder="Enter complete address"
-              placeholderTextColor={theme.colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               multiline
               numberOfLines={3}
             />
@@ -239,7 +249,7 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={(text) => setTempProfile({ ...tempProfile, city: text })}
               editable={editMode}
               placeholder="Enter city"
-              placeholderTextColor={theme.colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
             />
           </View>
         </Card>
@@ -269,13 +279,13 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FAFBFC'
   },
   headerCard: {
     marginHorizontal: 0,
     borderRadius: 0,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: '#E2E8F0'
   },
   header: {
     flexDirection: 'row',
@@ -287,7 +297,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: '#1A202C'
   },
   content: {
     flex: 1,
@@ -318,17 +328,17 @@ const styles = StyleSheet.create({
   dealerName: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: theme.colors.text,
-    marginRight: 8,
+    color: colors.text,
+          marginRight: 8,
   },
   ownerName: {
     fontSize: 16,
-    color: theme.colors.textSecondary,
-    marginBottom: 4,
+    color: colors.textSecondary,
+          marginBottom: 4,
   },
   verificationText: {
     fontSize: 14,
-    color: theme.colors.textSecondary,
+    color: colors.textSecondary
   },
   statsContainer: {
     flexDirection: 'row',
@@ -343,13 +353,13 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: theme.colors.primary,
-    marginBottom: 4,
+    color: colors.primary,
+          marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
+    color: colors.textSecondary,
+          textAlign: 'center',
   },
   infoCard: {
     marginTop: 16,
@@ -358,8 +368,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: theme.colors.text,
-    marginBottom: 16,
+    color: colors.text,
+          marginBottom: 16,
   },
   formGroup: {
     marginBottom: 16,
@@ -367,18 +377,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 8,
+    color: colors.text,
+          marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 8,
+    borderColor: colors.border,
+          borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
-    color: theme.colors.text,
-    backgroundColor: theme.colors.background,
+    color: colors.text,
+          backgroundColor: colors.background
   },
   textArea: {
     height: 80,
