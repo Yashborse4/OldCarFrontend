@@ -4,7 +4,6 @@
  *
  * @format
  */
-
 import 'react-native-gesture-handler';
 import 'react-native-screens';
 import React, { useState, useEffect } from 'react';
@@ -15,11 +14,11 @@ import { View, ActivityIndicator, StatusBar, useColorScheme as useDeviceColorSch
 import AppNavigator from './src/navigation/AppNavigator';
 import { isUserAuthorized } from './src/services/auth';
 import { RootStackParamList } from './src/navigation/types';
-import { ThemeProvider, useTheme } from './src/theme';
 import { AuthProvider } from './src/context/AuthContext';
-import { AppErrorBoundary } from './src/components/ErrorBoundary';
-import { ToastProvider } from './src/components/ui/ToastManager';
 
+
+import { ToastProvider } from './src/components/ui/ToastManager';
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 
 function App() {
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
@@ -40,7 +39,7 @@ function App() {
 
   if (!initialRoute) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" />
       </View>
     );
@@ -48,28 +47,29 @@ function App() {
 
   return (
     <SafeAreaProvider>
-      <AppErrorBoundary>
+
+      <ToastProvider>
         <ThemeProvider>
-          <ToastProvider>
-            <AuthProvider>
-              <AppContent initialRoute={initialRoute} />
-            </AuthProvider>
-          </ToastProvider>
+          <AuthProvider>
+            <AppContent initialRoute={initialRoute} />
+          </AuthProvider>
         </ThemeProvider>
-      </AppErrorBoundary>
+      </ToastProvider>
+
     </SafeAreaProvider>
   );
 }
 
 const AppContent = ({ initialRoute }: { initialRoute: keyof RootStackParamList }) => {
-  const { isDark, themeColors } = useTheme();
-  
+  const { theme, isDark } = useTheme();
+
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
-      <StatusBar 
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={themeColors.background}
-        translucent
+        backgroundColor={theme.colors.background}
+        translucent={false}
+        hidden={false}
       />
       <NavigationContainer>
         <AppNavigator initialRouteName={initialRoute} />

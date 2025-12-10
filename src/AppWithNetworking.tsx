@@ -19,11 +19,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 // Network Context Provider
 import { NetworkProvider } from './context/NetworkContext';
 
-// Theme Context Provider (existing)
-import { ThemeProvider } from './theme';
+//  Context Provider (existing)
 
 // Screens (with network handling already applied)
-import DashboardScreen from './screens/main/DashboardScreen';
+import DashboardScreen from './screens/main/DashboardScreenModern';
 import LoginScreen from './screens/auth/LoginScreen';
 import MyGarageScreen from './screens/car/MyGarageScreen';
 
@@ -57,11 +56,9 @@ const AppWithNetworking: React.FC = () => {
   return (
     <SafeAreaProvider>
       <NetworkProvider>
-        <ThemeProvider>
           <NavigationContainer>
             <AppNavigator />
           </NavigationContainer>
-        </ThemeProvider>
       </NetworkProvider>
     </SafeAreaProvider>
   );
