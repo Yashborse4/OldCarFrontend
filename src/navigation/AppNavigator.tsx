@@ -1,6 +1,6 @@
 import React from 'react';
-import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
-import { theme } from '../theme';
+import { Platform, Easing } from 'react-native';
+import { createStackNavigator, TransitionPresets, CardStyleInterpolators, HeaderStyleInterpolators } from '@react-navigation/stack';
 
 // Authentication Screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -8,7 +8,7 @@ import RegisterUser from '../screens/auth/RegisterUser';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 
 // Main App Screens
-import DashboardScreen from '../screens/main/DashboardScreen';
+import DashboardScreen from '../screens/main/DashboardScreenModern';
 import SettingsScreen from '../screens/main/SettingsScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import NotificationsScreen from '../screens/main/NotificationsScreen';
@@ -45,10 +45,48 @@ import { RootStackParamList } from './types';
 const Stack = createStackNavigator<RootStackParamList>();
 
 // Default screen options for modern navigation
+const iosTransition = {
+  gestureEnabled: true,
+  animationEnabled: true,
+  cardOverlayEnabled: true,
+  ...TransitionPresets.SlideFromRightIOS,
+  cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+  headerStyleInterpolator: HeaderStyleInterpolators.forUIKit,
+  transitionSpec: {
+    open: {
+      animation: 'timing' as const,
+      config: { duration: 320, easing: Easing.out(Easing.poly(5)) },
+    },
+    close: {
+      animation: 'timing' as const,
+      config: { duration: 300, easing: Easing.in(Easing.poly(4)) },
+    },
+  },
+};
+
+const androidTransition = {
+  gestureEnabled: true,
+  animationEnabled: true,
+  cardOverlayEnabled: true,
+  cardStyleInterpolator: CardStyleInterpolators.forFadeFromBottomAndroid,
+  headerStyleInterpolator: HeaderStyleInterpolators.forUIKit,
+  transitionSpec: {
+    open: {
+      animation: 'timing' as const,
+      config: { duration: 280, easing: Easing.bezier(0.2, 0, 0, 1) },
+    },
+    close: {
+      animation: 'timing' as const,
+      config: { duration: 250, easing: Easing.bezier(0.4, 0, 1, 1) },
+    },
+  },
+};
+
 const defaultScreenOptions = {
   headerShown: false,
-  cardStyle: { backgroundColor: theme.colors.background },
-  ...TransitionPresets.SlideFromRightIOS,
+  cardStyle: { backgroundColor: '#FAFBFC' },
+  detachPreviousScreen: true,
+  ...(Platform.OS === 'ios' ? iosTransition : androidTransition),
 };
 
 const AppNavigator = ({ initialRouteName }: { initialRouteName: keyof RootStackParamList }) => {
@@ -88,9 +126,9 @@ const AppNavigator = ({ initialRouteName }: { initialRouteName: keyof RootStackP
       
       {/* Chat/Messaging Screens */}
       <Stack.Screen name="Messages" component={MessagesScreen} />
-      <Stack.Screen name="ChatScreen" component={ChatScreen} />
-      <Stack.Screen name="ChatListScreen" component={ChatListScreen} />
-      <Stack.Screen name="ChatConversationScreen" component={ChatConversationScreen} />
+      <Stack.Screen name="Chat" component={ChatScreen} />
+      <Stack.Screen name="ChatList" component={ChatListScreen} />
+      <Stack.Screen name="ChatConversation" component={ChatConversationScreen} />
       
       {/* Dealer Networking Screens */}
       <Stack.Screen name="DealerGroups" component={DealerGroupsScreen} />

@@ -19,8 +19,7 @@ import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { VehicleSearchNavigationProp, Vehicle } from '../../navigation/types';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
-import { VehicleCard } from '../../components/VehicleCard';
-import { useTheme } from '../../theme';
+import { VehicleCard } from '../../config/VehicleCard';
 import { carApi } from '../../services/CarApi';
 
 const { width } = Dimensions.get('window');
@@ -67,7 +66,7 @@ const VehicleSearchScreen: React.FC = () => {
     yearMin: '',
     yearMax: '',
     priceMin: '',
-    priceMax: '', 
+    priceMax: '',
     mileageMax: '',
     location: [],
     condition: [],
@@ -84,10 +83,18 @@ const VehicleSearchScreen: React.FC = () => {
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const { colors, spacing } = useTheme();
+  const colors = {
+    background: '#FAFBFC',
+    surface: '#FFFFFF',
+    text: '#1A202C',
+    textSecondary: '#4A5568',
+    primary: '#FFD700',
+    border: '#E2E8F0',
+  };
+  const spacing = { sm: 8, md: 16, lg: 24, xl: 32 };
 
   // Mock data - replace with API calls later
-  const mockVehicles: Vehicle[] = [
+  const mockVehiclesMemo = React.useMemo<Vehicle[]>(() => [
     {
       id: '1',
       make: 'BMW',
@@ -183,7 +190,7 @@ const VehicleSearchScreen: React.FC = () => {
       inquiries: 31,
       shares: 22,
     },
-  ];
+  ], []);
 
   const makeOptions = ['BMW', 'Mercedes-Benz', 'Audi', 'Tesla', 'Porsche', 'Lexus', 'Acura'];
   const modelOptions = ['X5', 'S-Class', 'A4', 'Model 3', '911', 'RX', 'MDX'];
@@ -245,22 +252,22 @@ const VehicleSearchScreen: React.FC = () => {
     applyFilters();
   }, [vehicles, filters]);
 
-  const loadVehicles = async () => {
+  const loadVehicles = useCallback(async () => {
     try {
       setLoading(true);
       // Simulate API call
       setTimeout(() => {
-        setVehicles(mockVehicles);
+        setVehicles(mockVehiclesMemo);
         setLoading(false);
       }, 1000);
     } catch (error) {
       console.error('Error loading vehicles:', error);
       setLoading(false);
     }
-  };
+  }, [mockVehiclesMemo]);
 
-  const applyFilters = () => {
-    let filtered = [...vehicles];
+  const applyFilters = useCallback(() => {
+    let filtered = vehicles;
 
     // Text search
     if (filters.searchText) {
@@ -316,14 +323,14 @@ const VehicleSearchScreen: React.FC = () => {
 
     // Fuel type filter
     if (filters.fuelType.length > 0) {
-      filtered = filtered.filter(vehicle => 
+      filtered = filtered.filter(vehicle =>
         vehicle.specifications?.fuelType && filters.fuelType.includes(vehicle.specifications.fuelType)
       );
     }
 
     // Transmission filter
     if (filters.transmission.length > 0) {
-      filtered = filtered.filter(vehicle => 
+      filtered = filtered.filter(vehicle =>
         vehicle.specifications?.transmission && filters.transmission.includes(vehicle.specifications.transmission)
       );
     }
@@ -349,7 +356,7 @@ const VehicleSearchScreen: React.FC = () => {
     });
 
     setFilteredVehicles(filtered);
-  };
+  }, [vehicles, filters]);
 
   const updateFilter = (key: keyof SearchFilters, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -384,16 +391,16 @@ const VehicleSearchScreen: React.FC = () => {
   };
 
   const handleVehiclePress = (vehicle: Vehicle) => {
-    navigation.navigate('VehicleDetail', { 
+    navigation.navigate('VehicleDetail', {
       vehicleId: vehicle.id,
-      enableCoListing: true 
+      enableCoListing: true
     });
   };
 
   const handleContactDealer = (vehicle: Vehicle) => {
-    navigation.navigate('Chat', { 
+    navigation.navigate('Chat', {
       dealerId: vehicle.dealerId,
-      dealerName: vehicle.dealerName 
+      dealerName: vehicle.dealerName
     });
   };
 
@@ -417,7 +424,7 @@ const VehicleSearchScreen: React.FC = () => {
           </View>
         )}
       </View>
-      
+
       <View style={styles.vehicleInfo}>
         <Text style={styles.vehicleTitle}>
           {item.year} {item.make} {item.model}
@@ -428,7 +435,7 @@ const VehicleSearchScreen: React.FC = () => {
         </Text>
         <Text style={styles.vehicleLocation}>{item.location}</Text>
         <Text style={styles.dealerName}>{item.dealerName}</Text>
-        
+
         <View style={styles.vehicleStats}>
           <View style={styles.statItem}>
             <MaterialIcons name="visibility" size={16} color="#666" />
@@ -440,7 +447,7 @@ const VehicleSearchScreen: React.FC = () => {
           </View>
         </View>
       </View>
-      
+
       <View style={styles.vehicleActions}>
         <TouchableOpacity
           style={styles.contactButton}
@@ -448,7 +455,7 @@ const VehicleSearchScreen: React.FC = () => {
         >
           <MaterialIcons name="chat" size={20} color="#4ECDC4" />
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           style={styles.coListButton}
           onPress={() => navigation.navigate('CoListVehicle', { vehicleId: item.id })}
@@ -498,7 +505,7 @@ const VehicleSearchScreen: React.FC = () => {
           value={filters.searchText}
           onChangeText={(text) => updateFilter('searchText', text)}
           placeholder="Search by make, model, dealer, location..."
-          style={styles.searchInput}
+          containerStyle={styles.searchInput}
         />
       </View>
 
@@ -506,15 +513,15 @@ const VehicleSearchScreen: React.FC = () => {
         <Text style={styles.resultsCount}>
           {filteredVehicles.length} vehicle{filteredVehicles.length !== 1 ? 's' : ''} found
         </Text>
-        
+
         <TouchableOpacity style={styles.sortButton} onPress={() => setShowSortModal(true)}>
           <Text style={styles.sortText}>
             Sort: {filters.sortBy === 'price-low' ? 'Price (Low to High)' :
-                   filters.sortBy === 'price-high' ? 'Price (High to Low)' :
-                   filters.sortBy === 'year-new' ? 'Year (Newest)' :
-                   filters.sortBy === 'year-old' ? 'Year (Oldest)' :
-                   filters.sortBy === 'mileage-low' ? 'Mileage (Low to High)' :
-                   'Mileage (High to Low)'}
+              filters.sortBy === 'price-high' ? 'Price (High to Low)' :
+                filters.sortBy === 'year-new' ? 'Year (Newest)' :
+                  filters.sortBy === 'year-old' ? 'Year (Oldest)' :
+                    filters.sortBy === 'mileage-low' ? 'Mileage (Low to High)' :
+                      'Mileage (High to Low)'}
           </Text>
           <MaterialIcons name="arrow-drop-down" size={20} color="#666" />
         </TouchableOpacity>
@@ -558,7 +565,7 @@ const VehicleSearchScreen: React.FC = () => {
             <ScrollView style={styles.filtersContent} showsVerticalScrollIndicator={false}>
               {renderFilterSection('Make', makeOptions, filters.make, (value) => toggleArrayFilter('make', value))}
               {renderFilterSection('Model', modelOptions, filters.model, (value) => toggleArrayFilter('model', value))}
-              
+
               <View style={styles.filterSection}>
                 <Text style={styles.filterTitle}>Year Range</Text>
                 <View style={styles.rangeInputs}>
@@ -567,7 +574,7 @@ const VehicleSearchScreen: React.FC = () => {
                     onChangeText={(text) => updateFilter('yearMin', text)}
                     placeholder="Min Year"
                     keyboardType="numeric"
-                    style={styles.rangeInput}
+                    containerStyle={styles.rangeInput}
                   />
                   <Text style={styles.rangeSeparator}>to</Text>
                   <Input
@@ -575,7 +582,7 @@ const VehicleSearchScreen: React.FC = () => {
                     onChangeText={(text) => updateFilter('yearMax', text)}
                     placeholder="Max Year"
                     keyboardType="numeric"
-                    style={styles.rangeInput}
+                    containerStyle={styles.rangeInput}
                   />
                 </View>
               </View>
@@ -588,7 +595,7 @@ const VehicleSearchScreen: React.FC = () => {
                     onChangeText={(text) => updateFilter('priceMin', text)}
                     placeholder="Min Price"
                     keyboardType="numeric"
-                    style={styles.rangeInput}
+                    containerStyle={styles.rangeInput}
                   />
                   <Text style={styles.rangeSeparator}>to</Text>
                   <Input
@@ -596,7 +603,7 @@ const VehicleSearchScreen: React.FC = () => {
                     onChangeText={(text) => updateFilter('priceMax', text)}
                     placeholder="Max Price"
                     keyboardType="numeric"
-                    style={styles.rangeInput}
+                    containerStyle={styles.rangeInput}
                   />
                 </View>
               </View>
@@ -608,7 +615,7 @@ const VehicleSearchScreen: React.FC = () => {
                   onChangeText={(text) => updateFilter('mileageMax', text)}
                   placeholder="Max Mileage"
                   keyboardType="numeric"
-                  style={styles.singleInput}
+                  containerStyle={styles.singleInput}
                 />
               </View>
 
@@ -636,7 +643,7 @@ const VehicleSearchScreen: React.FC = () => {
                 <MaterialIcons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            
+
             <View style={styles.sortContent}>
               {sortOptions.map(option => (
                 <TouchableOpacity
@@ -682,7 +689,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderColor: '#eee',
   },
   backButton: {
     padding: 4,
@@ -699,7 +706,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderColor: '#eee',
   },
   searchInput: {
     marginBottom: 0,
@@ -712,7 +719,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderColor: '#eee',
   },
   resultsCount: {
     fontSize: 14,
@@ -737,10 +744,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
     elevation: 3,
   },
   vehicleImageContainer: {
@@ -846,7 +850,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   filtersModal: {
-    backgroundColor: '#fff',
+    color: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -858,7 +862,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    color: '#eee',
   },
   clearFiltersText: {
     fontSize: 16,
@@ -925,7 +929,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   sortModal: {
-    backgroundColor: '#fff',
+    color: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     minHeight: 300,
@@ -937,7 +941,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    color: '#eee',
   },
   sortTitle: {
     fontSize: 18,
@@ -953,10 +957,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#fff',
   },
   selectedSortOption: {
-    backgroundColor: '#f8fcfc',
+    backgroundColor: '#f0f9f9',
+    borderWidth: 1,
+    borderColor: '#4ECDC4',
   },
   sortOptionText: {
     fontSize: 16,

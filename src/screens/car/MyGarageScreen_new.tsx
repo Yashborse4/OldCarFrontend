@@ -172,6 +172,10 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
   const [sortBy, setSortBy] = useState<'date' | 'price' | 'views' | 'inquiries'>('date');
   const [searchQuery, setSearchQuery] = useState('');
 
+  useEffect(() => {
+    loadCars();
+  }, [loadCars]);
+
   const loadCars = useCallback(async () => {
     try {
       const userCars = await fetchUserCars();
@@ -182,10 +186,6 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       setLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    loadCars();
-  }, [loadCars]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -224,7 +224,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
   const handleStatusChange = async (carId: string, newStatus: Car['status']) => {
     try {
       await updateCarStatus(carId, newStatus);
-      setCars(prev => prev.map(car =>
+      setCars(prev => prev.map(car => 
         car.id === carId ? { ...car, status: newStatus, updatedAt: new Date().toISOString().split('T')[0] } : car
       ));
       Alert.alert('Success', `Car status updated to ${newStatus}`);
@@ -258,7 +258,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
 
   const handlePromoteCar = async (carId: string) => {
     // Mock promote functionality
-    setCars(prev => prev.map(car =>
+    setCars(prev => prev.map(car => 
       car.id === carId ? { ...car, isPromoted: true } : car
     ));
     Alert.alert('Success', 'Your car has been promoted for better visibility!');
@@ -294,7 +294,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
 
     // Apply search
     if (searchQuery.trim()) {
-      filtered = filtered.filter(car =>
+      filtered = filtered.filter(car => 
         car.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         car.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
         car.model.toLowerCase().includes(searchQuery.toLowerCase())
@@ -739,7 +739,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
   const SortModal = () => (
     <Modal visible={showSortModal} transparent animationType="fade">
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+        <Animatable.View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Sort by</Text>
           {[
             { key: 'date', label: 'Last Updated', icon: 'access-time' },
@@ -791,7 +791,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </Animatable.View>
       </View>
     </Modal>
   );
@@ -800,7 +800,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <MaterialIcons name="refresh" size={48} color={colors.primary} />
+            <MaterialIcons name="refresh" size={48} color={colors.primary} />
           <Text style={{ color: colors.textSecondary, marginTop: 12 }}>Loading your cars...</Text>
         </View>
       </SafeAreaView>
@@ -814,9 +814,9 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
         backgroundColor="transparent"
         translucent
       />
-
+      
       <SortModal />
-
+      
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -824,7 +824,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Garage</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity
+          <TouchableOpacity 
             style={styles.headerButton}
             onPress={() => navigation.navigate('SellCar')}
           >
@@ -878,7 +878,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setSearchQuery}
             />
           </View>
-
+          
           <View style={styles.filtersRow}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterButtons}>
               {[
@@ -907,7 +907,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-
+            
             <TouchableOpacity style={styles.sortButton} onPress={() => setShowSortModal(true)}>
               <Text style={styles.sortButtonText}>Sort</Text>
               <AntDesign name="filter" size={12} color={colors.textSecondary} />
@@ -918,23 +918,23 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
         {/* Cars List */}
         {filteredCars.length === 0 ? (
           <View style={styles.emptyState}>
-            <MaterialIcons
-              name="directions-car"
-              size={64}
-              color={colors.textSecondary}
+            <MaterialIcons 
+              name="directions-car" 
+              size={64} 
+              color={colors.textSecondary} 
               style={styles.emptyIcon}
             />
             <Text style={styles.emptyTitle}>
               {searchQuery.trim() ? 'No cars found' : 'No cars yet'}
             </Text>
             <Text style={styles.emptyMessage}>
-              {searchQuery.trim()
+              {searchQuery.trim() 
                 ? `No cars match "${searchQuery}". Try adjusting your search.`
                 : 'Start by adding your first car to get more visibility and potential buyers.'
               }
             </Text>
             {!searchQuery.trim() && (
-              <TouchableOpacity
+              <TouchableOpacity 
                 style={styles.addCarButton}
                 onPress={() => navigation.navigate('SellCar')}
               >
@@ -946,24 +946,26 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
         ) : (
           <View style={styles.carsList}>
             {filteredCars.map((car) => (
-              <View
-                key={car.id}
+              <Animatable.View 
+                key={car.id} 
+                
+               
                 style={styles.carCard}
               >
                 <View style={styles.carImageContainer}>
                   <Image source={{ uri: car.images[0] }} style={styles.carImage} />
-
+                  
                   <View style={[styles.statusBadge, { backgroundColor: getStatusColor(car.status) + '20' }]}>
-                    <MaterialIcons
-                      name={getStatusIcon(car.status) as any}
-                      size={12}
-                      color={getStatusColor(car.status)}
+                    <MaterialIcons 
+                      name={getStatusIcon(car.status) as any} 
+                      size={12} 
+                      color={getStatusColor(car.status)} 
                     />
                     <Text style={[styles.statusText, { color: getStatusColor(car.status) }]}>
                       {car.status}
                     </Text>
                   </View>
-
+                  
                   {car.isPromoted && (
                     <View style={styles.promotedBadge}>
                       <Text style={styles.promotedText}>PROMOTED</Text>
@@ -1009,7 +1011,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                         Manage
                       </Text>
                     </TouchableOpacity>
-
+                    
                     <TouchableOpacity
                       style={[styles.actionButton, styles.secondaryActionButton]}
                       onPress={() => handleCarAction(car, 'edit')}
@@ -1019,7 +1021,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                         Edit
                       </Text>
                     </TouchableOpacity>
-
+                    
                     <TouchableOpacity
                       style={[styles.actionButton, styles.secondaryActionButton]}
                       onPress={() => handleCarAction(car, 'view')}
@@ -1031,7 +1033,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                     </TouchableOpacity>
                   </View>
                 </View>
-              </View>
+              </Animatable.View>
             ))}
           </View>
         )}

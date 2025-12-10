@@ -11,45 +11,23 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../context/AuthContext';
-import { PermissionGate, usePermissions } from '../../components/PermissionGate';
+import { PermissionGate, usePermissions } from '../../config/PermissionGate';
 import { Permission } from '../../utils/permissions';
-import { carApi } from '../../services/CarApi';
+import { carApi, Vehicle } from '../../services/CarApi';
 import { ErrorHandler } from '../../components/ErrorHandler';
-import { VehicleCard } from '../../components/VehicleCard';
+import { VehicleCard } from '../../config/VehicleCard';
+import { RootStackParamList } from '../../navigation/types';
 
-interface Vehicle {
-  id: string;
-  make: string;
-  model: string;
-  year: number;
-  price: number;
-  mileage: number;
-  location: string;
-  condition: string;
-  images: string[];
-  dealerId: string;
-  dealerName: string;
-  views: number;
-  status: string;
-  featured: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
 
-interface PageData {
-  content: Vehicle[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
+type CarListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'VehicleDetail'>;
 
 const CarListScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<CarListScreenNavigationProp>();
   const { user, isAuthenticated } = useAuth();
   const canCreateCars = usePermissions([Permission.CREATE_CAR]);
-  
+
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -57,6 +35,7 @@ const CarListScreen: React.FC = () => {
   const [error, setError] = useState<Error | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [hasMorePages, setHasMorePages] = useState(false);
 
   const PAGE_SIZE = 20;
@@ -71,17 +50,16 @@ const CarListScreen: React.FC = () => {
       }
 
       const response = await carApi.getAllVehicles(page, PAGE_SIZE, 'createdAt,desc');
-      const pageData: PageData = response;
-
       if (refresh || page === 0) {
-        setVehicles(pageData.content);
+        setVehicles(response.content || []);
       } else {
-        setVehicles(prev => [...prev, ...pageData.content]);
+        setVehicles(prev => [...prev, ...(response.content || [])]);
       }
 
-      setCurrentPage(pageData.number);
-      setTotalPages(pageData.totalPages);
-      setHasMorePages(pageData.number < pageData.totalPages - 1);
+      setCurrentPage(response.number || page);
+      setTotalPages(response.totalPages);
+      setTotalElements(response.totalElements);
+      setHasMorePages((response.number || page) < response.totalPages - 1);
 
     } catch (error: any) {
       console.error('Error fetching vehicles:', error);
@@ -107,7 +85,7 @@ const CarListScreen: React.FC = () => {
   const handleVehiclePress = useCallback((vehicle: Vehicle) => {
     // Track view
     carApi.trackVehicleView(vehicle.id).catch(console.error);
-    
+
     // Navigate to details
     navigation.navigate('VehicleDetail', { vehicleId: vehicle.id });
   }, [navigation]);
@@ -128,13 +106,13 @@ const CarListScreen: React.FC = () => {
   }, [isAuthenticated, navigation]);
 
   const handleEditVehicle = useCallback((vehicle: Vehicle) => {
-    navigation.navigate('EditVehicle', { vehicleId: vehicle.id });
+    navigation.navigate('VehicleDetail', { vehicleId: vehicle.id });
   }, [navigation]);
 
   const handleDeleteVehicle = useCallback(async (vehicle: Vehicle) => {
     Alert.alert(
       'Delete Vehicle',
-      'Are you sure you want to delete this vehicle listing?',
+      'Are you sure you want to delete this vehicle listing? ',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -159,11 +137,8 @@ const CarListScreen: React.FC = () => {
     <VehicleCard
       vehicle={item}
       onPress={() => handleVehiclePress(item)}
-      onEdit={user?.userId.toString() === item.dealerId ? () => handleEditVehicle(item) : undefined}
-      onDelete={user?.userId.toString() === item.dealerId ? () => handleDeleteVehicle(item) : undefined}
-      showActions={isAuthenticated}
     />
-  ), [user, isAuthenticated, handleVehiclePress, handleEditVehicle, handleDeleteVehicle]);
+  ), [handleVehiclePress]);
 
   const renderFooter = useCallback(() => {
     if (!loadingMore) return null;
@@ -179,7 +154,7 @@ const CarListScreen: React.FC = () => {
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyTitle}>No Vehicles Found</Text>
       <Text style={styles.emptyMessage}>
-        {isAuthenticated 
+        {isAuthenticated
           ? "There are no vehicles listed yet. Be the first to list your car!"
           : "There are no vehicles listed yet."
         }
@@ -225,7 +200,7 @@ const CarListScreen: React.FC = () => {
       </View>
 
       {/* Error Handler */}
-      <ErrorHandler 
+      <ErrorHandler
         error={error}
         onRetry={retryFetch}
         onDismiss={() => setError(null)}
@@ -251,7 +226,7 @@ const CarListScreen: React.FC = () => {
       {vehicles.length > 0 && (
         <View style={styles.statsContainer}>
           <Text style={styles.statsText}>
-            Showing {vehicles.length} of {totalPages * PAGE_SIZE} vehicles
+            Showing {vehicles.length} of {totalElements} vehicles
           </Text>
         </View>
       )}

@@ -18,8 +18,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { AntDesign } from '@react-native-vector-icons/ant-design';
-import * as Animatable from 'react-native-animatable';
-import { useTheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -91,7 +90,8 @@ const renewCar = async (carId: string) => {
 };
 
 const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { isDark, colors: themeColors } = useTheme();
+  const { theme, isDark } = useTheme();
+  const colors = theme.colors;
   const [car, setCar] = useState<Car>(route.params.car);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
@@ -210,9 +210,9 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
         {
           text: 'Duplicate',
           onPress: () => {
-            navigation.navigate('EditCar', { 
-              carId: car.id, 
-              isDuplicate: true 
+            navigation.navigate('EditCar', {
+              carId: car.id,
+              isDuplicate: true
             });
           },
         },
@@ -222,11 +222,11 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const getStatusColor = (status: Car['status']) => {
     switch (status) {
-      case 'active': return themeColors.success;
-      case 'inactive': return themeColors.warning;
-      case 'sold': return themeColors.error;
-      case 'draft': return themeColors.textSecondary;
-      default: return themeColors.textSecondary;
+      case 'active': return colors.success;
+      case 'inactive': return colors.warning;
+      case 'sold': return colors.error;
+      case 'draft': return colors.textSecondary;
+      default: return colors.textSecondary;
     }
   };
 
@@ -256,7 +256,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       title: 'Edit Details',
       description: 'Update car information, photos, and description',
       icon: 'edit',
-      color: themeColors.primary,
+      color: colors.primary,
       onPress: () => navigation.navigate('EditCar', { carId: car.id }),
     },
     {
@@ -264,7 +264,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       title: 'Change Price',
       description: 'Update your car\'s selling price',
       icon: 'attach-money',
-      color: themeColors.success,
+      color: colors.success,
       onPress: () => setShowPriceModal(true),
     },
     {
@@ -272,7 +272,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       title: 'Change Status',
       description: 'Make active, inactive, or mark as sold',
       icon: 'toggle-on',
-      color: themeColors.warning,
+      color: colors.warning,
       onPress: () => setShowStatusModal(true),
     },
     {
@@ -313,7 +313,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       title: 'Delete Listing',
       description: 'Permanently remove this car listing',
       icon: 'delete',
-      color: themeColors.error,
+      color: colors.error,
       onPress: () => setShowDeleteModal(true),
     },
   ];
@@ -321,7 +321,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: themeColors.background,
+      backgroundColor: colors.background
     },
     header: {
       flexDirection: 'row',
@@ -330,14 +330,14 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       paddingHorizontal: 16,
       paddingTop: 12,
       paddingBottom: 8,
-      backgroundColor: themeColors.surface,
+      backgroundColor: colors.surface,
       borderBottomWidth: 1,
-      borderBottomColor: themeColors.border,
+      borderBottomColor: colors.border
     },
     headerTitle: {
       fontSize: 18,
       fontWeight: '700',
-      color: themeColors.text,
+      color: colors.text,
       flex: 1,
       textAlign: 'center',
       marginHorizontal: 16,
@@ -378,7 +378,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 20,
-      backgroundColor: themeColors.primary,
+      backgroundColor: colors.primary
     },
     promotedText: {
       color: '#111827',
@@ -386,27 +386,24 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       fontWeight: '700',
     },
     carInfo: {
-      backgroundColor: themeColors.surface,
+      backgroundColor: colors.surface,
       marginHorizontal: 16,
       marginBottom: 16,
       borderRadius: 16,
       padding: 16,
       elevation: 2,
-      shadowColor: themeColors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+
     },
     carTitle: {
       fontSize: 20,
       fontWeight: '700',
-      color: themeColors.text,
+      color: colors.text,
       marginBottom: 4,
     },
     carPrice: {
       fontSize: 24,
       fontWeight: '700',
-      color: themeColors.primary,
+      color: colors.primary,
       marginBottom: 8,
     },
     carDetails: {
@@ -422,7 +419,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     },
     carDetailText: {
       fontSize: 14,
-      color: themeColors.textSecondary,
+      color: colors.textSecondary,
       marginLeft: 4,
     },
     carStats: {
@@ -430,7 +427,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       justifyContent: 'space-around',
       paddingTop: 12,
       borderTopWidth: 1,
-      borderTopColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+      borderTopColor: colors.border,
     },
     statItem: {
       alignItems: 'center',
@@ -438,11 +435,11 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     statValue: {
       fontSize: 18,
       fontWeight: '700',
-      color: themeColors.text,
+      color: colors.text
     },
     statLabel: {
       fontSize: 12,
-      color: themeColors.textSecondary,
+      color: colors.textSecondary,
       marginTop: 2,
     },
     actionsContainer: {
@@ -452,18 +449,15 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     sectionTitle: {
       fontSize: 18,
       fontWeight: '700',
-      color: themeColors.text,
+      color: colors.text,
       marginBottom: 12,
     },
     actionCard: {
-      backgroundColor: themeColors.surface,
+      backgroundColor: colors.surface,
       borderRadius: 12,
       marginBottom: 8,
       elevation: 2,
-      shadowColor: themeColors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+
       overflow: 'hidden',
     },
     actionButton: {
@@ -485,12 +479,12 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     actionTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: themeColors.text,
+      color: colors.text,
       marginBottom: 2,
     },
     actionDescription: {
       fontSize: 13,
-      color: themeColors.textSecondary,
+      color: colors.textSecondary,
       lineHeight: 18,
     },
     actionChevron: {
@@ -506,7 +500,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       alignItems: 'center',
     },
     modalContent: {
-      backgroundColor: themeColors.surface,
+      backgroundColor: colors.surface,
       borderRadius: 16,
       padding: 20,
       width: width * 0.85,
@@ -515,13 +509,13 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     modalTitle: {
       fontSize: 18,
       fontWeight: '700',
-      color: themeColors.text,
+      color: colors.text,
       marginBottom: 8,
       textAlign: 'center',
     },
     modalSubtitle: {
       fontSize: 14,
-      color: themeColors.textSecondary,
+      color: colors.textSecondary,
       textAlign: 'center',
       marginBottom: 20,
       lineHeight: 20,
@@ -537,8 +531,8 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       borderColor: 'transparent',
     },
     statusOptionActive: {
-      borderColor: themeColors.primary,
-      backgroundColor: `${themeColors.primary}10`,
+      borderColor: colors.primary,
+      backgroundColor: `${colors.primary}10`,
     },
     statusOptionContent: {
       flex: 1,
@@ -547,11 +541,11 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     statusOptionTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: themeColors.text,
+      color: colors.text
     },
     statusOptionDescription: {
       fontSize: 13,
-      color: themeColors.textSecondary,
+      color: colors.textSecondary,
       marginTop: 2,
       lineHeight: 18,
     },
@@ -561,17 +555,17 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     priceInputLabel: {
       fontSize: 16,
       fontWeight: '600',
-      color: themeColors.text,
+      color: colors.text,
       marginBottom: 8,
     },
     priceInput: {
       borderWidth: 1,
-      borderColor: themeColors.border,
+      borderColor: colors.border,
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 12,
       fontSize: 16,
-      color: themeColors.text,
+      color: colors.text,
       backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
     },
     modalButtons: {
@@ -586,30 +580,26 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       borderRadius: 8,
       marginHorizontal: 4,
       alignItems: 'center',
-    },
-    modalButtonPrimary: {
-      backgroundColor: themeColors.primary,
+      backgroundColor: colors.primary
     },
     modalButtonSecondary: {
       backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
       borderWidth: 1,
-      borderColor: themeColors.border,
+      borderColor: colors.border
     },
     modalButtonDanger: {
-      backgroundColor: themeColors.error,
+      backgroundColor: colors.error
     },
     modalButtonText: {
       fontSize: 14,
       fontWeight: '600',
-    },
-    modalButtonTextPrimary: {
-      color: '#111827',
+      color: colors.text,
     },
     modalButtonTextSecondary: {
-      color: themeColors.textSecondary,
+      color: colors.textSecondary
     },
     modalButtonTextDanger: {
-      color: '#FFFFFF',
+      color: colors.surface,
     },
     deleteWarning: {
       backgroundColor: isDark ? 'rgba(255, 59, 48, 0.1)' : 'rgba(255, 59, 48, 0.1)',
@@ -617,11 +607,11 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       padding: 12,
       marginBottom: 16,
       borderWidth: 1,
-      borderColor: themeColors.error + '30',
+      borderColor: colors.error + '30',
     },
     deleteWarningText: {
       fontSize: 14,
-      color: themeColors.error,
+      color: colors.error,
       textAlign: 'center',
       lineHeight: 20,
     },
@@ -633,7 +623,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
     },
     promoteFeatureText: {
       fontSize: 14,
-      color: themeColors.text,
+      color: colors.text,
       marginLeft: 8,
       flex: 1,
     },
@@ -643,17 +633,17 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       padding: 12,
       marginVertical: 12,
       borderWidth: 1,
-      borderColor: themeColors.primary + '30',
+      borderColor: colors.primary + '30',
     },
     promotePricingText: {
       fontSize: 16,
       fontWeight: '700',
-      color: themeColors.primary,
+      color: colors.primary,
       textAlign: 'center',
     },
     promotePricingSubtext: {
       fontSize: 12,
-      color: themeColors.textSecondary,
+      color: colors.textSecondary,
       textAlign: 'center',
       marginTop: 4,
     },
@@ -663,12 +653,12 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
   const StatusModal = () => (
     <Modal visible={showStatusModal} transparent animationType="fade">
       <View style={styles.modalOverlay}>
-        <Animatable.View animation="zoomIn" duration={300} style={styles.modalContent}>
+        <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Change Status</Text>
           <Text style={styles.modalSubtitle}>
             Choose the status that best describes your car listing
           </Text>
-          
+
           {[
             { key: 'active', label: 'Active', icon: 'check-circle' },
             { key: 'inactive', label: 'Inactive', icon: 'pause-circle' },
@@ -696,11 +686,11 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
                 </Text>
               </View>
               {car.status === status.key && (
-                <MaterialIcons name="check" size={20} color={themeColors.primary} />
+                <MaterialIcons name="check" size={20} color={colors.primary} />
               )}
             </TouchableOpacity>
           ))}
-          
+
           <View style={styles.modalButtons}>
             <TouchableOpacity
               style={[styles.modalButton, styles.modalButtonSecondary]}
@@ -712,7 +702,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
               </Text>
             </TouchableOpacity>
           </View>
-        </Animatable.View>
+        </View>
       </View>
     </Modal>
   );
@@ -721,12 +711,12 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
   const PriceModal = () => (
     <Modal visible={showPriceModal} transparent animationType="fade">
       <View style={styles.modalOverlay}>
-        <Animatable.View animation="zoomIn" duration={300} style={styles.modalContent}>
+        <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Update Price</Text>
           <Text style={styles.modalSubtitle}>
             Set a competitive price to attract more buyers
           </Text>
-          
+
           <View style={styles.priceInputContainer}>
             <Text style={styles.priceInputLabel}>New Price</Text>
             <TextInput
@@ -734,11 +724,11 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
               value={newPrice}
               onChangeText={setNewPrice}
               placeholder="₹0"
-              placeholderTextColor={themeColors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               keyboardType="numeric"
             />
           </View>
-          
+
           <View style={styles.modalButtons}>
             <TouchableOpacity
               style={[styles.modalButton, styles.modalButtonSecondary]}
@@ -753,16 +743,16 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.modalButton, styles.modalButtonPrimary]}
+              style={[styles.modalButton, styles.modalButton]}
               onPress={handlePriceUpdate}
               disabled={loading}
             >
-              <Text style={[styles.modalButtonText, styles.modalButtonTextPrimary]}>
+              <Text style={[styles.modalButtonText, styles.modalButtonText]}>
                 {loading ? 'Updating...' : 'Update Price'}
               </Text>
             </TouchableOpacity>
           </View>
-        </Animatable.View>
+        </View>
       </View>
     </Modal>
   );
@@ -771,19 +761,19 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
   const DeleteModal = () => (
     <Modal visible={showDeleteModal} transparent animationType="fade">
       <View style={styles.modalOverlay}>
-        <Animatable.View animation="zoomIn" duration={300} style={styles.modalContent}>
+        <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Delete Listing</Text>
-          
+
           <View style={styles.deleteWarning}>
             <Text style={styles.deleteWarningText}>
               ⚠️ This action cannot be undone. Your car listing and all associated data will be permanently deleted.
             </Text>
           </View>
-          
+
           <Text style={styles.modalSubtitle}>
             Are you sure you want to delete "{car.title}"?
           </Text>
-          
+
           <View style={styles.modalButtons}>
             <TouchableOpacity
               style={[styles.modalButton, styles.modalButtonSecondary]}
@@ -804,7 +794,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
               </Text>
             </TouchableOpacity>
           </View>
-        </Animatable.View>
+        </View>
       </View>
     </Modal>
   );
@@ -813,17 +803,17 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
   const PromoteModal = () => (
     <Modal visible={showPromoteModal} transparent animationType="fade">
       <View style={styles.modalOverlay}>
-        <Animatable.View animation="zoomIn" duration={300} style={styles.modalContent}>
+        <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Promote Your Listing</Text>
           <Text style={styles.modalSubtitle}>
             Get more visibility and attract potential buyers faster
           </Text>
-          
+
           <View style={styles.promotePricing}>
             <Text style={styles.promotePricingText}>₹299 for 7 days</Text>
             <Text style={styles.promotePricingSubtext}>Get 5x more views on average</Text>
           </View>
-          
+
           {[
             'Top position in search results',
             'Featured in homepage carousel',
@@ -832,11 +822,11 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
             'Extended visibility period',
           ].map((feature, index) => (
             <View key={index} style={styles.promoteFeature}>
-              <MaterialIcons name="check-circle" size={16} color={themeColors.success} />
+              <MaterialIcons name="check-circle" size={16} color={colors.success} />
               <Text style={styles.promoteFeatureText}>{feature}</Text>
             </View>
           ))}
-          
+
           <View style={styles.modalButtons}>
             <TouchableOpacity
               style={[styles.modalButton, styles.modalButtonSecondary]}
@@ -848,16 +838,16 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.modalButton, styles.modalButtonPrimary]}
+              style={[styles.modalButton, styles.modalButton]}
               onPress={handlePromoteCar}
               disabled={loading}
             >
-              <Text style={[styles.modalButtonText, styles.modalButtonTextPrimary]}>
+              <Text style={[styles.modalButtonText, styles.modalButtonText]}>
                 {loading ? 'Processing...' : 'Promote Now'}
               </Text>
             </TouchableOpacity>
           </View>
-        </Animatable.View>
+        </View>
       </View>
     </Modal>
   );
@@ -869,20 +859,20 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
         backgroundColor="transparent"
         translucent
       />
-      
+
       <StatusModal />
       <PriceModal />
       <DeleteModal />
       <PromoteModal />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <AntDesign name="arrow-left" size={24} color={themeColors.text} />
+          <AntDesign name="arrow-left" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Manage Car</Text>
         <TouchableOpacity onPress={() => navigation.navigate('VehicleDetail', { carId: car.id })}>
-          <MaterialIcons name="visibility" size={24} color={themeColors.text} />
+          <MaterialIcons name="visibility" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -890,18 +880,18 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* Car Image */}
         <View style={styles.carImageContainer}>
           <Image source={{ uri: car.images[0] }} style={styles.carImage} />
-          
+
           <View style={[styles.statusOverlay, { backgroundColor: getStatusColor(car.status) + '20' }]}>
-            <MaterialIcons 
-              name={getStatusIcon(car.status) as any} 
-              size={16} 
-              color={getStatusColor(car.status)} 
+            <MaterialIcons
+              name={getStatusIcon(car.status) as any}
+              size={16}
+              color={getStatusColor(car.status)}
             />
             <Text style={[styles.statusText, { color: getStatusColor(car.status) }]}>
               {car.status}
             </Text>
           </View>
-          
+
           {car.isPromoted && (
             <View style={styles.promotedOverlay}>
               <Text style={styles.promotedText}>PROMOTED</Text>
@@ -913,22 +903,22 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.carInfo}>
           <Text style={styles.carTitle}>{car.title}</Text>
           <Text style={styles.carPrice}>{car.price}</Text>
-          
+
           <View style={styles.carDetails}>
             <View style={styles.carDetailItem}>
-              <MaterialIcons name="event" size={16} color={themeColors.textSecondary} />
+              <MaterialIcons name="event" size={16} color={colors.textSecondary} />
               <Text style={styles.carDetailText}>{car.year}</Text>
             </View>
             <View style={styles.carDetailItem}>
-              <MaterialIcons name="speed" size={16} color={themeColors.textSecondary} />
+              <MaterialIcons name="speed" size={16} color={colors.textSecondary} />
               <Text style={styles.carDetailText}>{car.mileage}</Text>
             </View>
             <View style={styles.carDetailItem}>
-              <MaterialIcons name="local-gas-station" size={16} color={themeColors.textSecondary} />
+              <MaterialIcons name="local-gas-station" size={16} color={colors.textSecondary} />
               <Text style={styles.carDetailText}>{car.fuelType}</Text>
             </View>
             <View style={styles.carDetailItem}>
-              <MaterialIcons name="location-on" size={16} color={themeColors.textSecondary} />
+              <MaterialIcons name="location-on" size={16} color={colors.textSecondary} />
               <Text style={styles.carDetailText}>{car.location}</Text>
             </View>
           </View>
@@ -952,12 +942,10 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* Actions */}
         <View style={styles.actionsContainer}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
-          
+
           {quickActions.map((action) => (
-            <Animatable.View 
+            <View
               key={action.id}
-              animation="fadeInUp"
-              delay={quickActions.indexOf(action) * 100}
               style={[styles.actionCard, action.disabled && styles.disabledAction]}
             >
               <TouchableOpacity
@@ -966,10 +954,10 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
                 disabled={action.disabled || loading}
               >
                 <View style={[styles.actionIconContainer, { backgroundColor: action.color + '20' }]}>
-                  <MaterialIcons 
-                    name={action.icon as any} 
-                    size={20} 
-                    color={action.color} 
+                  <MaterialIcons
+                    name={action.icon as any}
+                    size={20}
+                    color={action.color}
                   />
                 </View>
                 <View style={styles.actionContent}>
@@ -978,20 +966,19 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
                     {action.disabled && ' ✓'}
                   </Text>
                   <Text style={styles.actionDescription}>
-                    {action.disabled && action.id === 'promote' 
-                      ? 'Your car is already promoted' 
-                      : action.description
+                    {action.disabled && action.id === 'promote'
+                      ? 'Your car is already promoted' : action.description
                     }
                   </Text>
                 </View>
-                <MaterialIcons 
-                  name="chevron-right" 
-                  size={20} 
-                  color={themeColors.textSecondary}
+                <MaterialIcons
+                  name="chevron-right"
+                  size={20}
+                  color={colors.textSecondary}
                   style={styles.actionChevron}
                 />
               </TouchableOpacity>
-            </Animatable.View>
+            </View>
           ))}
         </View>
       </ScrollView>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,8 +14,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import LinearGradient from 'react-native-linear-gradient';
-import { useTheme } from '../../theme';
+
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Vehicle, VehiclePerformance, carApi } from '../../services/CarApi';
@@ -39,21 +38,21 @@ interface AnalyticsData {
 
 const VehicleAnalyticsScreen: React.FC = () => {
   const navigation = useNavigation<VehicleAnalyticsScreenNavigationProp>();
-  const { colors: themeColors, spacing } = useTheme();
-  
+  const colors = {
+    text: '#1A202C',
+    primary: '#FFD700',
+  };
+  const spacing = { md: 16 };
+
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState('7d');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadAnalyticsData();
-  }, [selectedPeriod]);
-
-  const loadAnalyticsData = async () => {
+  const loadAnalyticsData = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // For now, using mock data. In real implementation, these would be API calls
       const mockAnalyticsData: AnalyticsData = {
         totalVehicles: 15,
@@ -116,7 +115,11 @@ const VehicleAnalyticsScreen: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadAnalyticsData();
+  }, [selectedPeriod, loadAnalyticsData]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -218,7 +221,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
             <Text style={styles.viewAllText}>View All</Text>
           </TouchableOpacity>
         </View>
-        
+
         <FlatList
           data={analyticsData.topPerformers.slice(0, 3)}
           horizontal
@@ -228,17 +231,14 @@ const VehicleAnalyticsScreen: React.FC = () => {
               style={styles.performerCard}
               onPress={() => navigation.navigate('VehicleDetail', { vehicleId: item.id })}
             >
-              <LinearGradient
-                colors={['#4ECDC4', '#44A08D']}
-                style={styles.performerGradient}
-              >
+              <View style={styles.performerGradient}>
                 <Text style={styles.performerTitle}>
                   {item.year} {item.make} {item.model}
                 </Text>
                 <Text style={styles.performerPrice}>
                   {item.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
                 </Text>
-                
+
                 <View style={styles.performerStats}>
                   <View style={styles.performerStat}>
                     <MaterialIcons name="visibility" size={16} color="#fff" />
@@ -253,7 +253,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
                     <Text style={styles.performerStatText}>{item.shares}</Text>
                   </View>
                 </View>
-              </LinearGradient>
+              </View>
             </TouchableOpacity>
           )}
           keyExtractor={(item) => item.id}
@@ -270,7 +270,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
     return (
       <Card style={styles.section} variant="elevated">
         <Text style={styles.sectionTitle}>Views by Location</Text>
-        
+
         <View style={styles.locationStatsContainer}>
           {analyticsData.locationStats.map((stat, index) => (
             <View key={index} style={styles.locationStatRow}>
@@ -312,12 +312,12 @@ const VehicleAnalyticsScreen: React.FC = () => {
     return (
       <Card style={styles.section} variant="elevated">
         <Text style={styles.sectionTitle}>Recent Activity</Text>
-        
+
         <View style={styles.activityList}>
           {analyticsData.recentActivity.map((activity, index) => (
             <View key={index} style={styles.activityItem}>
               <View style={styles.activityIcon}>
-                <MaterialIcons name={getActivityIcon(activity.type)} size={16} color={themeColors.primary} />
+                <MaterialIcons name={getActivityIcon(activity.type)} size={16} color={colors.primary} />
               </View>
               <View style={styles.activityContent}>
                 <Text style={styles.activityText}>
@@ -328,7 +328,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
             </View>
           ))}
         </View>
-        
+
         <Button
           title="View All Activity"
           variant="outline"
@@ -347,11 +347,11 @@ const VehicleAnalyticsScreen: React.FC = () => {
     return (
       <Card style={styles.section} variant="elevated">
         <Text style={styles.sectionTitle}>Monthly Performance</Text>
-        
+
         <View style={styles.chartContainer}>
           <View style={styles.chartLegend}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: themeColors.primary }]} />
+              <View style={[styles.legendColor, { backgroundColor: colors.primary }]} />
               <Text style={styles.legendText}>Views</Text>
             </View>
             <View style={styles.legendItem}>
@@ -359,7 +359,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
               <Text style={styles.legendText}>Inquiries</Text>
             </View>
           </View>
-          
+
           <View style={styles.chart}>
             {analyticsData.monthlyStats.map((stat, index) => (
               <View key={index} style={styles.chartBar}>
@@ -367,16 +367,16 @@ const VehicleAnalyticsScreen: React.FC = () => {
                   <View
                     style={[
                       styles.bar,
-                      { 
+                      {
                         height: (stat.views / maxViews) * 100,
-                        backgroundColor: themeColors.primary
+                        backgroundColor: colors.primary
                       }
                     ]}
                   />
                   <View
                     style={[
                       styles.bar,
-                      { 
+                      {
                         height: (stat.inquiries / maxViews) * 100,
                         backgroundColor: '#FF6B6B',
                         position: 'absolute',
@@ -412,7 +412,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
+          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Vehicle Analytics</Text>
         <View style={styles.headerRight} />
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderColor: '#eee',
   },
   backButton: {
     padding: 8,
@@ -478,15 +478,12 @@ const styles = StyleSheet.create({
   },
   periodSelector: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    color: '#fff',
     marginHorizontal: 16,
     marginVertical: 8,
     borderRadius: 12,
     padding: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
     elevation: 2,
   },
   periodButton: {
@@ -576,6 +573,7 @@ const styles = StyleSheet.create({
   performerGradient: {
     padding: 16,
     minHeight: 120,
+    backgroundColor: '#4ECDC4',
   },
   performerTitle: {
     fontSize: 16,
@@ -625,13 +623,13 @@ const styles = StyleSheet.create({
   },
   locationBarContainer: {
     height: 6,
-    backgroundColor: '#f0f0f0',
+    color: '#f0f0f0',
     borderRadius: 3,
     overflow: 'hidden',
   },
   locationBar: {
     height: '100%',
-    backgroundColor: '#4ECDC4',
+    color: '#4ECDC4',
     borderRadius: 3,
   },
   activityList: {
@@ -642,7 +640,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    color: '#f0f0f0',
   },
   activityIcon: {
     width: 32,

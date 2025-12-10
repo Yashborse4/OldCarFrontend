@@ -12,14 +12,21 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useTheme } from '../../theme';
 import { AntDesign } from '@react-native-vector-icons/ant-design';
-import LinearGradient from 'react-native-linear-gradient';
+
 import MaterialIcons from '@react-native-vector-icons/material-icons';
 
 const SellCarScreen = ({ navigation }: { navigation: any }) => {
-  const { isDark, colors: themeColors } = useTheme();
-  
+  const isDark = false; // Hardcoded to false (light theme)
+  const colors = {
+    background: '#FAFBFC',
+    surface: '#FFFFFF',
+    text: '#1A202C',
+    textSecondary: '#4A5568',
+    primary: '#FFD700',
+    border: '#E2E8F0',
+  };
+
   const [formData, setFormData] = useState({
     make: '',
     model: '',
@@ -34,7 +41,7 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
 
   const [selectedFuelType, setSelectedFuelType] = useState('');
   const [selectedTransmission, setSelectedTransmission] = useState('');
-  
+
   const fuelTypes = ['Petrol', 'Diesel', 'Electric', 'Hybrid', 'CNG'];
   const transmissionTypes = ['Manual', 'Automatic', 'CVT', 'DCT'];
 
@@ -52,96 +59,96 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
-      
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} translucent={false} hidden={false} />
+
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: themeColors.border }]}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
+          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Sell Your Car</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Sell Your Car</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView 
+        <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
           {/* Form Container */}
-          <View style={[styles.formContainer, { backgroundColor: themeColors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Car Details</Text>
-            
+          <View style={[styles.formContainer, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Car Details</Text>
+
             {/* Make & Model */}
             <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: themeColors.text }]}>Make</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Make</Text>
               <TextInput
-                style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+                style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
                 placeholder="e.g. Toyota, Honda, BMW"
-                placeholderTextColor={themeColors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={formData.make}
                 onChangeText={(text) => handleInputChange('make', text)}
               />
             </View>
-            
+
             <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: themeColors.text }]}>Model</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Model</Text>
               <TextInput
-                style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+                style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
                 placeholder="e.g. Camry, Civic, 3 Series"
-                placeholderTextColor={themeColors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={formData.model}
                 onChangeText={(text) => handleInputChange('model', text)}
               />
             </View>
-            
+
             {/* Year & Price */}
             <View style={styles.rowContainer}>
               <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={[styles.label, { color: themeColors.text }]}>Year</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Year</Text>
                 <TextInput
-                  style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+                  style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
                   placeholder="e.g. 2019"
-                  placeholderTextColor={themeColors.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   keyboardType="number-pad"
                   value={formData.year}
                   onChangeText={(text) => handleInputChange('year', text)}
                 />
               </View>
-              
+
               <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
-                <Text style={[styles.label, { color: themeColors.text }]}>Price (₹)</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Price (₹)</Text>
                 <TextInput
-                  style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+                  style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
                   placeholder="e.g. 500000"
-                  placeholderTextColor={themeColors.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   keyboardType="number-pad"
                   value={formData.price}
                   onChangeText={(text) => handleInputChange('price', text)}
                 />
               </View>
             </View>
-            
+
             {/* Kilometers */}
             <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: themeColors.text }]}>Kilometers Driven</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Kilometers Driven</Text>
               <TextInput
-                style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }]}
+                style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
                 placeholder="e.g. 45000"
-                placeholderTextColor={themeColors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 keyboardType="number-pad"
                 value={formData.kilometers}
                 onChangeText={(text) => handleInputChange('kilometers', text)}
               />
             </View>
-            
+
             {/* Fuel Type */}
             <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: themeColors.text }]}>Fuel Type</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Fuel Type</Text>
               <View style={styles.optionsContainer}>
                 {fuelTypes.map((type) => (
                   <TouchableOpacity
@@ -149,17 +156,17 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
                     style={[
                       styles.optionButton,
                       { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                      selectedFuelType === type && { backgroundColor: themeColors.primary }
+                      selectedFuelType === type && { backgroundColor: colors.primary }
                     ]}
                     onPress={() => {
                       setSelectedFuelType(type);
                       handleInputChange('fuelType', type);
                     }}
                   >
-                    <Text 
+                    <Text
                       style={[
-                        styles.optionText, 
-                        { color: themeColors.text },
+                        styles.optionText,
+                        { color: colors.text },
                         selectedFuelType === type && { color: isDark ? '#111827' : '#111827' }
                       ]}
                     >
@@ -169,10 +176,10 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
                 ))}
               </View>
             </View>
-            
+
             {/* Transmission */}
             <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: themeColors.text }]}>Transmission</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Transmission</Text>
               <View style={styles.optionsContainer}>
                 {transmissionTypes.map((type) => (
                   <TouchableOpacity
@@ -180,17 +187,17 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
                     style={[
                       styles.optionButton,
                       { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                      selectedTransmission === type && { backgroundColor: themeColors.primary }
+                      selectedTransmission === type && { backgroundColor: colors.primary }
                     ]}
                     onPress={() => {
                       setSelectedTransmission(type);
                       handleInputChange('transmission', type);
                     }}
                   >
-                    <Text 
+                    <Text
                       style={[
-                        styles.optionText, 
-                        { color: themeColors.text },
+                        styles.optionText,
+                        { color: colors.text },
                         selectedTransmission === type && { color: isDark ? '#111827' : '#111827' }
                       ]}
                     >
@@ -200,10 +207,10 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
                 ))}
               </View>
             </View>
-            
+
             {/* Owner Number */}
             <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: themeColors.text }]}>Owner Number</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Owner Number</Text>
               <View style={styles.optionsContainer}>
                 {[1, 2, 3, 4].map((num) => (
                   <TouchableOpacity
@@ -211,14 +218,14 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
                     style={[
                       styles.optionButton,
                       { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                      formData.ownerNumber === num.toString() && { backgroundColor: themeColors.primary }
+                      formData.ownerNumber === num.toString() && { backgroundColor: colors.primary }
                     ]}
                     onPress={() => handleInputChange('ownerNumber', num.toString())}
                   >
-                    <Text 
+                    <Text
                       style={[
-                        styles.optionText, 
-                        { color: themeColors.text },
+                        styles.optionText,
+                        { color: colors.text },
                         formData.ownerNumber === num.toString() && { color: isDark ? '#111827' : '#111827' }
                       ]}
                     >
@@ -228,18 +235,18 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
                 ))}
               </View>
             </View>
-            
+
             {/* Description */}
             <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: themeColors.text }]}>Description</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Description</Text>
               <TextInput
                 style={[
-                  styles.input, 
-                  styles.textArea, 
-                  { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: themeColors.text }
+                  styles.input,
+                  styles.textArea,
+                  { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }
                 ]}
                 placeholder="Describe your car's condition, features, etc."
-                placeholderTextColor={themeColors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
@@ -247,34 +254,29 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
                 onChangeText={(text) => handleInputChange('description', text)}
               />
             </View>
-            
+
             {/* Photo Upload Section */}
             <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: themeColors.text }]}>Photos</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Photos</Text>
               <View style={styles.photoContainer}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.addPhotoButton, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}
                 >
-                  <AntDesign name="plus" size={24} color={themeColors.primary} />
-                  <Text style={[styles.addPhotoText, { color: themeColors.text }]}>Add Photos</Text>
+                  <AntDesign name="plus" size={24} color={colors.primary} />
+                  <Text style={[styles.addPhotoText, { color: colors.text }]}>Add Photos</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      
+
       {/* Submit Button */}
-      <View style={[styles.bottomContainer, { backgroundColor: themeColors.surface, borderTopColor: themeColors.border }]}>
+      <View style={[styles.bottomContainer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <LinearGradient
-            colors={['#FFD700', '#E6C200', '#D4AF37']} // Gold gradient
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 0}}
-            style={styles.submitButtonGradient}
-          >
+          <View style={styles.submitButtonGradient}>
             <Text style={styles.submitButtonText}>List Your Car</Text>
-          </LinearGradient>
+          </View>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -309,10 +311,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     margin: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+
     elevation: 4,
   },
   sectionTitle: {
@@ -386,6 +385,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#FFD700',
   },
   submitButtonText: {
     fontSize: 18,

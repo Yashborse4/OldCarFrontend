@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,10 +14,10 @@ import {
   Switch,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 
-import LinearGradient from 'react-native-linear-gradient';
-import { useTheme } from '../../theme';
+
+
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
@@ -48,7 +48,7 @@ const CoListVehicleScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   // Mock data - replace with API calls later
-  const mockVehicle: Vehicle = {
+  const mockVehicleMemo = React.useMemo<Vehicle>(() => ({
     id: vehicleId,
     make: 'BMW',
     model: 'X5',
@@ -66,9 +66,9 @@ const CoListVehicleScreen: React.FC = () => {
     views: 234,
     inquiries: 12,
     shares: 8,
-  };
+  }), [vehicleId]);
 
-  const mockGroups: DealerGroup[] = [
+  const mockGroupsMemo = React.useMemo<DealerGroup[]>(() => [
     {
       id: '1',
       name: 'Luxury Car Dealers Network',
@@ -94,33 +94,33 @@ const CoListVehicleScreen: React.FC = () => {
       ],
       createdAt: new Date().toISOString(),
     },
-  ];
+  ], []);
 
-  const mockDealers: DealerMember[] = [
+  const mockDealersMemo = React.useMemo<DealerMember[]>(() => [
     { id: 'dealer5', name: 'Lisa Garcia', dealership: 'Speed Motors', role: 'member' },
     { id: 'dealer6', name: 'Tom Anderson', dealership: 'Performance Plus', role: 'member' },
     { id: 'dealer7', name: 'Chris Lee', dealership: 'Turbo Cars', role: 'member' },
-  ];
+  ], []);
 
   useEffect(() => {
     loadVehicleAndOptions();
-  }, [vehicleId]);
+  }, []);
 
   useEffect(() => {
     filterOptions();
   }, [searchText, coListingOptions]);
 
-  const loadVehicleAndOptions = async () => {
+  const loadVehicleAndOptions = useCallback(async () => {
     try {
       setLoading(true);
       
       // Simulate API calls
       setTimeout(() => {
-        setVehicle(mockVehicle);
+        setVehicle(mockVehicleMemo);
         
         const options: CoListingOption[] = [
           // Groups
-          ...mockGroups.map(group => ({
+          ...mockGroupsMemo.map(group => ({
             id: `group_${group.id}`,
             type: 'group' as const,
             name: group.name,
@@ -130,7 +130,7 @@ const CoListVehicleScreen: React.FC = () => {
             selected: false,
           })),
           // Individual dealers
-          ...mockDealers.map(dealer => ({
+          ...mockDealersMemo.map(dealer => ({
             id: `dealer_${dealer.id}`,
             type: 'dealer' as const,
             name: dealer.name,
@@ -146,9 +146,9 @@ const CoListVehicleScreen: React.FC = () => {
       console.error('Error loading vehicle and options:', error);
       setLoading(false);
     }
-  };
+  }, [mockVehicleMemo, mockGroupsMemo, mockDealersMemo]);
 
-  const filterOptions = () => {
+  const filterOptions = useCallback(() => {
     if (!searchText.trim()) {
       setFilteredOptions(coListingOptions);
       return;
@@ -159,7 +159,7 @@ const CoListVehicleScreen: React.FC = () => {
       (option.subtitle && option.subtitle.toLowerCase().includes(searchText.toLowerCase()))
     );
     setFilteredOptions(filtered);
-  };
+  }, [searchText, coListingOptions]);
 
   const toggleOption = (option: CoListingOption) => {
     const updatedOptions = coListingOptions.map(opt =>
@@ -312,7 +312,7 @@ const CoListVehicleScreen: React.FC = () => {
           value={searchText}
           onChangeText={setSearchText}
           placeholder="Search groups or dealers..."
-          style={styles.searchInput}
+          
         />
       </View>
 
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderColor: '#eee',
   },
   backButton: {
     padding: 4,
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderColor: '#eee',
   },
   vehicleImageContainer: {
     width: 80,
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderColor: '#eee',
   },
   searchInput: {
     marginBottom: 0,
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#e8f8f5',
     borderBottomWidth: 1,
-    borderBottomColor: '#4ECDC4',
+    borderColor: '#4ECDC4',
   },
   selectionText: {
     fontSize: 14,
@@ -531,10 +531,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
     elevation: 3,
   },
   selectedOptionCard: {
@@ -607,8 +604,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkedBox: {
-    backgroundColor: '#fff',
-    borderColor: '#fff',
+    backgroundColor: '#4ECDC4',
+    borderColor: '#4ECDC4',
   },
   emptyState: {
     alignItems: 'center',
@@ -624,7 +621,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderColor: '#eee',
   },
   coListButton: {
     backgroundColor: '#4ECDC4',

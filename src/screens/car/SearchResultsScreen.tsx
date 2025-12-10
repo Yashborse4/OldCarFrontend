@@ -14,12 +14,11 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import { useTheme } from '../../theme';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import { Vehicle, VehicleSearchFilters, carApi } from '../../services/CarApi';
-import { VehicleCard } from '../../components/VehicleCard';
+import { VehicleCard } from '../../config/VehicleCard';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
@@ -29,12 +28,17 @@ const { width } = Dimensions.get('window');
 type SearchResultsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SearchResults'>;
 type SearchResultsScreenRouteProp = RouteProp<RootStackParamList, 'SearchResults'>;
 
-interface SearchResultsScreenProps {}
+interface SearchResultsScreenProps { }
 
 const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
   const navigation = useNavigation<SearchResultsScreenNavigationProp>();
   const route = useRoute<SearchResultsScreenRouteProp>();
-  const { colors: themeColors, spacing } = useTheme();
+  const colors = {
+    text: '#1A202C',
+    primary: '#FFD700',
+    textSecondary: '#4A5568',
+  };
+  const spacing = { md: 16 };
   const { filters: initialFilters } = route.params as { filters: VehicleSearchFilters };
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -53,9 +57,9 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
 
   useEffect(() => {
     searchVehicles(true);
-  }, [filters, sortBy]);
+  }, []);
 
-  const searchVehicles = async (reset: boolean = false) => {
+  const searchVehicles = useCallback(async (reset: boolean = false, pageOverride?: number) => {
     try {
       if (reset) {
         setLoading(true);
@@ -64,15 +68,16 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
         setLoadingMore(true);
       }
 
+      const nextPage = reset ? 0 : (pageOverride ?? 0);
       const searchFilters = {
         ...filters,
-        page: reset ? 0 : currentPage + 1,
+        page: nextPage,
         size: 10,
         sort: sortBy,
       };
 
       const response = await carApi.searchVehicles(searchFilters);
-      
+
       if (reset) {
         setVehicles(response.content);
         setCurrentPage(0);
@@ -80,7 +85,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
         setVehicles(prev => [...prev, ...response.content]);
         setCurrentPage(prev => prev + 1);
       }
-      
+
       setTotalResults(response.totalElements);
       setTotalPages(response.totalPages);
     } catch (error) {
@@ -91,16 +96,16 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
       setLoadingMore(false);
       setRefreshing(false);
     }
-  };
+  }, [filters, sortBy]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     searchVehicles(true);
-  }, [filters, sortBy]);
+  }, [searchVehicles]);
 
   const handleLoadMore = () => {
     if (!loadingMore && currentPage < totalPages - 1) {
-      searchVehicles(false);
+      searchVehicles(false, currentPage + 1);
     }
   };
 
@@ -124,7 +129,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
     <VehicleCard
       vehicle={item}
       onPress={() => navigation.navigate('VehicleDetail', { vehicleId: item.id })}
-      showCoListButton={true}
+      showCoListButton
       onCoList={() => navigation.navigate('CoListVehicle', { vehicleId: item.id })}
     />
   );
@@ -135,9 +140,9 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
         style={styles.backButton}
         onPress={() => navigation.goBack()}
       >
-        <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
+        <MaterialIcons name="arrow-back" size={24} color={colors.text} />
       </TouchableOpacity>
-      
+
       <View style={styles.headerContent}>
         <Text style={styles.headerTitle}>Search Results</Text>
         <Text style={styles.resultCount}>
@@ -150,7 +155,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
           style={styles.filterButton}
           onPress={() => setShowFilters(true)}
         >
-          <MaterialIcons name="filter-list" size={24} color={themeColors.primary} />
+          <MaterialIcons name="filter-list" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
     </View>
@@ -196,7 +201,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
       <SafeAreaView style={styles.filterModal}>
         <View style={styles.filterHeader}>
           <TouchableOpacity onPress={() => setShowFilters(false)}>
-            <MaterialIcons name="close" size={24} color={themeColors.text} />
+            <MaterialIcons name="close" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.filterTitle}>Filters</Text>
           <TouchableOpacity onPress={clearFilters}>
@@ -217,7 +222,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
                   minPrice: text ? parseInt(text) : undefined
                 }))}
                 keyboardType="numeric"
-                style={styles.priceInput}
+                containerStyle={styles.priceInput}
               />
               <Text style={styles.toText}>to</Text>
               <Input
@@ -228,7 +233,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
                   maxPrice: text ? parseInt(text) : undefined
                 }))}
                 keyboardType="numeric"
-                style={styles.priceInput}
+                containerStyle={styles.priceInput}
               />
             </View>
           </Card>
@@ -260,7 +265,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
                   minYear: text ? parseInt(text) : undefined
                 }))}
                 keyboardType="numeric"
-                style={styles.priceInput}
+                containerStyle={styles.priceInput}
               />
               <Text style={styles.toText}>to</Text>
               <Input
@@ -271,7 +276,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
                   maxYear: text ? parseInt(text) : undefined
                 }))}
                 keyboardType="numeric"
-                style={styles.priceInput}
+                containerStyle={styles.priceInput}
               />
             </View>
           </Card>
@@ -318,7 +323,6 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
           <Button
             title="Apply Filters"
             onPress={applyFilters}
-            variant="primary"
             style={styles.applyButton}
           />
         </View>
@@ -328,7 +332,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <MaterialIcons name="search-off" size={80} color={themeColors.textSecondary} />
+      <MaterialIcons name="search-off" size={80} color={colors.textSecondary} />
       <Text style={styles.emptyStateTitle}>No vehicles found</Text>
       <Text style={styles.emptyStateText}>
         Try adjusting your search filters or search terms
@@ -344,10 +348,10 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
 
   const renderLoadingFooter = () => {
     if (!loadingMore) return null;
-    
+
     return (
       <View style={styles.loadingFooter}>
-        <ActivityIndicator size="small" color={themeColors.primary} />
+        <ActivityIndicator size="small" color={colors.primary} />
         <Text style={styles.loadingText}>Loading more vehicles...</Text>
       </View>
     );
@@ -357,7 +361,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={themeColors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Searching vehicles...</Text>
         </View>
       </SafeAreaView>
@@ -368,7 +372,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
     <SafeAreaView style={styles.container}>
       {renderHeader()}
       {renderSortOptions()}
-      
+
       <FlatList
         data={vehicles}
         renderItem={renderVehicleItem}

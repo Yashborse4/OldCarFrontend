@@ -12,15 +12,15 @@ import {
   ActivityIndicator,
   Animated,
 } from 'react-native';
-import { useTheme } from '../../theme';
-import { spacing, borderRadius, typography, shadows } from '../../design-system/tokens';
+
 import { useNotifications } from '../../components/ui/ToastManager';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import LinearGradient from 'react-native-linear-gradient';
+
 import { BlurView } from '@react-native-community/blur';
-import * as Animatable from 'react-native-animatable';
+import { borderRadius, spacing, typography } from '../../config';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -30,23 +30,33 @@ interface Props {
 }
 
 const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { isDark, colors: themeColors } = useTheme();
+  const isDark = false;
+  const colors = {
+    background: '#FAFBFC',
+    text: '#1A202C',
+    textSecondary: '#4A5568',
+    primary: '#FFD700',
+    surface: '#FFFFFF',
+    border: '#E2E8F0',
+    success: '#48BB78',
+    error: '#E53E3E',
+  };
   const { notifyCarSaved, notifyCarRemoved, notifyMessageSent } = useNotifications();
-  
+
   // State
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showFullDescription, setShowFullDescription] = useState(false);
-  
+
   // Animation refs
   const scrollY = useRef(new Animated.Value(0)).current;
   const favoriteScale = useRef(new Animated.Value(1)).current;
   const buttonSlideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  
+
   const carId = route.params?.carId;
-  
+
   // Mock data with enhanced information
   const car = {
     id: carId || 1,
@@ -69,8 +79,8 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     mileage: '13.5 kmpl',
     description: 'Experience luxury redefined with this stunning Mercedes-Benz S-Class. This flagship sedan combines cutting-edge technology, unparalleled comfort, and sophisticated styling. Every journey becomes extraordinary with features designed to pamper and protect.',
     features: [
-      'Panoramic Sunroof', 'Premium Leather Seats', 'Navigation System', 
-      '360° Camera', 'Adaptive Cruise Control', 'Air Suspension', 
+      'Panoramic Sunroof', 'Premium Leather Seats', 'Navigation System',
+      '360° Camera', 'Adaptive Cruise Control', 'Air Suspension',
       'Wireless Charging', 'Ambient Lighting', 'Heated & Cooled Seats',
       'Bang & Olufsen Sound', 'Lane Keep Assist', 'Parking Assist'
     ],
@@ -116,13 +126,13 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       ]).start();
     }, 800);
     return () => clearTimeout(timer);
-  }, []);
+  }, [fadeAnim, buttonSlideAnim]);
 
   // Favorite animation with enhanced feedback
   const handleFavoriteToggle = useCallback(() => {
     const newFavoriteState = !isFavorite;
     setIsFavorite(newFavoriteState);
-    
+
     // Bounce animation
     Animated.sequence([
       Animated.timing(favoriteScale, {
@@ -136,7 +146,7 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         useNativeDriver: true,
       }),
     ]).start();
-    
+
     if (newFavoriteState) {
       notifyCarSaved(car.title);
     } else {
@@ -166,22 +176,22 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     extrapolate: 'clamp',
   });
 
-  // Styles defined inside component to access themeColors
+  // Styles defined inside component to access 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: themeColors.background,
+      backgroundColor: colors.background
     },
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: themeColors.background,
+      backgroundColor: colors.background
     },
     loadingText: {
       marginTop: spacing.md,
       fontSize: typography.fontSizes.lg,
-      color: themeColors.text,
+      color: colors.text,
       fontWeight: typography.fontWeights.medium,
     },
     header: {
@@ -241,6 +251,7 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       left: 0,
       right: 0,
       height: height * 0.2,
+      backgroundColor: 'rgba(0, 0, 0, 0.4)',
     },
     imageDots: {
       position: 'absolute',
@@ -259,7 +270,7 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       marginHorizontal: 4,
     },
     activeDot: {
-      backgroundColor: themeColors.primary,
+      backgroundColor: colors.primary,
       width: 24,
     },
     contentContainer: {
@@ -267,7 +278,7 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       marginTop: -spacing['2xl'],
       borderTopLeftRadius: borderRadius['2xl'],
       borderTopRightRadius: borderRadius['2xl'],
-      backgroundColor: themeColors.background,
+      backgroundColor: colors.background,
       paddingTop: spacing.xl,
     },
     titleSection: {
@@ -277,12 +288,12 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     carTitle: {
       fontSize: typography.fontSizes['3xl'],
       fontWeight: typography.fontWeights.bold,
-      color: themeColors.text,
+      color: colors.text,
       marginBottom: spacing.xs,
     },
     carSubtitle: {
       fontSize: typography.fontSizes.lg,
-      color: themeColors.textSecondary,
+      color: colors.textSecondary,
       fontWeight: typography.fontWeights.medium,
       marginBottom: spacing.md,
     },
@@ -298,16 +309,16 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     currentPrice: {
       fontSize: typography.fontSizes['3xl'],
       fontWeight: typography.fontWeights.bold,
-      color: themeColors.primary,
+      color: colors.primary
     },
     originalPrice: {
       fontSize: typography.fontSizes.lg,
-      color: themeColors.textSecondary,
+      color: colors.textSecondary,
       textDecorationLine: 'line-through',
       marginTop: spacing.xs,
     },
     savingsCard: {
-      backgroundColor: themeColors.success + '20',
+      backgroundColor: colors.success + '20',
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
       borderRadius: borderRadius.lg,
@@ -316,11 +327,11 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     savingsText: {
       fontSize: typography.fontSizes.xl,
       fontWeight: typography.fontWeights.bold,
-      color: themeColors.success,
+      color: colors.primary
     },
     savingsLabel: {
       fontSize: typography.fontSizes.sm,
-      color: themeColors.success,
+      color: colors.primary,
       marginTop: spacing.xs,
     },
     quickInfoGrid: {
@@ -337,10 +348,10 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     quickInfoCard: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: themeColors.surface,
+      backgroundColor: colors.surface,
       padding: spacing.md,
       borderRadius: borderRadius.lg,
-      ...shadows.sm,
+
     },
     quickInfoIcon: {
       marginRight: spacing.sm,
@@ -350,13 +361,13 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     },
     quickInfoLabel: {
       fontSize: typography.fontSizes.xs,
-      color: themeColors.textSecondary,
+      color: colors.textSecondary,
       marginBottom: 2,
     },
     quickInfoValue: {
       fontSize: typography.fontSizes.sm,
       fontWeight: typography.fontWeights.semibold,
-      color: themeColors.text,
+      color: colors.text
     },
     section: {
       marginBottom: spacing.xl,
@@ -364,7 +375,7 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     sectionTitle: {
       fontSize: typography.fontSizes.xl,
       fontWeight: typography.fontWeights.bold,
-      color: themeColors.text,
+      color: colors.text,
       paddingHorizontal: spacing.lg,
       marginBottom: spacing.lg,
     },
@@ -373,7 +384,7 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     },
     descriptionText: {
       fontSize: typography.fontSizes.base,
-      color: themeColors.textSecondary,
+      color: colors.textSecondary,
       lineHeight: 22,
     },
     readMoreButton: {
@@ -381,7 +392,7 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     },
     readMoreText: {
       fontSize: typography.fontSizes.base,
-      color: themeColors.primary,
+      color: colors.primary,
       fontWeight: typography.fontWeights.semibold,
     },
     featuresContainer: {
@@ -393,17 +404,17 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       marginHorizontal: -spacing.xs,
     },
     featureChip: {
-      backgroundColor: themeColors.surface,
+      backgroundColor: colors.surface,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderRadius: borderRadius.full,
       margin: spacing.xs,
       borderWidth: 1,
-      borderColor: themeColors.border,
+      borderColor: colors.border
     },
     featureText: {
       fontSize: typography.fontSizes.sm,
-      color: themeColors.text,
+      color: colors.text,
       fontWeight: typography.fontWeights.medium,
     },
     specificationsContainer: {
@@ -415,16 +426,16 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       alignItems: 'center',
       paddingVertical: spacing.md,
       borderBottomWidth: 1,
-      borderBottomColor: themeColors.border,
+      borderBottomColor: colors.border
     },
     specLabel: {
       fontSize: typography.fontSizes.base,
-      color: themeColors.textSecondary,
+      color: colors.textSecondary,
       flex: 1,
     },
     specValue: {
       fontSize: typography.fontSizes.base,
-      color: themeColors.text,
+      color: colors.text,
       fontWeight: typography.fontWeights.semibold,
       flex: 1,
       textAlign: 'right',
@@ -435,16 +446,16 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     sellerCard: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: themeColors.surface,
+      backgroundColor: colors.surface,
       padding: spacing.lg,
       borderRadius: borderRadius.xl,
-      ...shadows.md,
+
     },
     sellerAvatar: {
       width: 60,
       height: 60,
       borderRadius: borderRadius.full,
-      backgroundColor: themeColors.primary,
+      backgroundColor: colors.primary,
       alignItems: 'center',
       justifyContent: 'center',
       marginRight: spacing.lg,
@@ -455,7 +466,7 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     sellerName: {
       fontSize: typography.fontSizes.lg,
       fontWeight: typography.fontWeights.bold,
-      color: themeColors.text,
+      color: colors.text,
       marginBottom: spacing.xs,
     },
     sellerStats: {
@@ -469,21 +480,21 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     },
     ratingText: {
       fontSize: typography.fontSizes.sm,
-      color: themeColors.textSecondary,
+      color: colors.textSecondary,
       marginLeft: spacing.xs,
     },
     memberSince: {
       fontSize: typography.fontSizes.sm,
-      color: themeColors.textSecondary,
+      color: colors.textSecondary
     },
     contactButtons: {
       flexDirection: 'row',
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.xl,
       paddingBottom: spacing['2xl'],
-      backgroundColor: themeColors.background,
+      backgroundColor: colors.background,
       borderTopWidth: 1,
-      borderTopColor: themeColors.border,
+      borderTopColor: colors.border
     },
     messageButton: {
       flex: 1,
@@ -496,39 +507,39 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: themeColors.background }]}>
-        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
-        <ActivityIndicator size="large" color={themeColors.primary} />
-        <Text style={[styles.loadingText, { color: themeColors.text }]}>Loading car details...</Text>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} translucent={false} hidden={false} />
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.text }]}>Loading car details...</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} translucent={false} hidden={false} />
+
       {/* Header */}
       <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
         <BlurView
           style={styles.headerBackground}
           blurType={isDark ? 'dark' : 'light'}
           blurAmount={10}
-          reducedTransparencyFallbackColor={themeColors.surface}
+          reducedTransparencyFallbackColor={colors.surface}
         />
         <View style={styles.headerContent}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
           <Animated.Text style={[styles.headerTitle, { opacity: headerOpacity }]}>
             {car.title}
           </Animated.Text>
           <Animated.View style={{ transform: [{ scale: favoriteScale }] }}>
             <TouchableOpacity onPress={handleFavoriteToggle} style={styles.favoriteButton}>
-              <MaterialIcons 
-                name={isFavorite ? 'favorite' : 'favorite-border'} 
-                size={24} 
-                color={isFavorite ? themeColors.error : '#FFFFFF'} 
+              <MaterialIcons
+                name={isFavorite ? 'favorite' : 'favorite-border'}
+                size={24}
+                color={isFavorite ? colors.error : '#FFFFFF'}
               />
             </TouchableOpacity>
           </Animated.View>
@@ -563,12 +574,9 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
               />
             ))}
           </ScrollView>
-          
-          <LinearGradient
-            colors={['transparent', 'rgba(0, 0, 0, 0.7)']}
-            style={styles.imageGradient}
-          />
-          
+
+          <View style={styles.imageGradient} />
+
           <View style={styles.imageDots}>
             {car.images.map((_, index) => (
               <View
@@ -588,13 +596,13 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={styles.titleSection}>
             <Text style={styles.carTitle}>{car.title}</Text>
             <Text style={styles.carSubtitle}>{car.subtitle}</Text>
-            
+
             <View style={styles.priceContainer}>
               <View style={styles.priceSection}>
                 <Text style={styles.currentPrice}>{car.price}</Text>
                 <Text style={styles.originalPrice}>{car.originalPrice}</Text>
               </View>
-              
+
               <View style={styles.savingsCard}>
                 <Text style={styles.savingsText}>{car.savings}</Text>
                 <Text style={styles.savingsLabel}>You Save</Text>
@@ -610,17 +618,15 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
               { icon: 'local-gas-station', label: 'Fuel Type', value: car.fuel },
               { icon: 'settings', label: 'Transmission', value: car.transmission },
             ].map((item, index) => (
-              <Animatable.View
+              <View
                 key={index}
-                animation="fadeInUp"
-                delay={index * 100}
                 style={styles.quickInfoItem}
               >
                 <View style={styles.quickInfoCard}>
                   <MaterialIcons
                     name={item.icon as any}
                     size={24}
-                    color={themeColors.primary}
+                    color={colors.primary}
                     style={styles.quickInfoIcon}
                   />
                   <View style={styles.quickInfoText}>
@@ -628,7 +634,7 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
                     <Text style={styles.quickInfoValue}>{item.value}</Text>
                   </View>
                 </View>
-              </Animatable.View>
+              </View>
             ))}
           </View>
 
@@ -656,14 +662,12 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.featuresContainer}>
               <View style={styles.featuresGrid}>
                 {car.features.map((feature, index) => (
-                  <Animatable.View
+                  <View
                     key={index}
-                    animation="fadeInRight"
-                    delay={index * 50}
                     style={styles.featureChip}
                   >
                     <Text style={styles.featureText}>{feature}</Text>
-                  </Animatable.View>
+                  </View>
                 ))}
               </View>
             </View>
@@ -694,12 +698,12 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={styles.sellerName}>{car.seller.name}</Text>
                     {car.seller.verified && (
-                      <MaterialIcons name="verified" size={18} color={themeColors.primary} style={{ marginLeft: 4 }} />
+                      <MaterialIcons name="verified" size={18} color={colors.primary} style={{ marginLeft: 4 }} />
                     )}
                   </View>
                   <View style={styles.sellerStats}>
                     <View style={styles.ratingContainer}>
-                      <MaterialIcons name="star" size={16} color={themeColors.primary} />
+                      <MaterialIcons name="star" size={16} color={colors.primary} />
                       <Text style={styles.ratingText}>
                         {car.seller.rating} ({car.seller.reviews} reviews)
                       </Text>
@@ -734,17 +738,14 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           onPress={handleSendMessage}
           variant="outline"
           size="lg"
-          icon={<MaterialIcons name="chat" size={20} color={themeColors.primary} />}
-          iconPosition="left"
+          icon="chat"
           style={styles.messageButton}
         />
         <Button
           title="Call Seller"
           onPress={handleCallSeller}
-          variant="gradient"
           size="lg"
-          icon={<MaterialIcons name="call" size={20} color="#FFFFFF" />}
-          iconPosition="left"
+          icon="call"
           style={styles.callButton}
         />
       </Animated.View>
