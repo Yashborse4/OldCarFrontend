@@ -1,0 +1,8 @@
+// Script to remove all Toast.show() calls from the project
+// This file lists all the necessary manual replacements
+
+// AuthContext.tsx: Replace all Toast.show calls with comments
+// Lines to comment out: 115-120, 124-129, 131-136, 157-162, 174-179, 181-186, 201-206, 222-227, 231-236, 238-243, 260-265, 269-274, 276-281
+
+// Instead of showing toasts, the errors will be logged to console (already done)  
+// and the calling components can handle displaying errors to users via Alert.alert()

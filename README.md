@@ -16,7 +16,7 @@ A comprehensive car marketplace mobile application built with React Native, feat
 
 ### Advanced Features
 - **Network-aware UI**: Handles offline/online states gracefully
-- **Dark/Light Theme**: Toggle between themes with system preference support
+- **Dark/Light **: Toggle between s with system preference support
 - **Group Chat**: Create and manage group conversations
 - **Vehicle Search**: Advanced search with filters and sorting
 - **Garage Management**: Personal vehicle collection management
@@ -121,7 +121,7 @@ src/
 ├── context/           # React Context providers
 ├── hooks/             # Custom React hooks
 ├── services/          # API services and utilities
-└── theme/             # Theme configuration
+└── /             #  configuration
 ```
 
 ## 🔧 Configuration
