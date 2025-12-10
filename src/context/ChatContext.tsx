@@ -688,6 +688,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     return () => {
       disconnectWebSocket();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const contextValue: ChatContextType = {

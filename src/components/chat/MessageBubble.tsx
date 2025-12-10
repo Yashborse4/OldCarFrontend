@@ -7,7 +7,7 @@ import {
   Image,
   Linking,
 } from 'react-native';
-import { useTheme } from '../../theme';
+// import {  } from '../../context/ThemeContext';
 
 interface ChatMessage {
   id: string;
@@ -52,7 +52,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   onCarPress,
   onLocationPress,
 }) => {
-  const { colors: theme } = useTheme();
+  const theme = {
+    colors: {
+      textSecondary: '#4A5568',
+    }
+  };
 
   const formatMessageTime = (timestamp: Date) => {
     return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -110,7 +114,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       width: 32,
       height: 32,
       borderRadius: 16,
-      backgroundColor: theme.primary,
+      backgroundColor: '#FFD700',
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: 8,
@@ -121,13 +125,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       padding: 12,
       borderRadius: 16,
       borderWidth: 1,
-      backgroundColor: isOwnMessage ? theme.primary : theme.card,
-      borderColor: theme.border,
+      backgroundColor: isOwnMessage ? '#FFD700' : '#FFFFFF',
+      borderColor: '#E2E8F0',
     },
     messageText: {
       fontSize: 16,
       lineHeight: 20,
-      color: isOwnMessage ? '#FFFFFF' : theme.text,
+      color: isOwnMessage ? '#FFFFFF' : '#1A202C',
     },
     messageImage: {
       width: 200,
@@ -153,17 +157,17 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       fontSize: 14,
       fontWeight: '600',
       marginBottom: 2,
-      color: isOwnMessage ? '#FFFFFF' : theme.text,
+      color: isOwnMessage ? '#FFFFFF' : '#1A202C',
     },
     carSharePrice: {
       fontSize: 14,
       fontWeight: '700',
       marginBottom: 2,
-      color: isOwnMessage ? '#FFFFFF' : theme.primary,
+      color: isOwnMessage ? '#FFFFFF' : '#FFD700',
     },
     carShareSubtitle: {
       fontSize: 12,
-      color: isOwnMessage ? '#FFFFFF' : theme.textSecondary,
+      color: isOwnMessage ? '#FFFFFF' : '#4A5568',
     },
     carShareActions: {
       flexDirection: 'row',
@@ -171,7 +175,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       marginTop: 8,
     },
     carShareButton: {
-      backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : theme.primary,
+      backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : '#FFD700',
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 12,
@@ -193,10 +197,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     locationText: {
       fontSize: 14,
       flex: 1,
-      color: isOwnMessage ? '#FFFFFF' : theme.text,
+      color: isOwnMessage ? '#FFFFFF' : '#1A202C',
     },
     locationButton: {
-      backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : theme.primary,
+      backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : '#FFD700',
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: 12,
@@ -219,7 +223,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     },
     messageTime: {
       fontSize: 10,
-      color: isOwnMessage ? '#FFFFFF' : theme.textSecondary,
+      color: isOwnMessage ? '#FFFFFF' : '#4A5568',
     },
     deliveryIcon: {
       marginLeft: 2,
@@ -229,7 +233,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   if (message.type === 'system') {
     return (
       <View style={styles.systemMessageContainer}>
-        <Text style={[styles.systemMessage, { color: theme.textSecondary }]}>
+        <Text style={[styles.systemMessage, { color: theme.colors.textSecondary }]}>
           {message.text}
         </Text>
       </View>
@@ -247,7 +251,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         ) : (
           <View style={styles.avatarPlaceholder}>
             <Text style={{color: '#FFFFFF', fontSize: 12, fontWeight: 'bold'}}>
-              {message.senderName?.charAt(0)?.toUpperCase() || '?'}
+              {message.senderName?.charAt(0)?.toUpperCase() || '? '}
             </Text>
           </View>
         )
@@ -261,7 +265,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
         
         {message.type === 'image' && (
-          <TouchableOpacity onPress={() => onImagePress?.(message.imageUrl || '')}>
+          <TouchableOpacity onPress={() => onImagePress && message.imageUrl && onImagePress(message.imageUrl)}>
             <Image
               source={{ uri: message.imageUrl }}
               style={styles.messageImage}

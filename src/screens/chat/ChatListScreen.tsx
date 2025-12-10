@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,7 @@ import {
   Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Card } from '../../components/UI/Card';
-import { theme } from '../../theme';
+import { Card } from '../../components/ui/Card';
 interface ChatParticipant {
   id: string;
   name: string;
@@ -45,6 +44,15 @@ interface ChatConversation {
 
 const ChatListScreen: React.FC = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
+  const colors = {
+    text: '#1A202C',
+    textSecondary: '#4A5568',
+    primary: '#FFD700',
+    surface: '#FFFFFF',
+    border: '#E2E8F0',
+    background: '#FAFBFC',
+    success: '#48BB78'
+  };
   
   // Mock user for now
   const user = { id: 'current-user', name: 'Current User' };
@@ -57,7 +65,7 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
   const [loading, setLoading] = useState(true);
 
   // Mock data - Replace with actual API calls
-  const mockConversations: ChatConversation[] = [
+  const mockConversations = React.useMemo<ChatConversation[]>(() => [
     {
       id: '1',
       participant: {
@@ -95,7 +103,7 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
       },
       lastMessage: {
         id: 'msg2',
-        text: 'I have a bulk order of 5 Maruti Swift. Interested in B2B deal?',
+        text: 'I have a bulk order of 5 Maruti Swift. Interested in B2B deal? ',
         timestamp: new Date(Date.now() - 30 * 60 * 1000),
         senderId: 'dealer1',
         type: 'text',
@@ -142,7 +150,7 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
       },
       lastMessage: {
         id: 'msg4',
-        text: 'Can you help with financing options for luxury cars?',
+        text: 'Can you help with financing options for luxury cars? ',
         timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
         senderId: 'dealer2',
         type: 'text',
@@ -152,17 +160,17 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
       isPinned: false,
       conversationType: 'dealer_network'
     }
-  ];
+  ], []);
 
   useEffect(() => {
     loadConversations();
-  }, []);
+  }, [loadConversations]);
 
   useEffect(() => {
     filterConversations();
-  }, [conversations, searchQuery, selectedFilter]);
+  }, [filterConversations]);
 
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     try {
       setLoading(true);
       // TODO: Replace with actual API call
@@ -173,9 +181,9 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [mockConversations]);
 
-  const filterConversations = () => {
+  const filterConversations = useCallback(() => {
     let filtered = conversations;
 
     // Filter by type
@@ -195,7 +203,7 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
     }
 
     setFilteredConversations(filtered);
-  };
+  }, [conversations, searchQuery, selectedFilter]);
 
   const formatTimestamp = (timestamp: Date) => {
     const now = new Date();
@@ -231,18 +239,18 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
       style={[
         styles.filterButton,
         {
-          backgroundColor: selectedFilter === filter ? theme.colors.primary : theme.colors.surface,
-          borderColor: selectedFilter === filter ? theme.colors.primary : theme.colors.border
+          backgroundColor: selectedFilter === filter ? colors.primary : colors.surface,
+          borderColor: selectedFilter === filter ? colors.primary : colors.border
         }
       ]}
       onPress={() => setSelectedFilter(filter)}
     >
-      <Text style={{fontSize: 16, color: selectedFilter === filter ? theme.colors.surface : theme.colors.text}}>
+      <Text style={{fontSize: 16, color: selectedFilter === filter ? colors.surface : colors.text}}>
         {icon === 'forum' ? '💬' : icon === 'account-group' ? '👥' : '🏪'}
       </Text>
       <Text style={[
         styles.filterButtonText,
-        { color: selectedFilter === filter ? theme.colors.surface : theme.colors.text }
+        { color: selectedFilter === filter ? colors.surface : colors.text }
       ]}>
         {label}
       </Text>
@@ -262,8 +270,8 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
             style={styles.avatar}
           />
         ) : (
-          <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.primary }]}>
-            <Text style={{fontSize: 24, color: theme.colors.surface}}>
+          <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
+            <Text style={{fontSize: 24, color: colors.surface}}>
               {item.participant.type === 'dealer' ? '🏪' : '👤'}
             </Text>
           </View>
@@ -273,7 +281,7 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
         
         {item.isPinned && (
           <View style={styles.pinnedIndicator}>
-            <Text style={{fontSize: 12, color: theme.colors.primary}}>📌</Text>
+            <Text style={{fontSize: 12, color: colors.primary}}>📌</Text>
           </View>
         )}
       </View>
@@ -281,27 +289,27 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
       <View style={styles.conversationContent}>
         <View style={styles.conversationHeader}>
           <View style={styles.nameContainer}>
-            <Text style={[styles.participantName, { color: theme.colors.text }]}>
+            <Text style={[styles.participantName, { color: colors.text }]}>
               {item.participant.name}
             </Text>
             
             <View style={[
               styles.typeIndicator,
-              { backgroundColor: item.participant.type === 'dealer' ? theme.colors.success : theme.colors.primary }
+              { backgroundColor: item.participant.type === 'dealer' ? colors.success : colors.primary }
             ]}>
-              <Text style={{fontSize: 10, color: theme.colors.surface}}>
+              <Text style={{fontSize: 10, color: colors.surface}}>
                 {item.participant.type === 'dealer' ? '🏪' : '👤'}
               </Text>
             </View>
           </View>
           
           <View style={styles.timestampContainer}>
-            <Text style={[styles.timestamp, { color: theme.colors.textSecondary }]}>
+            <Text style={[styles.timestamp, { color: colors.textSecondary }]}>
               {formatTimestamp(item.lastMessage.timestamp)}
             </Text>
             
             {item.unreadCount > 0 && (
-              <View style={[styles.unreadBadge, { backgroundColor: theme.colors.primary }]}>
+              <View style={[styles.unreadBadge, { backgroundColor: colors.primary }]}>
                 <Text style={styles.unreadCount}>
                   {item.unreadCount > 99 ? '99+' : item.unreadCount}
                 </Text>
@@ -311,15 +319,15 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
         </View>
 
         {item.participant.showroomName && (
-          <Text style={[styles.showroomName, { color: theme.colors.textSecondary }]}>
+          <Text style={[styles.showroomName, { color: colors.textSecondary }]}>
             {item.participant.showroomName}
           </Text>
         )}
 
         {item.relatedCarTitle && (
           <View style={styles.relatedCarContainer}>
-            <Text style={{fontSize: 12, color: theme.colors.primary, marginRight: 4}}>🚗</Text>
-            <Text style={[styles.relatedCarTitle, { color: theme.colors.primary }]}>
+            <Text style={{fontSize: 12, color: colors.primary, marginRight: 4}}>🚗</Text>
+            <Text style={[styles.relatedCarTitle, { color: colors.primary }]}>
               {item.relatedCarTitle}
             </Text>
           </View>
@@ -329,7 +337,7 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
           style={[
             styles.lastMessage,
             {
-              color: item.unreadCount > 0 ? theme.colors.text : theme.colors.textSecondary,
+              color: item.unreadCount > 0 ? colors.text : colors.textSecondary,
               fontWeight: item.unreadCount > 0 ? '600' : '400'
             }
           ]}
@@ -340,7 +348,7 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
       </View>
 
       <View style={styles.conversationActions}>
-        <Text style={{fontSize: 20, color: theme.colors.textSecondary}}>›</Text>
+        <Text style={{fontSize: 20, color: colors.textSecondary}}>›</Text>
       </View>
       </TouchableOpacity>
     </Card>
@@ -349,29 +357,29 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.colors.background,
+      backgroundColor: colors.background
     },
     header: {
       padding: 16,
-      backgroundColor: theme.colors.surface,
+      backgroundColor: colors.surface,
       borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
+      borderBottomColor: colors.border
     },
     headerTitle: {
       fontSize: 24,
       fontWeight: '700',
-      color: theme.colors.text,
+      color: colors.text,
       marginBottom: 16,
     },
     searchContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: theme.colors.background,
+      backgroundColor: colors.background,
       borderRadius: 12,
       paddingHorizontal: 12,
       marginBottom: 16,
       borderWidth: 1,
-      borderColor: theme.colors.border,
+      borderColor: colors.border
     },
     searchIcon: {
       marginRight: 8,
@@ -379,7 +387,7 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
     searchInput: {
       flex: 1,
       height: 40,
-      color: theme.colors.text,
+      color: colors.text,
       fontSize: 16,
     },
     filtersContainer: {
@@ -434,15 +442,15 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
       width: 12,
       height: 12,
       borderRadius: 6,
-      backgroundColor: theme.colors.success,
+      backgroundColor: colors.success,
       borderWidth: 2,
-      borderColor: theme.colors.surface,
+      borderColor: colors.surface
     },
     pinnedIndicator: {
       position: 'absolute',
       top: -2,
       right: -2,
-      backgroundColor: theme.colors.surface,
+      backgroundColor: colors.surface,
       borderRadius: 8,
       padding: 2,
     },
@@ -484,7 +492,7 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
       alignItems: 'center',
     },
     unreadCount: {
-      color: theme.colors.surface,
+      color: colors.surface,
       fontSize: 10,
       fontWeight: '600',
     },
@@ -509,36 +517,6 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
     conversationActions: {
       marginLeft: 8,
     },
-    conversationContent: {
-      flex: 1,
-    },
-    conversationHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: 4,
-    },
-    nameContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      flex: 1,
-    },
-    participantName: {
-      fontSize: 16,
-      fontWeight: '600',
-      marginRight: 6,
-    },
-    typeIndicator: {
-      borderRadius: 8,
-      padding: 2,
-    },
-    timestampContainer: {
-      alignItems: 'flex-end',
-    },
-    timestamp: {
-      fontSize: 12,
-      marginBottom: 2,
-    },
     emptyContainer: {
       flex: 1,
       justifyContent: 'center',
@@ -551,13 +529,13 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
     emptyTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: theme.colors.text,
+      color: colors.text,
       marginBottom: 8,
       textAlign: 'center',
     },
     emptyMessage: {
       fontSize: 14,
-      color: theme.colors.textSecondary,
+      color: colors.textSecondary,
       textAlign: 'center',
       lineHeight: 20,
     },
@@ -566,7 +544,7 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
   if (loading) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', paddingTop: insets.top }]}>
-        <Text style={{fontSize: 40, color: theme.colors.primary}}>⟳</Text>
+        <Text style={{fontSize: 40, color: colors.primary}}>⟳</Text>
         <Text style={[styles.emptyTitle, { marginTop: 16 }]}>Loading conversations...</Text>
       </View>
     );
@@ -578,11 +556,11 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
         <Text style={styles.headerTitle}>Messages</Text>
         
         <View style={styles.searchContainer}>
-          <Text style={{fontSize: 20, color: theme.colors.textSecondary, marginRight: 8}}>🔍</Text>
+          <Text style={{fontSize: 20, color: colors.textSecondary, marginRight: 8}}>🔍</Text>
           <TextInput
             style={styles.searchInput}
             placeholder="Search conversations..."
-            placeholderTextColor={theme.colors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -597,14 +575,13 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
 
       {filteredConversations.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={{fontSize: 60, color: theme.colors.textSecondary, marginBottom: 16}}>💬</Text>
+          <Text style={{fontSize: 60, color: colors.textSecondary, marginBottom: 16}}>💬</Text>
           <Text style={styles.emptyTitle}>
             {searchQuery ? 'No conversations found' : 'No messages yet'}
           </Text>
           <Text style={styles.emptyMessage}>
             {searchQuery 
-              ? 'Try adjusting your search or filters'
-              : 'Start connecting with buyers and dealers to see your conversations here.'
+              ? 'Try adjusting your search or filters' : 'Start connecting with buyers and dealers to see your conversations here.'
             }
           </Text>
         </View>
@@ -618,8 +595,8 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[theme.colors.primary]}
-              tintColor={theme.colors.primary}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
             />
           }
           showsVerticalScrollIndicator={false}

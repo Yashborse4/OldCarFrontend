@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import { Card } from '../../components/UI/Card';
-import { theme } from '../../theme';
+import { Card } from '../../components/ui/Card';
 
 // Temporary interface until proper types are available
 interface ChatMessage {
@@ -38,6 +37,15 @@ interface Conversation {
 const MessagesScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const colors = {
+    background: '#FAFBFC',
+    surface: '#FFFFFF',
+    text: '#1A202C',
+    textSecondary: '#4A5568',
+    primary: '#FFD700',
+    border: '#E2E8F0',
+    success: '#48BB78',
+  };
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [searchText, setSearchText] = useState('');
   const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
@@ -45,7 +53,7 @@ const MessagesScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   // Mock data - replace with API calls later
-  const mockConversations: Conversation[] = [
+  const mockConversations = React.useMemo<Conversation[]>(() => [
     {
       id: '1',
       dealerId: 'dealer2',
@@ -55,7 +63,7 @@ const MessagesScreen: React.FC = () => {
         id: 'msg1',
         senderId: 'dealer2',
         receiverId: 'current-user',
-        message: 'I have a customer interested in your BMW X5. Can we discuss pricing?',
+        message: 'I have a customer interested in your BMW X5. Can we discuss pricing? ',
         timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 minutes ago
         status: 'delivered',
         type: 'text',
@@ -106,7 +114,7 @@ const MessagesScreen: React.FC = () => {
         id: 'msg4',
         senderId: 'current-user',
         receiverId: 'dealer5',
-        message: 'Perfect! When can we schedule the vehicle inspection?',
+        message: 'Perfect! When can we schedule the vehicle inspection? ',
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
         status: 'read',
         type: 'text',
@@ -131,17 +139,17 @@ const MessagesScreen: React.FC = () => {
       unreadCount: 1,
       isOnline: false,
     },
-  ];
+  ], []);
 
   useEffect(() => {
     loadConversations();
-  }, []);
+  }, [loadConversations]);
 
   useEffect(() => {
     filterConversations();
-  }, [searchText, conversations]);
+  }, [filterConversations]);
 
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     try {
       setLoading(true);
       // Simulate API call
@@ -153,9 +161,9 @@ const MessagesScreen: React.FC = () => {
       console.error('Error loading conversations:', error);
       setLoading(false);
     }
-  };
+  }, [mockConversations]);
 
-  const filterConversations = () => {
+  const filterConversations = useCallback(() => {
     if (!searchText.trim()) {
       setFilteredConversations(conversations);
       return;
@@ -167,7 +175,7 @@ const MessagesScreen: React.FC = () => {
       conv.lastMessage.message.toLowerCase().includes(searchText.toLowerCase())
     );
     setFilteredConversations(filtered);
-  };
+  }, [searchText, conversations]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -262,7 +270,7 @@ const MessagesScreen: React.FC = () => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <MaterialIcons name="chat-bubble-outline" size={80} color={theme.colors.textSecondary} />
+      <MaterialIcons name="chat-bubble-outline" size={80} color={colors.textSecondary} />
       <Text style={styles.emptyStateTitle}>No Messages Yet</Text>
       <Text style={styles.emptyStateText}>
         Start networking with other dealers and your conversations will appear here
@@ -275,7 +283,7 @@ const MessagesScreen: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Messages</Text>
         <TouchableOpacity style={styles.headerButton}>
-          <MaterialIcons name="search" size={24} color={theme.colors.text} />
+          <MaterialIcons name="search" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -284,7 +292,7 @@ const MessagesScreen: React.FC = () => {
           value={searchText}
           onChangeText={setSearchText}
           placeholder="Search conversations..."
-          placeholderTextColor={theme.colors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           style={styles.searchInput}
         />
       </View>
@@ -297,8 +305,8 @@ const MessagesScreen: React.FC = () => {
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh}
-            colors={[theme.colors.primary]}
-            tintColor={theme.colors.primary}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
         contentContainerStyle={filteredConversations.length === 0 ? styles.emptyContainer : styles.listContainer}
@@ -312,7 +320,7 @@ const MessagesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FAFBFC',
   },
   header: {
     flexDirection: 'row',
@@ -320,31 +328,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: '#E2E8F0',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: '#1A202C',
   },
   headerButton: {
     padding: 8,
   },
   searchContainer: {
     padding: 20,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: '#FFFFFF',
   },
   searchInput: {
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: '#E2E8F0',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    color: theme.colors.text,
-    backgroundColor: theme.colors.background,
+    color: '#1A202C',
+    backgroundColor: '#FAFBFC',
   },
   listContainer: {
     paddingVertical: 8,
@@ -372,16 +380,16 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: '#FFD700',
     justifyContent: 'center',
     alignItems: 'center',
   },
   onlineAvatar: {
     borderWidth: 2,
-    borderColor: theme.colors.success,
+    borderColor: '#48BB78',
   },
   avatarText: {
-    color: theme.colors.surface,
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -392,9 +400,9 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: theme.colors.success,
+    backgroundColor: '#48BB78',
     borderWidth: 2,
-    borderColor: theme.colors.surface,
+    borderColor: '#FFFFFF',
   },
   conversationInfo: {
     flex: 1,
@@ -409,16 +417,16 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: '#1A202C',
     marginRight: 8,
   },
   timestamp: {
     fontSize: 12,
-    color: theme.colors.textSecondary,
+    color: '#4A5568',
   },
   dealership: {
     fontSize: 14,
-    color: theme.colors.textSecondary,
+    color: '#4A5568',
     marginBottom: 6,
   },
   lastMessageContainer: {
@@ -429,15 +437,15 @@ const styles = StyleSheet.create({
   lastMessage: {
     flex: 1,
     fontSize: 14,
-    color: theme.colors.textSecondary,
+    color: '#4A5568',
     marginRight: 8,
   },
   unreadMessage: {
-    color: theme.colors.text,
+    color: '#1A202C',
     fontWeight: '500',
   },
   unreadBadge: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: '#FFD700',
     borderRadius: 12,
     minWidth: 24,
     height: 24,
@@ -446,7 +454,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   unreadCount: {
-    color: theme.colors.surface,
+    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -456,13 +464,13 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: '#1A202C',
     marginTop: 20,
     marginBottom: 8,
   },
   emptyStateText: {
     fontSize: 16,
-    color: theme.colors.textSecondary,
+    color: '#4A5568',
     textAlign: 'center',
     lineHeight: 22,
   },

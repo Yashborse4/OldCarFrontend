@@ -1,3 +1,5 @@
+// import {  } from '../../context/ThemeContext';
+
 import React, { useEffect, useRef, useContext } from 'react';
 import {
   View,
@@ -6,8 +8,7 @@ import {
   Animated,
   Image,
 } from 'react-native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import { ThemeContext } from '../../theme/ThemeContext';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 
 interface TypingIndicatorProps {
   isVisible: boolean;
@@ -22,7 +23,15 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({
   participantAvatar,
   participantType = 'buyer',
 }) => {
-  const { theme } = useContext(ThemeContext);
+  const theme = {
+    colors: {
+      surface: '#FFFFFF',
+      text: '#1A202C',
+      textSecondary: '#4A5568',
+      primary: '#FFD700',
+      border: '#E2E8F0',
+    }
+  };
   const animationValue = useRef(new Animated.Value(0)).current;
   const fadeValue = useRef(new Animated.Value(0)).current;
 
@@ -64,6 +73,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({
       }).start();
       animationValue.setValue(0);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVisible]);
 
   if (!isVisible) {
@@ -91,7 +101,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({
           style={[
             styles.typingDot,
             {
-              backgroundColor: theme.secondaryText,
+              backgroundColor: '#4A5568',
               opacity: dotOpacity,
               transform: [{ scale: dotScale }],
             },
@@ -121,13 +131,13 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({
       width: 32,
       height: 32,
       borderRadius: 16,
-      backgroundColor: theme.primary,
+      backgroundColor: '#FFD700',
       justifyContent: 'center',
       alignItems: 'center',
     },
     typingBubble: {
-      backgroundColor: theme.cardBackground,
-      borderColor: theme.border,
+      backgroundColor: '#FFFFFF',
+      borderColor: '#E2E8F0',
       borderWidth: 1,
       borderRadius: 16,
       paddingVertical: 12,
@@ -147,12 +157,12 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({
     },
     typingText: {
       fontSize: 12,
-      color: theme.secondaryText,
+      color: '#4A5568',
       fontStyle: 'italic',
     },
     participantName: {
       fontSize: 11,
-      color: theme.secondaryText,
+      color: '#4A5568',
       marginBottom: 2,
     },
   });

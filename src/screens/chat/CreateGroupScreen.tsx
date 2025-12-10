@@ -11,11 +11,10 @@ import {
   TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import { ThemeContextType } from '../../theme/ThemeContext';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 
 import { GroupDetailsRouteProp } from '../../navigation/types';
-// import { Input } from '../../components/UI/Input'; // Update this path based on your project structure
+// import { Input } from '../../components/ui/Input'; // Update this path based on your project structure
 
 const CreateGroupScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -67,7 +66,7 @@ const CreateGroupScreen: React.FC = () => {
             text: 'OK',
             onPress: () => {
               // Navigate to group details screen
-              navigation.navigate('GroupDetails', { groupId: newGroup.id });
+              (navigation as any).navigate('GroupDetails', { groupId: newGroup.id });
             },
           },
         ]
@@ -130,7 +129,7 @@ const CreateGroupScreen: React.FC = () => {
           <View style={styles.privacyOption}>
             <View style={styles.privacyInfo}>
               <View style={styles.privacyHeader}>
-                <Icon
+                <MaterialIcons
                   name={isPrivate ? 'lock' : 'public'}
                   size={20}
                   color={isPrivate ? '#FF6B6B' : '#4ECDC4'}
@@ -141,15 +140,14 @@ const CreateGroupScreen: React.FC = () => {
               </View>
               <Text style={styles.privacyDescription}>
                 {isPrivate
-                  ? 'Only invited members can join and see group content'
-                  : 'Anyone can discover, request to join, and see group content'
+                  ? 'Only invited members can join and see group content' : 'Anyone can discover, request to join, and see group content'
                 }
               </Text>
             </View>
             <Switch
               value={isPrivate}
               onValueChange={setIsPrivate}
-              trackColor={{ false: '#4ECDC4', true: '#FF6B6B' }}
+              trackColor={{ false: '#FF6B6B', true: '#4ECDC4' }}
               thumbColor="#fff"
             />
           </View>

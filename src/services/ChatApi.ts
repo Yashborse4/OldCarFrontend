@@ -1,4 +1,4 @@
-import apiClient, {ApiSuccessResponse} from './ApiClient';
+import apiClient from './ApiClient';
 
 // Chat-related types
 export interface Chat {
@@ -146,53 +146,41 @@ export class ChatApi {
   /**
    * Get user's chats
    */
-  async getMyChats(page: number = 0, size: number = 20): Promise<{
-    content: Chat[];
-    totalElements: number;
-    totalPages: number;
-    page: number;
-    size: number;
-  }> {
-    const response = await apiClient.get<ApiSuccessResponse<{
-      content: Chat[];
-      totalElements: number;
-      totalPages: number;
-      page: number;
-      size: number;
-    }>>(`/api/chat/my-chats?page=${page}&size=${size}`);
-    return response.data.data;
+  async getMyChats(page: number = 0, size: number = 20): Promise<any> {
+    const response = await apiClient.get<any>(`/api/v2/chat/rooms?page=${page}&size=${size}`);
+    return response.data;
   }
 
   /**
    * Get chat details
    */
-  async getChat(chatId: number): Promise<Chat> {
-    const response = await apiClient.get<ApiSuccessResponse<Chat>>(
-      `/api/chat/${chatId}`
+  async getChat(chatId: number): Promise<any> {
+    const response = await apiClient.get<any>(
+      `/api/v2/chat/rooms/${chatId}`
     );
-    return response.data.data;
+    return response.data;
   }
 
   /**
    * Create a private chat
    */
-  async createPrivateChat(request: CreatePrivateChatRequest): Promise<Chat> {
-    const response = await apiClient.post<ApiSuccessResponse<Chat>>(
-      '/api/chat/private',
+  async createPrivateChat(request: CreatePrivateChatRequest): Promise<any> {
+    const response = await apiClient.post<any>(
+      '/api/v2/chat/private',
       request
     );
-    return response.data.data;
+    return response.data;
   }
 
   /**
    * Create a group chat
    */
-  async createGroupChat(request: CreateChatRequest): Promise<Chat> {
-    const response = await apiClient.post<ApiSuccessResponse<Chat>>(
-      '/api/chat/group',
+  async createGroupChat(request: CreateChatRequest): Promise<any> {
+    const response = await apiClient.post<any>(
+      '/api/v2/chat/group',
       request
     );
-    return response.data.data;
+    return response.data;
   }
 
   /**
@@ -200,7 +188,7 @@ export class ChatApi {
    */
   async addParticipants(chatId: number, request: AddParticipantRequest): Promise<void> {
     await apiClient.post(
-      `/api/chat/${chatId}/participants`,
+      `/api/v2/chat/rooms/${chatId}/participants`,
       request
     );
   }
@@ -210,7 +198,7 @@ export class ChatApi {
    */
   async removeParticipant(chatId: number, userId: number): Promise<void> {
     await apiClient.delete(
-      `/api/chat/${chatId}/participants/${userId}`
+      `/api/v2/chat/rooms/${chatId}/participants/${userId}`
     );
   }
 
@@ -218,17 +206,17 @@ export class ChatApi {
    * Leave chat
    */
   async leaveChat(chatId: number): Promise<void> {
-    await apiClient.post(`/api/chat/${chatId}/leave`);
+    await apiClient.post(`/api/v2/chat/rooms/${chatId}/leave`);
   }
 
   /**
    * Get chat participants
    */
-  async getChatParticipants(chatId: number): Promise<ChatParticipant[]> {
-    const response = await apiClient.get<ApiSuccessResponse<ChatParticipant[]>>(
-      `/api/chat/${chatId}/participants`
+  async getChatParticipants(chatId: number): Promise<any[]> {
+    const response = await apiClient.get<any>(
+      `/api/v2/chat/rooms/${chatId}/participants`
     );
-    return response.data.data;
+    return response.data;
   }
 
   // =====================================
@@ -242,50 +230,38 @@ export class ChatApi {
     chatId: number, 
     page: number = 0, 
     size: number = 50
-  ): Promise<{
-    content: Message[];
-    totalElements: number;
-    totalPages: number;
-    page: number;
-    size: number;
-  }> {
-    const response = await apiClient.get<ApiSuccessResponse<{
-      content: Message[];
-      totalElements: number;
-      totalPages: number;
-      page: number;
-      size: number;
-    }>>(`/api/chat/${chatId}/messages?page=${page}&size=${size}`);
-    return response.data.data;
+  ): Promise<any> {
+    const response = await apiClient.get<any>(`/api/v2/chat/rooms/${chatId}/messages?page=${page}&size=${size}`);
+    return response.data;
   }
 
   /**
    * Send message
    */
-  async sendMessage(chatId: number, request: SendMessageRequest): Promise<Message> {
-    const response = await apiClient.post<ApiSuccessResponse<Message>>(
-      `/api/chat/${chatId}/messages`,
+  async sendMessage(chatId: number, request: SendMessageRequest): Promise<any> {
+    const response = await apiClient.post<any>(
+      `/api/v2/chat/rooms/${chatId}/messages`,
       request
     );
-    return response.data.data;
+    return response.data;
   }
 
   /**
    * Edit message
    */
-  async editMessage(messageId: number, request: EditMessageRequest): Promise<Message> {
-    const response = await apiClient.put<ApiSuccessResponse<Message>>(
-      `/api/chat/messages/${messageId}`,
+  async editMessage(messageId: number, request: EditMessageRequest): Promise<any> {
+    const response = await apiClient.put<any>(
+      `/api/v2/chat/messages/${messageId}`,
       request
     );
-    return response.data.data;
+    return response.data;
   }
 
   /**
    * Delete message
    */
   async deleteMessage(messageId: number): Promise<void> {
-    await apiClient.delete(`/api/chat/messages/${messageId}`);
+    await apiClient.delete(`/api/v2/chat/messages/${messageId}`);
   }
 
   /**
@@ -296,35 +272,19 @@ export class ChatApi {
     query: string, 
     page: number = 0, 
     size: number = 20
-  ): Promise<{
-    content: Message[];
-    totalElements: number;
-    totalPages: number;
-  }> {
-    const response = await apiClient.get<ApiSuccessResponse<{
-      content: Message[];
-      totalElements: number;
-      totalPages: number;
-    }>>(
-      `/api/chat/${chatId}/messages/search?query=${encodeURIComponent(query)}&page=${page}&size=${size}`
+  ): Promise<any> {
+    const response = await apiClient.get<any>(
+      `/api/v2/chat/rooms/${chatId}/search?query=${encodeURIComponent(query)}&page=${page}&size=${size}`
     );
-    return response.data.data;
+    return response.data;
   }
 
   /**
    * Get media messages in chat
    */
-  async getMediaMessages(chatId: number, page: number = 0, size: number = 20): Promise<{
-    content: Message[];
-    totalElements: number;
-    totalPages: number;
-  }> {
-    const response = await apiClient.get<ApiSuccessResponse<{
-      content: Message[];
-      totalElements: number;
-      totalPages: number;
-    }>>(`/api/chat/${chatId}/media?page=${page}&size=${size}`);
-    return response.data.data;
+  async getMediaMessages(chatId: number, page: number = 0, size: number = 20): Promise<any> {
+    const response = await apiClient.get<any>(`/api/v2/chat/rooms/${chatId}/media?page=${page}&size=${size}`);
+    return response.data;
   }
 
   // =====================================
@@ -336,21 +296,21 @@ export class ChatApi {
    */
   async markAsRead(chatId: number, messageIds?: number[]): Promise<void> {
     const body = messageIds ? { messageIds } : undefined;
-    await apiClient.post(`/api/chat/${chatId}/mark-read`, body);
+    await apiClient.post(`/api/v2/chat/rooms/${chatId}/messages/read`, body);
   }
 
   /**
    * Mark message as delivered
    */
   async markAsDelivered(messageId: number): Promise<void> {
-    await apiClient.post(`/api/chat/messages/${messageId}/delivered`);
+    await apiClient.post(`/api/v2/chat/messages/${messageId}/delivered`);
   }
 
   /**
    * Bulk mark messages as delivered
    */
   async bulkMarkAsDelivered(messageIds: number[]): Promise<void> {
-    await apiClient.post('/api/chat/messages/bulk-delivered', {
+    await apiClient.post('/api/v2/chat/messages/bulk-delivered', {
       messageIds
     });
   }
@@ -358,35 +318,19 @@ export class ChatApi {
   /**
    * Get message delivery statistics
    */
-  async getDeliveryStats(messageId: number): Promise<DeliveryStats> {
-    const response = await apiClient.get<ApiSuccessResponse<DeliveryStats>>(
-      `/api/chat/messages/${messageId}/delivery-stats`
+  async getDeliveryStats(messageId: number): Promise<any> {
+    const response = await apiClient.get<any>(
+      `/api/v2/chat/messages/${messageId}/delivery-stats`
     );
-    return response.data.data;
+    return response.data;
   }
 
   /**
    * Get message status
    */
-  async getMessageStatus(messageId: number): Promise<{
-    messageId: number;
-    statuses: {
-      userId: number;
-      username: string;
-      status: 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
-      timestamp: string;
-    }[];
-  }> {
-    const response = await apiClient.get<ApiSuccessResponse<{
-      messageId: number;
-      statuses: {
-        userId: number;
-        username: string;
-        status: 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
-        timestamp: string;
-      }[];
-    }>>(`/api/chat/messages/${messageId}/status`);
-    return response.data.data;
+  async getMessageStatus(messageId: number): Promise<any> {
+    const response = await apiClient.get<any>(`/api/v2/chat/messages/${messageId}/status`);
+    return response.data;
   }
 
   // =====================================
@@ -396,21 +340,21 @@ export class ChatApi {
   /**
    * Get total unread count
    */
-  async getUnreadCount(): Promise<UnreadCount> {
-    const response = await apiClient.get<ApiSuccessResponse<UnreadCount>>(
-      '/api/chat/unread-count'
+  async getUnreadCount(): Promise<any> {
+    const response = await apiClient.get<any>(
+      '/api/v2/chat/unread-count'
     );
-    return response.data.data;
+    return response.data;
   }
 
   /**
    * Get unread count by chat
    */
-  async getUnreadCountByChat(): Promise<{[chatId: string]: number}> {
-    const response = await apiClient.get<ApiSuccessResponse<{[chatId: string]: number}>>(
-      '/api/chat/unread-count/by-chat'
+  async getUnreadCountByChat(): Promise<any> {
+    const response = await apiClient.get<any>(
+      '/api/v2/chat/rooms/unread-count'
     );
-    return response.data.data;
+    return response.data;
   }
 
   // =====================================
@@ -420,18 +364,18 @@ export class ChatApi {
   /**
    * Get online users in chat
    */
-  async getOnlineUsers(chatId: number): Promise<UserStatus[]> {
-    const response = await apiClient.get<ApiSuccessResponse<UserStatus[]>>(
-      `/api/chat/${chatId}/online-users`
+  async getOnlineUsers(chatId: number): Promise<any> {
+    const response = await apiClient.get<any>(
+      `/api/v2/chat/${chatId}/online-users`
     );
-    return response.data.data;
+    return response.data;
   }
 
   /**
    * Update user status
    */
   async updateUserStatus(status: 'ONLINE' | 'AWAY' | 'BUSY' | 'OFFLINE', customStatus?: string): Promise<void> {
-    await apiClient.post('/api/chat/user-status', {
+    await apiClient.post('/api/v2/chat/user-status', {
       status,
       customStatus
     });
@@ -444,23 +388,13 @@ export class ChatApi {
   /**
    * Upload file for message
    */
-  async uploadFile(file: FormData): Promise<{
-    fileUrl: string;
-    fileName: string;
-    fileSize: number;
-    mimeType: string;
-  }> {
-    const response = await apiClient.post<ApiSuccessResponse<{
-      fileUrl: string;
-      fileName: string;
-      fileSize: number;
-      mimeType: string;
-    }>>('/api/chat/upload', file, {
+  async uploadFile(chatId: number, file: FormData): Promise<any> {
+    const response = await apiClient.post<any>(`/api/v2/chat/rooms/${chatId}/messages/upload`, file, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
-    return response.data.data;
+    return response.data;
   }
 
   // =====================================
@@ -470,46 +404,34 @@ export class ChatApi {
   /**
    * Get dealer-only chats
    */
-  async getDealerChats(): Promise<Chat[]> {
-    const response = await apiClient.get<ApiSuccessResponse<Chat[]>>(
-      '/api/dealer/chats'
-    );
-    return response.data.data;
-  }
-
-  /**
-   * Get seller-specific chats
-   */
-  async getSellerChats(): Promise<Chat[]> {
-    const response = await apiClient.get<ApiSuccessResponse<Chat[]>>(
-      '/api/seller/chats'
-    );
-    return response.data.data;
+  async getDealerGroups(page: number = 0, size: number = 20): Promise<any> {
+    const response = await apiClient.get<any>(`/api/v2/chat/dealer-groups?page=${page}&size=${size}`);
+    return response.data;
   }
 
   /**
    * Create car inquiry chat
    */
-  async createCarInquiryChat(carId: number, sellerId: number, message: string): Promise<Chat> {
-    const response = await apiClient.post<ApiSuccessResponse<Chat>>(
-      '/api/chat/car-inquiry',
+  async createCarInquiryChat(carId: number, sellerId: number, message: string): Promise<any> {
+    const response = await apiClient.post<any>(
+      '/api/v2/chat/car-inquiry',
       {
         carId,
         sellerId,
         message
       }
     );
-    return response.data.data;
+    return response.data;
   }
 
   /**
    * Get car-related chats
    */
-  async getCarChats(carId: number): Promise<Chat[]> {
-    const response = await apiClient.get<ApiSuccessResponse<Chat[]>>(
-      `/api/chat/car/${carId}`
+  async getCarChats(carId: number): Promise<any> {
+    const response = await apiClient.get<any>(
+      `/api/v2/chat/car/${carId}`
     );
-    return response.data.data;
+    return response.data;
   }
 
   // =====================================
@@ -519,21 +441,21 @@ export class ChatApi {
   /**
    * Search chats
    */
-  async searchChats(query: string): Promise<Chat[]> {
-    const response = await apiClient.get<ApiSuccessResponse<Chat[]>>(
-      `/api/chat/search?query=${encodeURIComponent(query)}`
+  async searchChats(query: string): Promise<any> {
+    const response = await apiClient.get<any>(
+      `/api/v2/chat/search?query=${encodeURIComponent(query)}`
     );
-    return response.data.data;
+    return response.data;
   }
 
   /**
    * Get popular/featured chats
    */
-  async getPopularChats(): Promise<Chat[]> {
-    const response = await apiClient.get<ApiSuccessResponse<Chat[]>>(
-      '/api/chat/popular'
+  async getPopularChats(): Promise<any> {
+    const response = await apiClient.get<any>(
+      '/api/v2/chat/popular'
     );
-    return response.data.data;
+    return response.data;
   }
 
   // =====================================
@@ -543,21 +465,9 @@ export class ChatApi {
   /**
    * Get chat statistics
    */
-  async getChatStatistics(chatId: number): Promise<{
-    totalMessages: number;
-    totalParticipants: number;
-    activeParticipants: number;
-    messagesByType: {[type: string]: number};
-    activityByDay: {[date: string]: number};
-  }> {
-    const response = await apiClient.get<ApiSuccessResponse<{
-      totalMessages: number;
-      totalParticipants: number;
-      activeParticipants: number;
-      messagesByType: {[type: string]: number};
-      activityByDay: {[date: string]: number};
-    }>>(`/api/chat/${chatId}/statistics`);
-    return response.data.data;
+  async getChatStatistics(chatId: number): Promise<any> {
+    const response = await apiClient.get<any>(`/api/v2/chat/${chatId}/statistics`);
+    return response.data;
   }
 }
 

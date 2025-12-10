@@ -14,8 +14,7 @@ import {
   Platform,
   Animated,
 } from 'react-native';
-import { ThemeContext } from '../../theme/ThemeContext';
-import AuthContext from '../../context/AuthContext';
+
 
 interface ChatMessage {
   id: string;
@@ -43,6 +42,11 @@ interface ChatMessage {
   deliveryStatus: 'sending' | 'sent' | 'delivered' | 'read';
 }
 
+interface User {
+  id: string;
+  name: string;
+}
+
 interface Participant {
   id: string;
   name: string;
@@ -54,8 +58,21 @@ interface Participant {
 }
 
 const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
-  const { theme } = useContext(ThemeContext);
-  const { user } = useContext(AuthContext);
+  const theme = {
+    colors: {
+      text: '#1A202C',
+      textSecondary: '#4A5568',
+      primary: '#FFD700',
+      surface: '#FFFFFF',
+      border: '#E2E8F0',
+      background: '#FAFBFC',
+      cardBackground: '#FFFFFF',
+    }
+  } as const;
+  const user: User = { 
+    id: 'current_user_123',
+    name: 'Test User' 
+  };
   
   const {
     participantId,
@@ -76,7 +93,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
   const typingAnimation = useRef(new Animated.Value(0)).current;
 
   // Mock participant data
-  const mockParticipant: Participant = {
+  const mockParticipant = React.useMemo<Participant>(() => ({
     id: participantId,
     name: participantName,
     type: participantType,
@@ -84,15 +101,14 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
     lastSeen: new Date(),
     showroomName: participantType === 'dealer' ? 'Premium Motors' : undefined,
     avatar: participantType === 'dealer' 
-      ? 'https://images.unsplash.com/photo-1556157382-97eda2d62296?w=100&h=100&fit=crop'
-      : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
-  };
+      ? 'https://images.unsplash.com/photo-1556157382-97eda2d62296?w=100&h=100&fit=crop' : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
+  }), [participantId, participantName, participantType]);
 
   // Mock messages
-  const mockMessages: ChatMessage[] = [
+  const mockMessages = React.useMemo<ChatMessage[]>(() => [
     {
       id: '1',
-      text: 'Hello! I saw your listing for the Honda City. Is it still available?',
+      text: 'Hello! I saw your listing for the Honda City. Is it still available? ',
       timestamp: new Date(Date.now() - 60 * 60 * 1000),
       senderId: participantId,
       senderName: participantName,
@@ -102,7 +118,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
     },
     {
       id: '2',
-      text: 'Yes, it\'s still available! Would you like to schedule a test drive?',
+      text: 'Yes, it\'s still available! Would you like to schedule a test drive? ',
       timestamp: new Date(Date.now() - 50 * 60 * 1000),
       senderId: user?.id || 'current_user',
       senderName: user?.name || 'You',
@@ -112,7 +128,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
     },
     {
       id: '3',
-      text: 'That would be great! Can you share more details about the car?',
+      text: 'That would be great! Can you share more details about the car? ',
       timestamp: new Date(Date.now() - 45 * 60 * 1000),
       senderId: participantId,
       senderName: participantName,
@@ -141,7 +157,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
     },
     {
       id: '5',
-      text: 'Perfect! When would be a good time for the test drive?',
+      text: 'Perfect! When would be a good time for the test drive? ',
       timestamp: new Date(Date.now() - 30 * 60 * 1000),
       senderId: participantId,
       senderName: participantName,
@@ -149,7 +165,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
       isRead: true,
       deliveryStatus: 'read'
     }
-  ];
+  ], [participantId, participantName, relatedCarId, relatedCarTitle, user?.id, user?.name]);
 
   useEffect(() => {
     setParticipant(mockParticipant);
@@ -162,7 +178,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
     }, 2000);
 
     return () => clearTimeout(typingTimeout);
-  }, []);
+  }, [mockParticipant, mockMessages]);
 
   useEffect(() => {
     if (participantTyping) {
@@ -183,7 +199,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
     } else {
       typingAnimation.setValue(0);
     }
-  }, [participantTyping]);
+  }, [participantTyping, typingAnimation]);
 
   const sendMessage = async () => {
     if (!messageText.trim()) return;
@@ -298,7 +314,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
     if (item.type === 'system') {
       return (
         <View style={styles.systemMessageContainer}>
-          <Text style={[styles.systemMessage, { color: theme.secondaryText }]}>
+          <Text style={[styles.systemMessage, { color: theme.colors.textSecondary }]}>
             {item.text}
           </Text>
         </View>
@@ -320,14 +336,14 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
         <View style={[
           styles.messageBubble,
           {
-            backgroundColor: isOwnMessage ? theme.primary : theme.cardBackground,
-            borderColor: theme.border
+            backgroundColor: isOwnMessage ? theme.colors.primary : theme.colors.surface,
+            borderColor: theme.colors.border
           }
         ]}>
           {item.type === 'text' && (
             <Text style={[
               styles.messageText,
-              { color: isOwnMessage ? '#FFFFFF' : theme.text }
+              { color: isOwnMessage ? '#FFFFFF' : theme.colors.text }
             ]}>
               {item.text}
             </Text>
@@ -351,19 +367,19 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
               <View style={styles.carShareDetails}>
                 <Text style={[
                   styles.carShareTitle,
-                  { color: isOwnMessage ? '#FFFFFF' : theme.text }
+                  { color: isOwnMessage ? '#FFFFFF' : theme.colors.text }
                 ]}>
                   {item.carData.title}
                 </Text>
                 <Text style={[
                   styles.carSharePrice,
-                  { color: isOwnMessage ? '#FFFFFF' : theme.primary }
+                  { color: isOwnMessage ? '#FFFFFF' : theme.colors.primary }
                 ]}>
                   {item.carData.price}
                 </Text>
                 <Text style={[
                   styles.carShareSubtitle,
-                  { color: isOwnMessage ? '#FFFFFF' : theme.secondaryText }
+                  { color: isOwnMessage ? '#FFFFFF' : theme.colors.textSecondary }
                 ]}>
                   {item.carData.year} • {item.carData.make} {item.carData.model}
                 </Text>
@@ -376,7 +392,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
               <Text style={{fontSize: 20, marginRight: 4}}>📍</Text>
               <Text style={[
                 styles.locationText,
-                { color: isOwnMessage ? '#FFFFFF' : theme.text }
+                { color: isOwnMessage ? '#FFFFFF' : theme.colors.text }
               ]}>
                 {item.locationData.address}
               </Text>
@@ -386,7 +402,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
           <View style={styles.messageFooter}>
             <Text style={[
               styles.messageTime,
-              { color: isOwnMessage ? '#FFFFFF' : theme.secondaryText }
+              { color: isOwnMessage ? '#FFFFFF' : theme.colors.textSecondary }
             ]}>
               {formatMessageTime(item.timestamp)}
             </Text>
@@ -418,7 +434,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
         />
         <View style={[
           styles.messageBubble,
-          { backgroundColor: theme.cardBackground, borderColor: theme.border }
+          { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }
         ]}>
           <View style={styles.typingContainer}>
             {[0, 1, 2].map((index) => (
@@ -427,7 +443,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
                 style={[
                   styles.typingDot,
                   {
-                    backgroundColor: theme.secondaryText,
+                    backgroundColor: theme.colors.textSecondary,
                     opacity: typingAnimation.interpolate({
                       inputRange: [0, 1],
                       outputRange: [0.3, 1],
@@ -445,7 +461,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
               />
             ))}
           </View>
-          <Text style={[styles.typingText, { color: theme.secondaryText }]}>
+          <Text style={[styles.typingText, { color: theme.colors.textSecondary }]}>
             {participant?.name} is typing...
           </Text>
         </View>
@@ -456,15 +472,15 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.background,
+      backgroundColor: theme.colors.background,
     },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
       padding: 16,
-      backgroundColor: theme.cardBackground,
+      backgroundColor: theme.colors.cardBackground,
       borderBottomWidth: 1,
-      borderBottomColor: theme.border,
+      borderBottomColor: theme.colors.border,
     },
     backButton: {
       marginRight: 12,
@@ -484,7 +500,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: theme.primary,
+      backgroundColor: theme.colors.primary,
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: 12,
@@ -495,11 +511,11 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
     headerName: {
       fontSize: 16,
       fontWeight: '600',
-      color: theme.text,
+      color: theme.colors.text,
     },
     headerStatus: {
       fontSize: 12,
-      color: theme.secondaryText,
+      color: theme.colors.textSecondary,
       marginTop: 2,
     },
     headerActions: {
@@ -622,9 +638,9 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
       flexDirection: 'row',
       alignItems: 'flex-end',
       padding: 16,
-      backgroundColor: theme.cardBackground,
+      backgroundColor: theme.colors.cardBackground,
       borderTopWidth: 1,
-      borderTopColor: theme.border,
+      borderTopColor: theme.colors.border,
     },
     attachmentButton: {
       padding: 8,
@@ -634,19 +650,19 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
       flex: 1,
       maxHeight: 100,
       borderWidth: 1,
-      borderColor: theme.border,
+      borderColor: theme.colors.border,
       borderRadius: 20,
       paddingHorizontal: 16,
       paddingVertical: 8,
-      backgroundColor: theme.background,
+      backgroundColor: theme.colors.background,
     },
     textInput: {
       fontSize: 16,
-      color: theme.text,
+      color: theme.colors.text,
       textAlignVertical: 'top',
     },
     sendButton: {
-      backgroundColor: theme.primary,
+      backgroundColor: theme.colors.primary,
       borderRadius: 20,
       padding: 8,
       marginLeft: 8,
@@ -654,10 +670,10 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
       alignItems: 'center',
     },
     sendButtonDisabled: {
-      backgroundColor: theme.secondaryText,
-    },
+      backgroundColor: theme.colors.textSecondary,
+      },
     attachmentMenu: {
-      backgroundColor: theme.cardBackground,
+      backgroundColor: theme.colors.cardBackground,
       borderRadius: 12,
       padding: 8,
       marginBottom: 8,
@@ -671,7 +687,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
     },
     attachmentOptionText: {
       fontSize: 12,
-      color: theme.text,
+      color: theme.colors.text,
       marginTop: 4,
     },
     imageModal: {
@@ -706,7 +722,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={{fontSize: 24, color: theme.text}}>←</Text>
+          <Text style={{fontSize: 24, color: theme.colors.text}}>←</Text>
         </TouchableOpacity>
         
         <View style={styles.headerContent}>
@@ -714,7 +730,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
             <Image source={{ uri: participant.avatar }} style={styles.headerAvatar} />
           ) : (
             <View style={styles.headerAvatarPlaceholder}>
-              <Text style={{fontSize: 20, color: '#FFFFFF'}}>
+            <Text style={{fontSize: 20, color: '#FFFFFF'}}>
                 {participant?.type === 'dealer' ? '🏪' : '👤'}
               </Text>
             </View>
@@ -730,7 +746,7 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
         
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.actionButton} onPress={makePhoneCall}>
-            <Text style={{fontSize: 20, color: theme.primary}}>📞</Text>
+            <Text style={{fontSize: 20, color: theme.colors.primary}}>📞</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton} onPress={openWhatsApp}>
             <Text style={{fontSize: 20, color: '#25D366'}}>💬</Text>
@@ -753,14 +769,14 @@ const ChatConversationScreen: React.FC = ({ navigation, route }: any) => {
       {/* Input Area */}
       <View style={styles.inputContainer}>
         <TouchableOpacity style={styles.attachmentButton}>
-          <Text style={{fontSize: 24, color: theme.primary}}>+</Text>
+          <Text style={{fontSize: 24, color: theme.colors.primary}}>+</Text>
         </TouchableOpacity>
         
         <View style={styles.textInputContainer}>
           <TextInput
             style={styles.textInput}
             placeholder="Type a message..."
-            placeholderTextColor={theme.secondaryText}
+            placeholderTextColor={theme.colors.textSecondary}
             value={messageText}
             onChangeText={setMessageText}
             multiline

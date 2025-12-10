@@ -12,7 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 // import { GroupDetailsRouteProp, DealerGroup, Vehicle } from '../../navigation/types'; // Update this path based on your project structure
 
 // Temporary interfaces until proper types are available
@@ -119,10 +119,6 @@ const GroupDetailsScreen: React.FC = () => {
     },
   ];
 
-  useEffect(() => {
-    loadGroupDetails();
-  }, [groupId]);
-
   const loadGroupDetails = async () => {
     try {
       setLoading(true);
@@ -137,6 +133,11 @@ const GroupDetailsScreen: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadGroupDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupId]);
 
   const isAdmin = group?.adminId === 'dealer1'; // Replace with current user ID check
 
@@ -153,7 +154,7 @@ const GroupDetailsScreen: React.FC = () => {
   const handleLeaveGroup = () => {
     Alert.alert(
       'Leave Group',
-      'Are you sure you want to leave this group?',
+      'Are you sure you want to leave this group? ',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -195,7 +196,7 @@ const GroupDetailsScreen: React.FC = () => {
   };
 
   const handleMessageDealer = (dealerId: string, dealerName: string) => {
-    navigation.navigate('ChatScreen', { dealerId, dealerName });
+    (navigation as any).navigate('ChatScreen', { dealerId, dealerName });
   };
 
   const renderVehicleItem = ({ item }: { item: Vehicle }) => (
@@ -353,7 +354,7 @@ const GroupDetailsScreen: React.FC = () => {
       <View style={styles.groupInfo}>
         <View style={styles.groupHeader}>
           <View style={styles.privacyIndicator}>
-            <Icon
+            <MaterialIcons
               name={group.isPrivate ? 'lock' : 'public'}
               size={16}
               color={group.isPrivate ? '#FF6B6B' : '#4ECDC4'}
@@ -591,10 +592,7 @@ const styles = StyleSheet.create({
     width: '48%',
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
     elevation: 3,
   },
   statNumber: {
@@ -636,10 +634,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
     elevation: 3,
   },
   vehicleImageContainer: {
@@ -705,10 +700,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
     elevation: 3,
   },
   memberAvatar: {

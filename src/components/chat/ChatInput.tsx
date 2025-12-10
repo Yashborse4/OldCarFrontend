@@ -12,7 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import { useTheme } from '../../theme';
+
 import { launchImageLibrary, launchCamera, ImagePickerResponse, MediaType, PhotoQuality } from 'react-native-image-picker';
 import Geolocation from '@react-native-community/geolocation';
 
@@ -42,7 +42,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
   showCarShare = false,
   availableCars = [],
 }) => {
-  const { colors: theme } = useTheme();
+  const theme = {
+    colors: {
+      surface: '#FFFFFF',
+      text: '#1A202C',
+      textSecondary: '#4A5568',
+      primary: '#FFD700',
+      border: '#E2E8F0',
+    }
+  };
   const [messageText, setMessageText] = useState('');
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showCarShareModal, setShowCarShareModal] = useState(false);
@@ -183,12 +191,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
         activeOpacity={1}
         onPress={() => setShowAttachmentMenu(false)}
       >
-        <View style={[styles.attachmentMenu, { backgroundColor: theme.card }]}>
+        <View style={[styles.attachmentMenu, { backgroundColor: theme.colors.surface }]}>
           <TouchableOpacity style={styles.attachmentOption} onPress={takePhoto}>
             <View style={[styles.attachmentIconContainer, { backgroundColor: '#FF6B6B' }]}>
             <MaterialIcons name="camera-alt" size={24} color="#FFFFFF" />
             </View>
-            <Text style={[styles.attachmentOptionText, { color: theme.text }]}>
+            <Text style={[styles.attachmentOptionText, { color: theme.colors.text }]}>
               Take Photo
             </Text>
           </TouchableOpacity>
@@ -197,7 +205,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             <View style={[styles.attachmentIconContainer, { backgroundColor: '#4ECDC4' }]}>
               <MaterialIcons name="image" size={24} color="#FFFFFF" />
             </View>
-            <Text style={[styles.attachmentOptionText, { color: theme.text }]}>
+            <Text style={[styles.attachmentOptionText, { color: theme.colors.text }]}>
               Gallery
             </Text>
           </TouchableOpacity>
@@ -206,7 +214,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             <View style={[styles.attachmentIconContainer, { backgroundColor: '#45B7D1' }]}>
               <MaterialIcons name="location-on" size={24} color="#FFFFFF" />
             </View>
-            <Text style={[styles.attachmentOptionText, { color: theme.text }]}>
+            <Text style={[styles.attachmentOptionText, { color: theme.colors.text }]}>
               Location
             </Text>
           </TouchableOpacity>
@@ -219,10 +227,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 setShowCarShareModal(true);
               }}
             >
-              <View style={[styles.attachmentIconContainer, { backgroundColor: theme.primary }]}>
+              <View style={[styles.attachmentIconContainer, { backgroundColor: theme.colors.primary }]}>
                 <MaterialIcons name="directions-car" size={24} color="#FFFFFF" />
               </View>
-              <Text style={[styles.attachmentOptionText, { color: theme.text }]}>
+              <Text style={[styles.attachmentOptionText, { color: theme.colors.text }]}>
                 Share Car
               </Text>
             </TouchableOpacity>
@@ -240,20 +248,20 @@ const ChatInput: React.FC<ChatInputProps> = ({
       onRequestClose={() => setShowCarShareModal(false)}
     >
       <View style={styles.modalOverlay}>
-        <View style={[styles.carShareModal, { backgroundColor: theme.card }]}>
+        <View style={[styles.carShareModal, { backgroundColor: theme.colors.surface }]}>
           <View style={styles.carShareHeader}>
-            <Text style={[styles.carShareTitle, { color: theme.text }]}>
+            <Text style={[styles.carShareTitle, { color: theme.colors.text }]}>
               Share a Car
             </Text>
             <TouchableOpacity onPress={() => setShowCarShareModal(false)}>
-              <Text style={{fontSize: 24, color: theme.text}}>×</Text>
+              <Text style={{fontSize: 24, color: theme.colors.text}}>×</Text>
             </TouchableOpacity>
           </View>
 
           {availableCars.length === 0 ? (
             <View style={styles.emptyStateContainer}>
-              <Text style={{fontSize: 48, color: theme.textSecondary}}>🚗❌</Text>
-              <Text style={[styles.emptyStateText, { color: theme.textSecondary }]}>
+              <Text style={{fontSize: 48, color: theme.colors.textSecondary}}>🚗❌</Text>
+              <Text style={[styles.emptyStateText, { color: theme.colors.textSecondary }]}>
                 No cars available to share
               </Text>
             </View>
@@ -261,7 +269,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             availableCars.map((car) => (
               <TouchableOpacity
                 key={car.id}
-                style={[styles.carShareItem, { borderBottomColor: theme.border }]}
+                style={[styles.carShareItem, { borderBottomColor: theme.colors.border }]}
                 onPress={() => {
                   onSendCarShare?.(car.id);
                   setShowCarShareModal(false);
@@ -269,14 +277,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
               >
                 <Image source={{ uri: car.image }} style={styles.carShareItemImage} />
                 <View style={styles.carShareItemDetails}>
-                  <Text style={[styles.carShareItemTitle, { color: theme.text }]}>
+                  <Text style={[styles.carShareItemTitle, { color: theme.colors.text }]}>
                     {car.title}
                   </Text>
-                  <Text style={[styles.carShareItemPrice, { color: theme.primary }]}>
+                  <Text style={[styles.carShareItemPrice, { color: theme.colors.primary }]}>
                     {car.price}
                   </Text>
                 </View>
-                <Text style={{fontSize: 20, color: theme.textSecondary}}>›</Text>
+                <Text style={{fontSize: 20, color: theme.colors.textSecondary}}>›</Text>
               </TouchableOpacity>
             ))
           )}
@@ -290,9 +298,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
       flexDirection: 'row',
       alignItems: 'flex-end',
       padding: 16,
-      backgroundColor: theme.card,
+      backgroundColor: '#FFFFFF',
       borderTopWidth: 1,
-      borderTopColor: theme.border,
+      borderTopColor: '#E2E8F0',
     },
     attachmentButton: {
       padding: 8,
@@ -303,20 +311,20 @@ const ChatInput: React.FC<ChatInputProps> = ({
       flex: 1,
       maxHeight: 100,
       borderWidth: 1,
-      borderColor: theme.border,
+      borderColor: '#E2E8F0',
       borderRadius: 20,
       paddingHorizontal: 16,
       paddingVertical: 8,
-      backgroundColor: theme.background,
+      backgroundColor: '#FAFBFC',
     },
     textInput: {
       fontSize: 16,
-      color: theme.text,
+      color: '#1A202C',
       textAlignVertical: 'top',
       minHeight: 20,
     },
     sendButton: {
-      backgroundColor: theme.primary,
+      backgroundColor: '#FFD700',
       borderRadius: 20,
       padding: 8,
       marginLeft: 8,
@@ -326,7 +334,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
       minHeight: 36,
     },
     sendButtonDisabled: {
-      backgroundColor: theme.textSecondary,
+      backgroundColor: '#4A5568',
       opacity: 0.5,
     },
     modalOverlay: {
@@ -340,11 +348,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
       borderRadius: 12,
       padding: 16,
       marginHorizontal: 32,
-      elevation: 8,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 8,
+
+
     },
     attachmentOption: {
       alignItems: 'center',
@@ -368,10 +373,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
       maxHeight: '70%',
       borderRadius: 12,
       elevation: 8,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 8,
+
     },
     carShareHeader: {
       flexDirection: 'row',
@@ -379,7 +381,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
       alignItems: 'center',
       padding: 16,
       borderBottomWidth: 1,
-      borderBottomColor: theme.border,
+      borderBottomColor: '#E2E8F0',
     },
     carShareTitle: {
       fontSize: 18,
@@ -427,14 +429,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onPress={showAttachmentOptions}
         disabled={disabled}
       >
-        <Text style={{fontSize: 24, color: disabled ? theme.textSecondary : theme.primary}}>+</Text>
+        <Text style={{fontSize: 24, color: disabled ? theme.colors.textSecondary : theme.colors.primary}}>+</Text>
       </TouchableOpacity>
       
       <View style={styles.textInputContainer}>
         <TextInput
           style={styles.textInput}
           placeholder={placeholder}
-          placeholderTextColor={theme.textSecondary}
+          placeholderTextColor={theme.colors.textSecondary}
           value={messageText}
           onChangeText={setMessageText}
           multiline

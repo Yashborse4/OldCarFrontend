@@ -59,8 +59,7 @@ class WebSocketService {
 
   // Base URL for WebSocket connection
   private readonly wsBaseUrl = __DEV__ 
-    ? 'http://localhost:9000' 
-    : 'https://your-production-api.com';
+    ? 'http://localhost:9000' : 'https://your-production-api.com';
 
   constructor() {
     this.initializeClient();
@@ -73,7 +72,7 @@ class WebSocketService {
   private async initializeClient(): Promise<void> {
     try {
       this.client = new Client({
-        brokerURL: `${this.wsBaseUrl}/ws-native`,
+        brokerURL: `${this.wsBaseUrl}/ws`,
         
         // Use SockJS as fallback for better compatibility
         webSocketFactory: () => {
@@ -109,7 +108,7 @@ class WebSocketService {
     try {
       const token = await AsyncStorage.getItem('@carworld_access_token');
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
       console.warn('Failed to get auth token for WebSocket connection:', error);

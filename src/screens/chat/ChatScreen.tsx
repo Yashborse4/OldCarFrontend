@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,10 +14,9 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import { Button } from '../../components/UI/Button';
-import { Card } from '../../components/UI/Card';
-import { theme } from '../../theme';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
+import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
 
 // Temporary interfaces until proper types are available
 interface ChatMessage {
@@ -55,6 +54,15 @@ const ChatScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const insets = useSafeAreaInsets();
+  const colors = {
+    background: '#FAFBFC',
+    surface: '#FFFFFF',
+    text: '#1A202C',
+    textSecondary: '#4A5568',
+    primary: '#FFD700',
+    border: '#E2E8F0',
+    success: '#48BB78',
+  };
   const { dealerId, dealerName } = route.params as { dealerId: string; dealerName: string };
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -65,7 +73,7 @@ const ChatScreen: React.FC = () => {
   const flatListRef = useRef<FlatList>(null);
 
   // Mock data - replace with API calls later
-  const mockMessages: ChatMessage[] = [
+  const mockMessages = React.useMemo<ChatMessage[]>(() => [
     {
       id: '1',
       senderId: dealerId,
@@ -79,7 +87,7 @@ const ChatScreen: React.FC = () => {
       id: '2',
       senderId: 'current-user',
       receiverId: dealerId,
-      message: 'Thank you! It\'s in excellent condition. Are you interested for your inventory?',
+      message: 'Thank you! It\'s in excellent condition. Are you interested for your inventory? ',
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1.8).toISOString(),
       status: 'read',
       type: 'text',
@@ -88,9 +96,9 @@ const ChatScreen: React.FC = () => {
       id: '3',
       senderId: dealerId,
       receiverId: 'current-user',
-      message: 'Yes, definitely. Could you share more details about the maintenance history?',
+      message: 'Yes, definitely. Could you share more details about the maintenance history? ',
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1.5).toISOString(),
-      status: 'read',
+      status: 'delivered',
       type: 'text',
     },
     {
@@ -123,9 +131,9 @@ const ChatScreen: React.FC = () => {
       id: '6',
       senderId: dealerId,
       receiverId: 'current-user',
-      message: 'Perfect! What\'s your best price for a dealer-to-dealer transaction?',
+      message: 'Perfect! What\'s your best price for a dealer-to-dealer transaction? ',
       timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-      status: 'read',
+      status: 'delivered',
       type: 'text',
     },
     {
@@ -147,14 +155,14 @@ const ChatScreen: React.FC = () => {
       id: '8',
       senderId: dealerId,
       receiverId: 'current-user',
-      message: 'I have a customer interested in your BMW X5. Can we discuss pricing?',
+      message: 'I have a customer interested in your BMW X5. Can we discuss pricing? ',
       timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutes ago
-      status: 'delivered',
+      status: 'read',
       type: 'text',
     },
-  ];
+  ], [dealerId]);
 
-  const mockUserVehicles: Vehicle[] = [
+  const mockUserVehicles = React.useMemo<Vehicle[]>(() => [
     {
       id: 'v1',
       make: 'BMW',
@@ -193,14 +201,14 @@ const ChatScreen: React.FC = () => {
       inquiries: 8,
       shares: 4,
     },
-  ];
+  ], []);
 
   useEffect(() => {
     loadMessages();
     loadUserVehicles();
-  }, [dealerId]);
+  }, [loadMessages, loadUserVehicles]);
 
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     try {
       // Simulate API call
       setTimeout(() => {
@@ -210,9 +218,9 @@ const ChatScreen: React.FC = () => {
     } catch (error) {
       console.error('Error loading messages:', error);
     }
-  };
+  }, [dealerId, mockMessages, scrollToBottom]);
 
-  const loadUserVehicles = async () => {
+  const loadUserVehicles = useCallback(async () => {
     try {
       // Simulate API call
       setTimeout(() => {
@@ -221,15 +229,15 @@ const ChatScreen: React.FC = () => {
     } catch (error) {
       console.error('Error loading user vehicles:', error);
     }
-  };
+  }, [mockUserVehicles]);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = React.useCallback(() => {
     if (flatListRef.current && messages.length > 0) {
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
-  };
+  }, [messages]);
 
   const sendMessage = async (messageType: 'text' | 'vehicle' | 'quote' = 'text', attachments?: any) => {
     if (messageType === 'text' && !messageText.trim()) return;
@@ -240,19 +248,12 @@ const ChatScreen: React.FC = () => {
       receiverId: dealerId,
       message: messageType === 'text' ? messageText.trim() : 
                messageType === 'vehicle' ? `${attachments.year} ${attachments.make} ${attachments.model} - $${attachments.price.toLocaleString()}` :
-               `Quote: $${attachments.dealerPrice.toLocaleString()} (${attachments.savings > 0 ? 'Save $' + attachments.savings.toLocaleString() : 'Final offer'})`,
+               `Quote: $${attachments.dealerPrice.toLocaleString()} (${attachments.savings > 0 ? 'Save $' : 'Final offer'})`,
       timestamp: new Date().toISOString(),
       status: 'sent',
       type: messageType,
       attachments: attachments ? [attachments] : undefined,
     };
-
-    setMessages(prev => [...prev, newMessage]);
-    setMessageText('');
-    setShowVehicleModal(false);
-    scrollToBottom();
-
-    // TODO: Send to backend
     // Simulate message delivery
     setTimeout(() => {
       setMessages(prev => 
@@ -440,7 +441,7 @@ const ChatScreen: React.FC = () => {
       <Card style={styles.headerCard}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
+            <MaterialIcons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           
           <View style={styles.headerInfo}>
@@ -449,7 +450,7 @@ const ChatScreen: React.FC = () => {
           </View>
           
           <TouchableOpacity style={styles.headerButton}>
-            <MaterialIcons name="phone" size={24} color={theme.colors.primary} />
+            <MaterialIcons name="phone" size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
       </Card>
@@ -475,27 +476,27 @@ const ChatScreen: React.FC = () => {
               style={styles.attachButton}
               onPress={() => setShowAttachmentModal(true)}
             >
-              <MaterialIcons name="add" size={24} color={theme.colors.textSecondary} />
+              <MaterialIcons name="add" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
             
             <TextInput
               value={messageText}
               onChangeText={setMessageText}
               placeholder="Type a message..."
-              placeholderTextColor={theme.colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               multiline
               style={styles.messageInput}
               onSubmitEditing={() => sendMessage('text')}
             />
             
             <TouchableOpacity
-              style={[styles.sendButton, messageText.trim() && styles.sendButtonActive]}
+              style={[styles.sendButton, messageText.trim() ? styles.sendButtonActive : null]}
               onPress={() => sendMessage('text')}
             >
               <MaterialIcons 
                 name="send" 
                 size={20} 
-                color={messageText.trim() ? theme.colors.surface : theme.colors.textSecondary} 
+                color={messageText.trim() ? colors.surface : colors.textSecondary} 
               />
             </TouchableOpacity>
           </View>
@@ -587,13 +588,13 @@ const ChatScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FAFBFC',
   },
   headerCard: {
     marginHorizontal: 0,
     borderRadius: 0,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderColor: '#E2E8F0',
   },
   header: {
     flexDirection: 'row',
@@ -612,11 +613,11 @@ const styles = StyleSheet.create({
   dealerName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: '#1A202C',
   },
   onlineStatus: {
     fontSize: 12,
-    color: theme.colors.success,
+    color: '#48BB78',
     marginTop: 2,
   },
   headerButton: {
@@ -646,12 +647,12 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   ownMessage: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: '#FFD700',
     alignSelf: 'flex-end',
     borderBottomRightRadius: 4,
   },
   otherMessage: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: '#FFFFFF',
     alignSelf: 'flex-start',
     borderBottomLeftRadius: 4,
   },
@@ -660,10 +661,10 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   ownMessageText: {
-    color: theme.colors.surface,
+    color: '#FFFFFF',
   },
   otherMessageText: {
-    color: theme.colors.text,
+    color: '#1A202C',
   },
   messageStatus: {
     position: 'absolute',
@@ -746,7 +747,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 0,
     borderRadius: 0,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    borderColor: '#E2E8F0',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -765,26 +766,32 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     marginRight: 8,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: '#E2E8F0',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
     fontSize: 16,
-    color: theme.colors.text,
-    backgroundColor: theme.colors.background,
+    color: '#1A202C',
+    backgroundColor: '#FAFBFC',
     textAlignVertical: 'top',
   },
   sendButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: theme.colors.border,
+    backgroundColor: '#E2E8F0',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
   },
   sendButtonActive: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: '#FFD700',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   modalOverlay: {
     flex: 1,
@@ -812,7 +819,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderColor: '#eee',
     marginTop: 8,
   },
   cancelOptionText: {
