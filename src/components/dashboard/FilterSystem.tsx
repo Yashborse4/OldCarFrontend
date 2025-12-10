@@ -9,10 +9,9 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
-import { useTheme } from '../../theme';
-import * as Animatable from 'react-native-animatable';
-import { AntDesign } from '@react-native-vector-icons/ant-design';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+
+import AntDesign from '@react-native-vector-icons/ant-design';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -43,10 +42,10 @@ interface FilterSystemProps {
 }
 
 const STATUS_OPTIONS = [
-  { key: 'all', label: 'All Cars', icon: 'car', color: '#667EEA' },
-  { key: 'active', label: 'Active', icon: 'checkcircle', color: '#48BB78' },
-  { key: 'sold', label: 'Sold', icon: 'heart', color: '#ED8936' },
-  { key: 'expired', label: 'Expired', icon: 'closecircle', color: '#F56565' },
+  { key: 'all', label: 'All Cars', icon: 'car', backgroundColor: '#667EEA' },
+  { key: 'active', label: 'Active', icon: 'checkcircle', backgroundColor: '#48BB78' },
+  { key: 'sold', label: 'Sold', icon: 'heart', backgroundColor: '#ED8936' },
+  { key: 'expired', label: 'Expired', icon: 'closecircle', backgroundColor: '#F56565' },
 ];
 
 const BRANDS = [
@@ -71,7 +70,16 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
   onResetFilters,
   totalResults = 0,
 }) => {
-  const { colors: themeColors, spacing, borderRadius, shadows } = useTheme();
+  const colors = {
+    primary: '#FFD700',
+    surface: '#FFFFFF',
+    border: '#E2E8F0',
+    text: '#1A202C',
+    textSecondary: '#4A5568',
+    error: '#F56565',
+    background: '#FAFBFC',
+  };
+
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showSortModal, setShowSortModal] = useState(false);
 
@@ -87,7 +95,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
 
   const getActiveStatusColor = (status: string) => {
     const statusOption = STATUS_OPTIONS.find(option => option.key === status);
-    return statusOption?.color || themeColors.primary;
+    return statusOption?.backgroundColor || colors.primary;
   };
 
   const renderStatusFilters = () => (
@@ -101,22 +109,22 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
               style={[
                 styles.statusButton,
                 {
-                  backgroundColor: isActive ? option.color : themeColors.surface,
-                  borderColor: isActive ? option.color : themeColors.border,
+                  backgroundColor: isActive ? option.backgroundColor : colors.surface,
+                  borderColor: isActive ? option.backgroundColor : colors.border,
                 },
-                shadows.sm,
+
               ]}
               onPress={() => updateFilter('status', option.key as any)}
             >
               <AntDesign
                 name={option.icon as any}
                 size={16}
-                color={isActive ? '#FFFFFF' : themeColors.text}
+                color={isActive ? '#FFFFFF' : colors.text}
               />
               <Text
                 style={[
                   styles.statusButtonText,
-                  { color: isActive ? '#FFFFFF' : themeColors.text },
+                  { color: isActive ? '#FFFFFF' : colors.text },
                 ]}
               >
                 {option.label}
@@ -129,18 +137,18 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
   );
 
   const renderSearchBar = () => (
-    <View style={[styles.searchContainer, { backgroundColor: themeColors.surface }, shadows.sm]}>
-      <AntDesign name="search" size={20} color={themeColors.textSecondary} />
+    <View style={[styles.searchContainer, { backgroundColor: colors.surface }]}>
+      <AntDesign name="search" size={20} color={colors.textSecondary} />
       <TextInput
-        style={[styles.searchInput, { color: themeColors.text }]}
+        style={[styles.searchInput, { color: colors.text }]}
         placeholder="Search cars by name, model, or brand..."
-        placeholderTextColor={themeColors.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={filters.search}
         onChangeText={(text) => updateFilter('search', text)}
       />
       {filters.search.length > 0 && (
         <TouchableOpacity onPress={() => updateFilter('search', '')}>
-          <AntDesign name="close" size={18} color={themeColors.textSecondary} />
+          <AntDesign name="close" size={18} color={colors.textSecondary} />
         </TouchableOpacity>
       )}
     </View>
@@ -151,13 +159,13 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
       <TouchableOpacity
         style={[
           styles.quickActionButton,
-          { backgroundColor: themeColors.surface, borderColor: themeColors.border },
-          shadows.sm,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+
         ]}
         onPress={() => setShowAdvancedFilters(true)}
       >
-        <MaterialIcons name="tune" size={18} color={themeColors.text} />
-        <Text style={[styles.quickActionText, { color: themeColors.text }]}>
+        <MaterialIcons name="tune" size={18} color={colors.text} />
+        <Text style={[styles.quickActionText, { color: colors.text }]}>
           More Filters
         </Text>
       </TouchableOpacity>
@@ -165,27 +173,27 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
       <TouchableOpacity
         style={[
           styles.quickActionButton,
-          { backgroundColor: themeColors.surface, borderColor: themeColors.border },
-          shadows.sm,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+
         ]}
         onPress={() => setShowSortModal(true)}
       >
-        <MaterialIcons name="sort" size={18} color={themeColors.text} />
-        <Text style={[styles.quickActionText, { color: themeColors.text }]}>
+        <MaterialIcons name="sort" size={18} color={colors.text} />
+        <Text style={[styles.quickActionText, { color: colors.text }]}>
           Sort: {SORT_OPTIONS.find(opt => opt.key === filters.sortBy)?.label}
         </Text>
-        <AntDesign 
-          name={filters.sortOrder === 'asc' ? 'arrowup' : 'arrowdown'} 
-          size={14} 
-          color={themeColors.text} 
+        <AntDesign
+          name={filters.sortOrder === 'asc' ? 'arrow-up' : 'arrow-down'}
+          size={14}
+          color={colors.text}
         />
       </TouchableOpacity>
 
       <TouchableOpacity
         style={[
           styles.resetButton,
-          { backgroundColor: themeColors.error },
-          shadows.sm,
+          { backgroundColor: colors.error },
+
         ]}
         onPress={onResetFilters}
       >
@@ -196,7 +204,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
 
   const renderResultsCount = () => (
     <View style={styles.resultsContainer}>
-      <Text style={[styles.resultsText, { color: themeColors.textSecondary }]}>
+      <Text style={[styles.resultsText, { color: colors.textSecondary }]}>
         {totalResults} {totalResults === 1 ? 'car' : 'cars'} found
       </Text>
     </View>
@@ -210,28 +218,26 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
       onRequestClose={() => setShowAdvancedFilters(false)}
     >
       <View style={styles.modalOverlay}>
-        <Animatable.View
-          animation="slideInUp"
-          duration={300}
+        <View
           style={[
             styles.modalContent,
-            { backgroundColor: themeColors.surface },
-            shadows.xl,
+            { backgroundColor: colors.surface },
+
           ]}
         >
           <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: themeColors.text }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
               Advanced Filters
             </Text>
             <TouchableOpacity onPress={() => setShowAdvancedFilters(false)}>
-              <AntDesign name="close" size={24} color={themeColors.text} />
+              <AntDesign name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* Brand Filter */}
             <View style={styles.filterSection}>
-              <Text style={[styles.filterLabel, { color: themeColors.text }]}>Brand</Text>
+              <Text style={[styles.filterLabel, { color: colors.text }]}>Brand</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View style={styles.filterOptionsRow}>
                   {BRANDS.map((brand) => (
@@ -240,8 +246,8 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
                       style={[
                         styles.filterOption,
                         {
-                          backgroundColor: filters.brand === brand ? themeColors.primary : themeColors.background,
-                          borderColor: themeColors.border,
+                          backgroundColor: filters.brand === brand ? colors.primary : colors.background,
+                          borderColor: colors.border
                         },
                       ]}
                       onPress={() => updateFilter('brand', brand)}
@@ -249,7 +255,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
                       <Text
                         style={[
                           styles.filterOptionText,
-                          { color: filters.brand === brand ? '#000' : themeColors.text },
+                          { color: filters.brand === brand ? '#000' : colors.text },
                         ]}
                       >
                         {brand}
@@ -262,7 +268,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
 
             {/* Fuel Type Filter */}
             <View style={styles.filterSection}>
-              <Text style={[styles.filterLabel, { color: themeColors.text }]}>Fuel Type</Text>
+              <Text style={[styles.filterLabel, { color: colors.text }]}>Fuel Type</Text>
               <View style={styles.filterOptionsGrid}>
                 {FUEL_TYPES.map((fuel) => (
                   <TouchableOpacity
@@ -270,8 +276,8 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
                     style={[
                       styles.filterOption,
                       {
-                        backgroundColor: filters.fuelType === fuel ? themeColors.primary : themeColors.background,
-                        borderColor: themeColors.border,
+                        backgroundColor: filters.fuelType === fuel ? colors.primary : colors.background,
+                        borderColor: colors.border
                       },
                     ]}
                     onPress={() => updateFilter('fuelType', fuel)}
@@ -279,7 +285,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
                     <Text
                       style={[
                         styles.filterOptionText,
-                        { color: filters.fuelType === fuel ? '#000' : themeColors.text },
+                        { color: filters.fuelType === fuel ? '#000' : colors.text },
                       ]}
                     >
                       {fuel}
@@ -291,7 +297,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
 
             {/* Transmission Filter */}
             <View style={styles.filterSection}>
-              <Text style={[styles.filterLabel, { color: themeColors.text }]}>Transmission</Text>
+              <Text style={[styles.filterLabel, { color: colors.text }]}>Transmission</Text>
               <View style={styles.filterOptionsGrid}>
                 {TRANSMISSIONS.map((transmission) => (
                   <TouchableOpacity
@@ -299,8 +305,8 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
                     style={[
                       styles.filterOption,
                       {
-                        backgroundColor: filters.transmission === transmission ? themeColors.primary : themeColors.background,
-                        borderColor: themeColors.border,
+                        backgroundColor: filters.transmission === transmission ? colors.primary : colors.background,
+                        borderColor: colors.border
                       },
                     ]}
                     onPress={() => updateFilter('transmission', transmission)}
@@ -308,7 +314,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
                     <Text
                       style={[
                         styles.filterOptionText,
-                        { color: filters.transmission === transmission ? '#000' : themeColors.text },
+                        { color: filters.transmission === transmission ? '#000' : colors.text },
                       ]}
                     >
                       {transmission}
@@ -324,11 +330,11 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
               style={[
                 styles.modalButton,
                 styles.cancelButton,
-                { borderColor: themeColors.border },
+                { borderColor: colors.border },
               ]}
               onPress={() => setShowAdvancedFilters(false)}
             >
-              <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>
+              <Text style={[styles.cancelButtonText, { color: colors.text }]}>
                 Cancel
               </Text>
             </TouchableOpacity>
@@ -336,7 +342,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
               style={[
                 styles.modalButton,
                 styles.applyButton,
-                { backgroundColor: themeColors.primary },
+                { backgroundColor: colors.primary },
               ]}
               onPress={() => {
                 onApplyFilters();
@@ -346,7 +352,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
               <Text style={styles.applyButtonText}>Apply Filters</Text>
             </TouchableOpacity>
           </View>
-        </Animatable.View>
+        </View>
       </View>
     </Modal>
   );
@@ -363,16 +369,14 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
         activeOpacity={1}
         onPress={() => setShowSortModal(false)}
       >
-        <Animatable.View
-          animation="zoomIn"
-          duration={300}
+        <View
           style={[
             styles.sortModalContent,
-            { backgroundColor: themeColors.surface },
-            shadows.lg,
+            { backgroundColor: colors.surface },
+
           ]}
         >
-          <Text style={[styles.sortModalTitle, { color: themeColors.text }]}>
+          <Text style={[styles.sortModalTitle, { color: colors.text }]}>
             Sort By
           </Text>
           {SORT_OPTIONS.map((option) => (
@@ -380,7 +384,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
               key={option.key}
               style={[
                 styles.sortOption,
-                { borderBottomColor: themeColors.border },
+                { borderBottomColor: colors.border },
               ]}
               onPress={() => {
                 updateFilter('sortBy', option.key as any);
@@ -391,7 +395,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
                 style={[
                   styles.sortOptionText,
                   {
-                    color: filters.sortBy === option.key ? themeColors.primary : themeColors.text,
+                    color: filters.sortBy === option.key ? colors.primary : colors.text,
                     fontWeight: filters.sortBy === option.key ? '600' : '400',
                   },
                 ]}
@@ -407,13 +411,13 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
                   <AntDesign
                     name={filters.sortOrder === 'asc' ? 'up' : 'down'}
                     size={16}
-                    color={themeColors.primary}
+                    color={colors.primary}
                   />
                 </TouchableOpacity>
               )}
             </TouchableOpacity>
           ))}
-        </Animatable.View>
+        </View>
       </TouchableOpacity>
     </Modal>
   );
@@ -571,7 +575,7 @@ const styles = StyleSheet.create({
   applyButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+
   },
   sortModalContent: {
     margin: 20,

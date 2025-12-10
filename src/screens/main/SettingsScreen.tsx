@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, StyleSheet, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; 
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import { useTheme } from '../../theme';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import { useTheme } from '../../theme/ThemeContext';
+
+
 
 const SettingsScreen = ({ navigation }: { navigation?: any }) => {
-  const { isDark, toggleTheme, colors } = useTheme();
+  const { theme, isDark, toggleTheme } = useTheme();
+  const toggle = () => toggleTheme();
+  const styles = getStyles(theme.colors);
 
   const handleComingSoon = (feature: string) => {
     Alert.alert('Coming Soon', `${feature} is under development.`);
@@ -29,7 +33,7 @@ const SettingsScreen = ({ navigation }: { navigation?: any }) => {
                 <MaterialIcons 
                   name={isDark ? "dark-mode" : "light-mode"} 
                   size={24} 
-                  color={colors.primary} 
+                  color={theme.colors.primary} 
                 />
                 <Text style={styles.settingLabel}>
                   {isDark ? "Dark Mode" : "Light Mode"}
@@ -37,8 +41,8 @@ const SettingsScreen = ({ navigation }: { navigation?: any }) => {
               </View>
               <Switch 
                 value={isDark} 
-                onValueChange={toggleTheme} 
-                trackColor={{ false: '#E2E8F0', true: colors.primary }} 
+                onValueChange={toggle} 
+                trackColor={{ false: theme.colors.border, true: theme.colors.primary }} 
                 thumbColor="#FFFFFF"
               />
             </View>
@@ -50,30 +54,30 @@ const SettingsScreen = ({ navigation }: { navigation?: any }) => {
           <Card style={styles.settingCard} onPress={() => handleComingSoon('Edit Profile')}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <MaterialIcons name="person" size={24} color={colors.primary} />
+                <MaterialIcons name="person" size={24} color={theme.colors.primary} />
                 <Text style={styles.settingLabel}>Edit Profile</Text>
               </View>
-              <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+              <MaterialIcons name="keyboard-arrow-right" size={24} color={theme.colors.textSecondary} />
             </View>
           </Card>
 
           <Card style={styles.settingCard} onPress={() => handleComingSoon('Privacy Settings')}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <MaterialIcons name="privacy-tip" size={24} color={colors.primary} />
+                <MaterialIcons name="privacy-tip" size={24} color={theme.colors.primary} />
                 <Text style={styles.settingLabel}>Privacy Settings</Text>
               </View>
-              <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+              <MaterialIcons name="keyboard-arrow-right" size={24} color={theme.colors.textSecondary} />
             </View>
           </Card>
 
           <Card style={styles.settingCard} onPress={() => handleComingSoon('Notifications')}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <MaterialIcons name="notifications" size={24} color={colors.primary} />
+                <MaterialIcons name="notifications" size={24} color={theme.colors.primary} />
                 <Text style={styles.settingLabel}>Notifications</Text>
               </View>
-              <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+              <MaterialIcons name="keyboard-arrow-right" size={24} color={theme.colors.textSecondary} />
             </View>
           </Card>
         </View>
@@ -83,20 +87,20 @@ const SettingsScreen = ({ navigation }: { navigation?: any }) => {
           <Card style={styles.settingCard} onPress={() => handleComingSoon('Help Center')}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <MaterialIcons name="help" size={24} color={colors.primary} />
+                <MaterialIcons name="help" size={24} color={theme.colors.primary} />
                 <Text style={styles.settingLabel}>Help Center</Text>
               </View>
-              <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+              <MaterialIcons name="keyboard-arrow-right" size={24} color={theme.colors.textSecondary} />
             </View>
           </Card>
 
           <Card style={styles.settingCard} onPress={() => handleComingSoon('Contact Us')}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <MaterialIcons name="contact-support" size={24} color={colors.primary} />
+                <MaterialIcons name="contact-support" size={24} color={theme.colors.primary} />
                 <Text style={styles.settingLabel}>Contact Us</Text>
               </View>
-              <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+              <MaterialIcons name="keyboard-arrow-right" size={24} color={theme.colors.textSecondary} />
             </View>
           </Card>
         </View>
@@ -115,26 +119,26 @@ const SettingsScreen = ({ navigation }: { navigation?: any }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: colors.background,
   },
   header: {
     padding: 24,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: colors.border,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#1A202C',
+    color: colors.text,
     marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#718096',
+    color: colors.textSecondary,
   },
   content: {
     flex: 1,
@@ -147,7 +151,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1A202C',
+    color: colors.text,
     marginBottom: 16,
   },
   settingCard: {
@@ -168,7 +172,7 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#1A202C',
+    color: colors.text,
     marginLeft: 12,
   },
   backButton: {

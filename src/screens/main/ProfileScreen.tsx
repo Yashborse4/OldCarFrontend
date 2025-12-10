@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity, StatusBar, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '../../theme';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import { useTheme } from '../../theme/ThemeContext';
 
 const ProfileScreen = ({ navigation }: { navigation: any }) => {
-  const { isDark, toggleTheme, colors } = useTheme();
+  const { theme, isDark, toggleTheme } = useTheme();
+  const { colors } = theme;
 
   const handleComingSoon = (feature: string) => {
     Alert.alert('Coming Soon', `${feature} feature is under development.`);
@@ -16,7 +17,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
   const handleLogout = () => {
     Alert.alert(
       'Logout',
-      'Are you sure you want to logout?',
+      'Are you sure you want to logout? ',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -29,15 +30,15 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="default" />
-      
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <MaterialIcons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Profile</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -47,9 +48,9 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
           <View style={styles.avatarContainer}>
             <MaterialIcons name="account-circle" size={80} color={colors.primary} />
           </View>
-          <Text style={styles.userName}>John Doe</Text>
-          <Text style={styles.userEmail}>john.doe@example.com</Text>
-          <Text style={styles.userRole}>Car Enthusiast</Text>
+          <Text style={[styles.userName, { color: colors.text }]}>John Doe</Text>
+          <Text style={[styles.userEmail, { color: colors.textSecondary }]}>john.doe@example.com</Text>
+          <Text style={[styles.userRole, { color: colors.textSecondary }]}>Car Enthusiast</Text>
         </View>
       </Card>
 
@@ -59,19 +60,19 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
         <Card style={styles.settingCard}>
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <MaterialIcons 
-                name={isDark ? "dark-mode" : "light-mode"} 
-                size={24} 
-                color={colors.primary} 
+              <MaterialIcons
+                name={isDark ? "dark-mode" : "light-mode"}
+                size={24}
+                color={colors.primary}
               />
-              <Text style={styles.settingLabel}>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>
                 {isDark ? "Dark Mode" : "Light Mode"}
               </Text>
             </View>
-            <Switch 
-              value={isDark} 
-              onValueChange={toggleTheme} 
-              trackColor={{ false: '#E2E8F0', true: colors.primary }} 
+            <Switch
+              value={isDark}
+              onValueChange={toggleTheme}
+              trackColor={{ false: '#E2E8F0', true: colors.primary }}
               thumbColor="#FFFFFF"
             />
           </View>
@@ -82,7 +83,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
               <MaterialIcons name="list-alt" size={24} color={colors.primary} />
-              <Text style={styles.settingLabel}>My Listings</Text>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>My Listings</Text>
             </View>
             <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
           </View>
@@ -92,7 +93,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
               <MaterialIcons name="favorite-border" size={24} color={colors.primary} />
-              <Text style={styles.settingLabel}>Saved Cars</Text>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Saved Cars</Text>
             </View>
             <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
           </View>
@@ -102,7 +103,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
               <MaterialIcons name="notifications-none" size={24} color={colors.primary} />
-              <Text style={styles.settingLabel}>Notifications</Text>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Notifications</Text>
             </View>
             <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
           </View>
@@ -112,7 +113,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
               <MaterialIcons name="settings" size={24} color={colors.primary} />
-              <Text style={styles.settingLabel}>Settings</Text>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Settings</Text>
             </View>
             <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
           </View>
@@ -135,7 +136,6 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
   },
   header: {
     flexDirection: 'row',
@@ -150,7 +150,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1A202C',
   },
   profileCard: {
     marginHorizontal: 20,
@@ -166,17 +165,14 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1A202C',
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 16,
-    color: '#718096',
     marginBottom: 4,
   },
   userRole: {
     fontSize: 14,
-    color: '#A0AEC0',
   },
   settingsContainer: {
     paddingHorizontal: 20,
@@ -199,7 +195,6 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#1A202C',
     marginLeft: 12,
   },
   logoutButton: {
@@ -208,5 +203,4 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
-
 

@@ -13,10 +13,11 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import { useTheme } from '../../theme';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 import { Button } from '../../components/ui/Button';
 import { RootStackParamList } from '../../navigation/types';
+import { useTheme } from '../../theme/ThemeContext';
+
 
 type IconProps = React.ComponentProps<typeof MaterialIcons>['name'];
 
@@ -47,8 +48,12 @@ type NotificationsScreenNavigationProp = StackNavigationProp<RootStackParamList,
 
 const NotificationsScreen: React.FC = () => {
   const navigation = useNavigation<NotificationsScreenNavigationProp>();
-  const { colors: themeColors, spacing } = useTheme();
-  
+  const { theme, isDark } = useTheme();
+  const { colors } = theme;
+  const spacing = { sm: 8, md: 16, lg: 24, xl: 32 };
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
+
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'unread' | 'actionable'>('all');
@@ -143,13 +148,13 @@ const NotificationsScreen: React.FC = () => {
 
   useEffect(() => {
     loadNotifications();
-  }, []);
+  }, [loadNotifications]);
 
   useEffect(() => {
     filterNotifications();
-  }, [notifications, selectedFilter]);
+  }, [filterNotifications]);
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       setLoading(true);
       // Simulate API call
@@ -161,16 +166,16 @@ const NotificationsScreen: React.FC = () => {
       console.error('Error loading notifications:', error);
       setLoading(false);
     }
-  };
+  }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadNotifications().finally(() => setRefreshing(false));
-  }, []);
+  }, [loadNotifications]);
 
-  const filterNotifications = () => {
+  const filterNotifications = useCallback(() => {
     let filtered = notifications;
-    
+
     switch (selectedFilter) {
       case 'unread':
         filtered = notifications.filter(n => !n.isRead);
@@ -181,9 +186,9 @@ const NotificationsScreen: React.FC = () => {
       default:
         filtered = notifications;
     }
-    
+
     setFilteredNotifications(filtered);
-  };
+  }, [notifications, selectedFilter]);
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -275,13 +280,13 @@ const NotificationsScreen: React.FC = () => {
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInMinutes < 24 * 60) return `${Math.floor(diffInMinutes / 60)}h ago`;
     if (diffInMinutes < 7 * 24 * 60) return `${Math.floor(diffInMinutes / (24 * 60))}d ago`;
-    
+
     return messageTime.toLocaleDateString();
   };
 
   const renderNotificationItem = ({ item }: { item: Notification }) => {
     const icon = getNotificationIcon(item.type);
-    
+
     return (
       <TouchableOpacity
         style={[styles.notificationCard, !item.isRead && styles.unreadNotification]}
@@ -291,27 +296,27 @@ const NotificationsScreen: React.FC = () => {
         <View style={[styles.notificationIcon, { backgroundColor: `${icon.color}20` }]}>
           <MaterialIcons name={icon.name} size={20} color={icon.color} />
         </View>
-        
+
         <View style={styles.notificationContent}>
           <View style={styles.notificationHeader}>
             <Text style={styles.notificationTitle}>{item.title}</Text>
             <Text style={styles.notificationTime}>{formatTimestamp(item.timestamp)}</Text>
           </View>
-          
+
           <Text style={[
             styles.notificationMessage,
             !item.isRead && styles.unreadMessage
           ]}>
             {item.message}
           </Text>
-          
+
           {item.actionable && (
             <View style={styles.actionIndicator}>
-              <MaterialIcons name="chevron-right" size={16} color={themeColors.primary} />
+              <MaterialIcons name="chevron-right" size={16} color={colors.primary} />
             </View>
           )}
         </View>
-        
+
         {!item.isRead && <View style={styles.unreadDot} />}
       </TouchableOpacity>
     );
@@ -347,10 +352,10 @@ const NotificationsScreen: React.FC = () => {
           <View style={styles.settingsHeader}>
             <Text style={styles.settingsTitle}>Notification Settings</Text>
             <TouchableOpacity onPress={() => setShowSettings(false)}>
-              <MaterialIcons name="close" size={24} color={themeColors.text} />
+              <MaterialIcons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.settingsContent}>
             {Object.entries(settings).map(([key, value]) => (
               <View key={key} style={styles.settingRow}>
@@ -359,16 +364,16 @@ const NotificationsScreen: React.FC = () => {
                 </Text>
                 <Switch
                   value={value}
-                  onValueChange={(newValue) => 
+                  onValueChange={(newValue) =>
                     setSettings(prev => ({ ...prev, [key]: newValue }))
                   }
-                  trackColor={{ false: '#ddd', true: themeColors.primary }}
+                  trackColor={{ false: '#ddd', true: colors.primary }}
                   thumbColor={value ? '#fff' : '#f4f3f4'}
                 />
               </View>
             ))}
           </View>
-          
+
           <Button
             title="Save Settings"
             onPress={() => {
@@ -387,31 +392,31 @@ const NotificationsScreen: React.FC = () => {
   const actionableCount = notifications.filter(n => n.actionable && !n.isRead).length;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
+          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        
+
         <Text style={styles.headerTitle}>Notifications</Text>
-        
+
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={styles.headerButton}
             onPress={() => setShowSettings(true)}
           >
-            <MaterialIcons name="settings" size={24} color={themeColors.text} />
+            <MaterialIcons name="settings" size={24} color={colors.text} />
           </TouchableOpacity>
-          
+
           {unreadCount > 0 && (
             <TouchableOpacity
               style={styles.headerButton}
               onPress={markAllAsRead}
             >
-              <Text style={{fontSize: 24, color: themeColors.primary}}>✓✓</Text>
+              <Text style={{ fontSize: 24, color: colors.primary }}>✓✓</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -436,9 +441,8 @@ const NotificationsScreen: React.FC = () => {
             <MaterialIcons name="notifications-none" size={80} color="#ddd" />
             <Text style={styles.emptyStateTitle}>No Notifications</Text>
             <Text style={styles.emptyStateText}>
-              {selectedFilter === 'all' 
-                ? 'You\'re all caught up! New notifications will appear here.'
-                : `No ${selectedFilter} notifications found.`
+              {selectedFilter === 'all'
+                ? 'You have no notifications yet.' : `No ${selectedFilter} notifications found.`
               }
             </Text>
           </View>
@@ -451,7 +455,7 @@ const NotificationsScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
@@ -462,9 +466,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.border,
   },
   backButton: {
     padding: 8,
@@ -473,7 +477,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: colors.text,
   },
   headerActions: {
     flexDirection: 'row',
@@ -484,11 +488,11 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.border,
   },
   filterButton: {
     paddingHorizontal: 16,
@@ -498,7 +502,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   activeFilterButton: {
-    backgroundColor: '#4ECDC4',
+    backgroundColor: colors.primary,
   },
   filterButtonText: {
     fontSize: 14,
@@ -513,7 +517,7 @@ const styles = StyleSheet.create({
   },
   notificationCard: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
@@ -522,7 +526,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   unreadNotification: {
-    backgroundColor: '#f8fcfc',
+    backgroundColor: '#F0F7FF',
   },
   notificationIcon: {
     width: 40,
@@ -545,17 +549,17 @@ const styles = StyleSheet.create({
   notificationTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: colors.text,
     flex: 1,
     marginRight: 8,
   },
   notificationTime: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
   },
   notificationMessage: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     lineHeight: 20,
   },
   unreadMessage: {
@@ -575,7 +579,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#4ECDC4',
+    backgroundColor: colors.primary,
   },
   emptyState: {
     alignItems: 'center',
@@ -585,13 +589,13 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: colors.text,
     marginTop: 16,
     marginBottom: 8,
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -602,7 +606,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   settingsModal: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     margin: 20,
     maxHeight: '80%',
@@ -615,12 +619,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.border,
   },
   settingsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: colors.text,
   },
   settingsContent: {
     paddingVertical: 8,

@@ -11,11 +11,9 @@ import {
   Modal,
   Switch,
 } from 'react-native';
-import { useTheme } from '../../theme';
-import * as Animatable from 'react-native-animatable';
-import { AntDesign } from '@react-native-vector-icons/ant-design';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import LinearGradient from 'react-native-linear-gradient';
+
+import AntDesign from '@react-native-vector-icons/ant-design';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -59,6 +57,8 @@ interface CarListingsGridProps {
   refreshing?: boolean;
 }
 
+import { useTheme } from '../../theme/ThemeContext';
+
 export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
   listings,
   viewMode,
@@ -72,7 +72,11 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
   onRefresh,
   refreshing = false,
 }) => {
-  const { colors: themeColors, spacing, borderRadius, shadows } = useTheme();
+  const { theme, isDark } = useTheme();
+  const colors = theme.colors;
+  const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24 };
+  const borderRadius = { sm: 4, md: 8, lg: 12, xl: 16 };
+
   const [selectedCar, setSelectedCar] = useState<CarListing | null>(null);
   const [showActionsModal, setShowActionsModal] = useState(false);
 
@@ -85,7 +89,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
       case 'expired':
         return '#F56565';
       default:
-        return themeColors.textSecondary;
+        return colors.textSecondary;
     }
   };
 
@@ -129,7 +133,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
 
   const handleDelete = () => {
     if (!selectedCar) return;
-    
+
     Alert.alert(
       'Delete Car',
       `Are you sure you want to delete "${selectedCar.title}"?`,
@@ -148,17 +152,15 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
   };
 
   const renderGridItem = ({ item, index }: { item: CarListing; index: number }) => (
-    <Animatable.View
-      animation="fadeInUp"
-      delay={index * 100}
-      duration={600}
+    <View
       style={styles.gridItemContainer}
+      key={`grid-${item.id}`}
     >
       <TouchableOpacity
         style={[
           styles.gridCard,
-          { backgroundColor: themeColors.surface },
-          shadows.md,
+          { backgroundColor: colors.surface },
+
         ]}
         onPress={() => onCarPress(item)}
         onLongPress={() => handleLongPress(item)}
@@ -171,7 +173,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
             style={styles.carImage}
             resizeMode="cover"
           />
-          
+
           {/* Status Badge */}
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
             <AntDesign
@@ -184,14 +186,14 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
 
           {/* Featured Badge */}
           {item.featured && (
-            <View style={[styles.featuredBadge, { backgroundColor: themeColors.primary }]}>
+            <View style={[styles.featuredBadge, { backgroundColor: colors.primary }]}>
               <AntDesign name="star" size={10} color="#000" />
             </View>
           )}
 
           {/* Verified Badge */}
           {item.verified && (
-            <View style={[styles.verifiedBadge, { backgroundColor: themeColors.success }]}>
+            <View style={[styles.verifiedBadge, { backgroundColor: colors.success }]}>
               <AntDesign name="check-circle" size={10} color="#FFFFFF" />
             </View>
           )}
@@ -210,67 +212,68 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
         {/* Content */}
         <View style={styles.gridCardContent}>
           <View style={styles.titleRow}>
-            <Text style={[styles.carTitle, { color: themeColors.text }]} numberOfLines={1}>
+            <Text style={[styles.carTitle, { color: colors.text }]} numberOfLines={1}>
               {item.title}
             </Text>
-            <Text style={[styles.carYear, { color: themeColors.textSecondary }]}>
+            <Text style={[styles.carYear, { color: colors.textSecondary }]}>
               {item.year}
             </Text>
           </View>
 
           <View style={styles.priceRow}>
-            <Text style={[styles.price, { color: themeColors.success }]}>
+            <Text style={[styles.price, { color: colors.success }]}>
               {formatPrice(item.price, item.currency)}
             </Text>
             {item.originalPrice && item.originalPrice > item.price && (
-              <Text style={[styles.originalPrice, { color: themeColors.textSecondary }]}>
+              <Text style={[styles.originalPrice, { color: colors.textSecondary }]}>
                 {formatPrice(item.originalPrice, item.currency)}
               </Text>
             )}
           </View>
 
           <View style={styles.specsRow}>
-            <Text style={[styles.specs, { color: themeColors.textSecondary }]} numberOfLines={1}>
+            <Text style={[styles.specs, { color: colors.textSecondary }]} numberOfLines={1}>
               {formatKm(item.specifications.kmDriven)} • {item.specifications.fuelType} • {item.specifications.transmission}
             </Text>
           </View>
 
           <View style={styles.statsRow}>
             <View style={styles.stat}>
-              <AntDesign name="eye" size={12} color={themeColors.textSecondary} />
-              <Text style={[styles.statText, { color: themeColors.textSecondary }]}>
+              <AntDesign name="eye" size={12} color={colors.textSecondary} />
+              <Text style={[styles.statText, { color: colors.textSecondary }]}>
                 {item.views}
               </Text>
             </View>
             <View style={styles.stat}>
-              <AntDesign name="heart" size={12} color={themeColors.textSecondary} />
-              <Text style={[styles.statText, { color: themeColors.textSecondary }]}>
+              <AntDesign name="heart" size={12} color={colors.textSecondary} />
+              <Text style={[styles.statText, { color: colors.textSecondary }]}>
                 {item.likes}
               </Text>
             </View>
             <View style={styles.stat}>
-              <AntDesign name="message" size={12} color={themeColors.textSecondary} />
-              <Text style={[styles.statText, { color: themeColors.textSecondary }]}>
+              <AntDesign name="message" size={12} color={colors.textSecondary} />
+              <Text style={[styles.statText, { color: colors.textSecondary }]}>
                 {item.inquiries}
               </Text>
             </View>
           </View>
         </View>
       </TouchableOpacity>
-    </Animatable.View>
+    </View>
   );
 
   const renderListItem = ({ item, index }: { item: CarListing; index: number }) => (
-    <Animatable.View
-      animation="fadeInRight"
-      delay={index * 50}
-      duration={400}
+    <View
+      key={`list-${item.id}`}
     >
       <TouchableOpacity
         style={[
           styles.listCard,
-          { backgroundColor: themeColors.surface, borderColor: themeColors.border },
-          shadows.sm,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.border
+          },
+
         ]}
         onPress={() => onCarPress(item)}
         onLongPress={() => handleLongPress(item)}
@@ -285,35 +288,35 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
         <View style={styles.listContent}>
           <View style={styles.listHeader}>
             <View style={styles.listTitleContainer}>
-              <Text style={[styles.listTitle, { color: themeColors.text }]} numberOfLines={1}>
+              <Text style={[styles.listTitle, { color: colors.text }]} numberOfLines={1}>
                 {item.title}
               </Text>
               <View style={styles.listBadges}>
                 {item.featured && (
-                  <AntDesign name="star" size={12} color={themeColors.primary} />
+                  <AntDesign name="star" size={12} color={colors.primary} />
                 )}
                 {item.verified && (
-                  <AntDesign name="check-circle" size={12} color={themeColors.success} />
+                  <AntDesign name="check-circle" size={12} color={colors.success} />
                 )}
               </View>
             </View>
-            
+
             <View style={[styles.listStatusBadge, { backgroundColor: getStatusColor(item.status) }]}>
               <Text style={styles.listStatusText}>{item.status}</Text>
             </View>
           </View>
 
-          <Text style={[styles.listSpecs, { color: themeColors.textSecondary }]} numberOfLines={1}>
+          <Text style={[styles.listSpecs, { color: colors.textSecondary }]} numberOfLines={1}>
             {item.year} • {formatKm(item.specifications.kmDriven)} • {item.specifications.fuelType} • {item.specifications.location}
           </Text>
 
           <View style={styles.listFooter}>
             <View style={styles.listPriceContainer}>
-              <Text style={[styles.listPrice, { color: themeColors.success }]}>
+              <Text style={[styles.listPrice, { color: colors.success }]}>
                 {formatPrice(item.price, item.currency)}
               </Text>
               {item.originalPrice && item.originalPrice > item.price && (
-                <Text style={[styles.listOriginalPrice, { color: themeColors.textSecondary }]}>
+                <Text style={[styles.listOriginalPrice, { color: colors.textSecondary }]}>
                   {formatPrice(item.originalPrice, item.currency)}
                 </Text>
               )}
@@ -321,14 +324,14 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
 
             <View style={styles.listStats}>
               <View style={styles.listStat}>
-                <AntDesign name="eye" size={10} color={themeColors.textSecondary} />
-                <Text style={[styles.listStatText, { color: themeColors.textSecondary }]}>
+                <AntDesign name="eye" size={10} color={colors.textSecondary} />
+                <Text style={[styles.listStatText, { color: colors.textSecondary }]}>
                   {item.views}
                 </Text>
               </View>
               <View style={styles.listStat}>
-                <AntDesign name="message" size={10} color={themeColors.textSecondary} />
-                <Text style={[styles.listStatText, { color: themeColors.textSecondary }]}>
+                <AntDesign name="message" size={10} color={colors.textSecondary} />
+                <Text style={[styles.listStatText, { color: colors.textSecondary }]}>
                   {item.inquiries}
                 </Text>
               </View>
@@ -340,15 +343,15 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
           style={styles.listActionButton}
           onPress={() => onEditCar(item)}
         >
-          <AntDesign name="edit" size={16} color={themeColors.text} />
+          <AntDesign name="edit" size={16} color={colors.text} />
         </TouchableOpacity>
       </TouchableOpacity>
-    </Animatable.View>
+    </View>
   );
 
   const renderHeader = () => (
     <View style={styles.header}>
-      <Text style={[styles.headerTitle, { color: themeColors.text }]}>
+      <Text style={[styles.headerTitle, { color: colors.text }]}>
         Your Listings ({listings.length})
       </Text>
       <View style={styles.headerActions}>
@@ -356,8 +359,8 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
           style={[
             styles.viewModeButton,
             {
-              backgroundColor: viewMode === 'grid' ? themeColors.primary : themeColors.surface,
-              borderColor: themeColors.border,
+              backgroundColor: viewMode === 'grid' ? colors.primary : colors.surface,
+              borderColor: colors.border
             },
           ]}
           onPress={() => onViewModeChange('grid')}
@@ -365,15 +368,15 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
           <MaterialIcons
             name="grid-view"
             size={16}
-            color={viewMode === 'grid' ? '#000' : themeColors.text}
+            color={viewMode === 'grid' ? '#000' : colors.text}
           />
         </TouchableOpacity>
         <TouchableOpacity
           style={[
             styles.viewModeButton,
             {
-              backgroundColor: viewMode === 'list' ? themeColors.primary : themeColors.surface,
-              borderColor: themeColors.border,
+              backgroundColor: viewMode === 'list' ? colors.primary : colors.surface,
+              borderColor: colors.border
             },
           ]}
           onPress={() => onViewModeChange('list')}
@@ -381,7 +384,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
           <MaterialIcons
             name="view-list"
             size={16}
-            color={viewMode === 'list' ? '#000' : themeColors.text}
+            color={viewMode === 'list' ? '#000' : colors.text}
           />
         </TouchableOpacity>
       </View>
@@ -400,43 +403,41 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
         activeOpacity={1}
         onPress={() => setShowActionsModal(false)}
       >
-        <Animatable.View
-          animation="slideInUp"
-          duration={300}
+        <View
           style={[
             styles.actionsModal,
-            { backgroundColor: themeColors.surface },
-            shadows.xl,
+            { backgroundColor: colors.surface },
+
           ]}
         >
           {selectedCar && (
             <>
               <View style={styles.modalHeader}>
-                <Text style={[styles.modalTitle, { color: themeColors.text }]}>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>
                   {selectedCar.title}
                 </Text>
                 <TouchableOpacity onPress={() => setShowActionsModal(false)}>
-                  <AntDesign name="close" size={20} color={themeColors.text} />
+                  <AntDesign name="close" size={20} color={colors.text} />
                 </TouchableOpacity>
               </View>
 
               <View style={styles.modalActions}>
                 <TouchableOpacity
-                  style={[styles.modalAction, { borderBottomColor: themeColors.border }]}
+                  style={[styles.modalAction, { borderBottomColor: colors.border }]}
                   onPress={() => {
                     onEditCar(selectedCar);
                     setShowActionsModal(false);
                   }}
                 >
-                  <AntDesign name="edit" size={20} color={themeColors.text} />
-                  <Text style={[styles.modalActionText, { color: themeColors.text }]}>
+                  <AntDesign name="edit" size={20} color={colors.text} />
+                  <Text style={[styles.modalActionText, { color: colors.text }]}>
                     Edit Car
                   </Text>
                 </TouchableOpacity>
 
-                <View style={[styles.modalAction, { borderBottomColor: themeColors.border }]}>
-                  <AntDesign name="star" size={20} color={themeColors.primary} />
-                  <Text style={[styles.modalActionText, { color: themeColors.text }]}>
+                <View style={[styles.modalAction, { borderBottomColor: colors.border }]}>
+                  <AntDesign name="star" size={20} color={colors.primary} />
+                  <Text style={[styles.modalActionText, { color: colors.text }]}>
                     Featured
                   </Text>
                   <Switch
@@ -445,12 +446,12 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
                       onToggleFeatured(selectedCar);
                       setShowActionsModal(false);
                     }}
-                    thumbColor={selectedCar.featured ? themeColors.primary : themeColors.textSecondary}
+                    thumbColor={selectedCar.featured ? colors.primary : colors.textSecondary}
                   />
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.modalAction, { borderBottomColor: themeColors.border }]}
+                  style={[styles.modalAction, { borderBottomColor: colors.border }]}
                   onPress={() => {
                     onToggleStatus(selectedCar);
                     setShowActionsModal(false);
@@ -461,7 +462,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
                     size={20}
                     color={getStatusColor(selectedCar.status)}
                   />
-                  <Text style={[styles.modalActionText, { color: themeColors.text }]}>
+                  <Text style={[styles.modalActionText, { color: colors.text }]}>
                     Change Status
                   </Text>
                 </TouchableOpacity>
@@ -470,15 +471,15 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
                   style={[styles.modalAction, { borderBottomWidth: 0 }]}
                   onPress={handleDelete}
                 >
-                  <AntDesign name="delete" size={20} color={themeColors.error} />
-                  <Text style={[styles.modalActionText, { color: themeColors.error }]}>
+                  <AntDesign name="delete" size={20} color={colors.error} />
+                  <Text style={[styles.modalActionText, { color: colors.error }]}>
                     Delete Car
                   </Text>
                 </TouchableOpacity>
               </View>
             </>
           )}
-        </Animatable.View>
+        </View>
       </TouchableOpacity>
     </Modal>
   );
@@ -486,7 +487,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
           Loading your listings...
         </Text>
       </View>
@@ -509,11 +510,11 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
         refreshing={refreshing}
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
-            <AntDesign name="car" size={48} color={themeColors.textSecondary} />
-            <Text style={[styles.emptyText, { color: themeColors.textSecondary }]}>
+            <AntDesign name="car" size={48} color={colors.textSecondary} />
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               No cars listed yet
             </Text>
-            <Text style={[styles.emptySubtext, { color: themeColors.textTertiary }]}>
+            <Text style={[styles.emptySubtext, { color: colors.textDisabled }]}>
               Start by adding your first car listing
             </Text>
           </View>
@@ -555,7 +556,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
   },
-  
+
   // Grid Item Styles
   gridItemContainer: {
     width: (width - 48) / 2,

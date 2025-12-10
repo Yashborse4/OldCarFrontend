@@ -1,28 +1,33 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StatusBar,
   TextInput,
-  FlatList,
-  Dimensions,
+  useWindowDimensions,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   RefreshControl,
   Animated,
+  Platform,
+  Image,
+  FlatList,
 } from 'react-native';
-import { useTheme } from '../../theme';
-import { spacing, borderRadius, typography, shadows } from '../../design-system/tokens';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { BottomNavigation } from '../../components/ui/BottomNavigation';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
-import LinearGradient from 'react-native-linear-gradient';
-import * as Animatable from 'react-native-animatable';
 
-const { width, height } = Dimensions.get('window');
+import { BottomNavigation } from '../../components/ui/BottomNavigation';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { Gradient } from '../../components/ui/Gradient';
+import { useTheme } from '../../theme';
+import {
+  scaleSize,
+  getResponsiveSpacing,
+  getResponsiveTypography,
+  getResponsiveBorderRadius,
+  wp,
+  hp
+} from '../../utils/responsiveEnhanced';
 
 interface Props {
   navigation: any;
@@ -30,35 +35,35 @@ interface Props {
 
 // Mock data with modern approach
 const QUICK_ACTIONS = [
-  { 
+  {
     id: 'sell',
-    icon: 'sell', 
-    label: 'Sell Car', 
-    route: 'SellCar', 
+    icon: 'sell',
+    label: 'Sell Car',
+    route: 'SellCar',
     color: '#10B981',
     gradient: ['#10B981', '#059669']
   },
-  { 
+  {
     id: 'buy',
-    icon: 'directions-car', 
-    label: 'Buy Used', 
-    route: 'SearchResults', 
+    icon: 'directions-car',
+    label: 'Buy Used',
+    route: 'SearchResults',
     color: '#3B82F6',
     gradient: ['#3B82F6', '#2563EB']
   },
-  { 
+  {
     id: 'value',
-    icon: 'assessment', 
-    label: 'Valuation', 
-    route: null, 
+    icon: 'assessment',
+    label: 'Valuation',
+    route: null,
     color: '#8B5CF6',
     gradient: ['#8B5CF6', '#7C3AED']
   },
-  { 
+  {
     id: 'finance',
-    icon: 'account-balance', 
-    label: 'Finance', 
-    route: null, 
+    icon: 'account-balance',
+    label: 'Finance',
+    route: null,
     color: '#F59E0B',
     gradient: ['#F59E0B', '#D97706']
   },
@@ -125,7 +130,9 @@ const BOTTOM_NAV_ITEMS = [
 ];
 
 const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
-  const { colors: themeColors, isDark } = useTheme();
+  const { theme, isDark } = useTheme();
+  const { colors } = theme;
+  const { width: windowWidth } = useWindowDimensions();
   const [selectedCity, setSelectedCity] = useState('Mumbai');
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -133,16 +140,19 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
   const [currentRoute, setCurrentRoute] = useState('Dashboard');
 
   // Enhanced refresh with haptic feedback
-  const onRefresh = useCallback(async () => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    } catch (error) {
-      console.error('Refresh error:', error);
-    } finally {
-      setRefreshing(false);
-    }
+    const refreshData = async () => {
+      try {
+        // Simulate API call
+        await new Promise<void>(resolve => setTimeout(() => resolve(), 1000));
+      } catch (error) {
+        console.error('Refresh error:', error);
+      } finally {
+        setRefreshing(false);
+      }
+    };
+    refreshData();
   }, []);
 
   const handleBottomNavPress = useCallback((route: string, item: any) => {
@@ -156,452 +166,426 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
   const styles = useMemo(() => StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: themeColors.background,
+      backgroundColor: colors.background
     },
     headerContainer: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.sm,
+      paddingHorizontal: getResponsiveSpacing('lg'),
+      paddingTop: getResponsiveSpacing('md'),
+      paddingBottom: getResponsiveSpacing('sm'),
     },
     headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: spacing.sm,
+      marginBottom: getResponsiveSpacing('sm'),
     },
     greeting: {
-      fontSize: typography.fontSizes['3xl'],
-      fontWeight: typography.fontWeights.bold,
-      color: themeColors.text,
-      letterSpacing: typography.letterSpacing.tight,
+      fontSize: getResponsiveTypography('xl'),
+      fontWeight: 'bold',
+      color: colors.text,
+      letterSpacing: -0.5,
     },
     subGreeting: {
-      fontSize: typography.fontSizes.base,
-      color: themeColors.textSecondary,
-      marginTop: spacing.xs,
+      fontSize: getResponsiveTypography('sm'),
+      color: colors.textSecondary,
+      marginTop: scaleSize(2),
     },
     citySelector: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: themeColors.surface,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: borderRadius.lg,
-      ...shadows.sm,
+      backgroundColor: isDark ? colors.surface : '#F3F4F6',
+      paddingHorizontal: getResponsiveSpacing('md'),
+      paddingVertical: getResponsiveSpacing('xs'),
+      borderRadius: getResponsiveBorderRadius('full'),
     },
     cityText: {
-      fontSize: typography.fontSizes.sm,
-      fontWeight: typography.fontWeights.semibold,
-      color: themeColors.text,
-      marginLeft: spacing.xs,
-      marginRight: spacing.xs,
+      fontSize: getResponsiveTypography('xs'),
+      fontWeight: '600',
+      color: colors.text,
+      marginLeft: scaleSize(4),
+      marginRight: scaleSize(4),
     },
     searchContainer: {
-      marginHorizontal: spacing.lg,
-      marginBottom: spacing.lg,
+      marginHorizontal: getResponsiveSpacing('lg'),
+      marginBottom: getResponsiveSpacing('lg'),
     },
     searchWrapper: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: themeColors.surface,
-      borderRadius: borderRadius.xl,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      ...shadows.sm,
+      backgroundColor: isDark ? colors.surface : '#FFFFFF',
+      borderRadius: getResponsiveBorderRadius('xl'),
+      paddingHorizontal: getResponsiveSpacing('lg'),
+      paddingVertical: Platform.OS === 'ios' ? getResponsiveSpacing('md') : scaleSize(4),
+      borderWidth: 1,
+      borderColor: isDark ? colors.border : '#E5E7EB',
+
     },
     searchInput: {
       flex: 1,
-      fontSize: typography.fontSizes.base,
-      color: themeColors.text,
-      marginLeft: spacing.sm,
-      paddingVertical: 0,
+      fontSize: getResponsiveTypography('md'),
+      color: colors.text,
+      marginLeft: getResponsiveSpacing('sm'),
+      height: scaleSize(44),
     },
     scrollContent: {
-      paddingBottom: 100, // Space for bottom navigation
+      paddingBottom: hp(12), // Space for bottom navigation
     },
     sectionContainer: {
-      marginBottom: spacing['2xl'],
+      marginBottom: getResponsiveSpacing('xxl'),
     },
     sectionHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-      marginBottom: spacing.lg,
+      paddingHorizontal: getResponsiveSpacing('lg'),
+      marginBottom: getResponsiveSpacing('md'),
     },
     sectionTitle: {
-      fontSize: typography.fontSizes.xl,
-      fontWeight: typography.fontWeights.bold,
-      color: themeColors.text,
+      fontSize: getResponsiveTypography('lg'),
+      fontWeight: '700',
+      color: colors.text,
+      letterSpacing: -0.5,
     },
     viewAllButton: {
-      paddingHorizontal: spacing.sm,
-      paddingVertical: spacing.xs,
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     viewAllText: {
-      fontSize: typography.fontSizes.sm,
-      fontWeight: typography.fontWeights.semibold,
-      color: themeColors.primary,
+      fontSize: getResponsiveTypography('sm'),
+      fontWeight: '600',
+      color: colors.primary,
+      marginRight: scaleSize(2),
     },
     quickActionsGrid: {
-      paddingHorizontal: spacing.lg,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingHorizontal: getResponsiveSpacing('md'),
+      justifyContent: 'space-between',
     },
-    quickActionCard: {
+    quickActionItem: {
+      width: (wp(100) - getResponsiveSpacing('md') * 2 - getResponsiveSpacing('md') * 3) / 4,
       alignItems: 'center',
-      justifyContent: 'center',
-      width: (width - spacing.lg * 2 - spacing.md * 3) / 4,
-      aspectRatio: 1,
-      borderRadius: borderRadius.xl,
-      ...shadows.md,
-      marginRight: spacing.md,
+      marginBottom: getResponsiveSpacing('md'),
     },
     quickActionIcon: {
-      marginBottom: spacing.sm,
+      width: scaleSize(56),
+      height: scaleSize(56),
+      borderRadius: getResponsiveBorderRadius('xxl'),
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: getResponsiveSpacing('xs'),
     },
     quickActionLabel: {
-      fontSize: typography.fontSizes.xs,
-      fontWeight: typography.fontWeights.medium,
-      color: themeColors.white,
+      fontSize: getResponsiveTypography('xs'),
+      fontWeight: '600',
+      color: colors.text,
       textAlign: 'center',
     },
     carCard: {
-      width: width * 0.8,
-      marginRight: spacing.lg,
-      borderRadius: borderRadius['2xl'],
-      backgroundColor: themeColors.surface,
+      width: scaleSize(280),
+      marginLeft: getResponsiveSpacing('lg'),
+      backgroundColor: isDark ? colors.surface : '#FFFFFF',
+      borderRadius: getResponsiveBorderRadius('xxl'),
       overflow: 'hidden',
-      ...shadows.lg,
-    },
-    carImageContainer: {
-      height: width * 0.5,
-      position: 'relative',
+      borderWidth: 1,
+      borderColor: isDark ? colors.border : '#E5E7EB',
     },
     carImage: {
       width: '100%',
-      height: '100%',
-      borderTopLeftRadius: borderRadius['2xl'],
-      borderTopRightRadius: borderRadius['2xl'],
-    },
-    carBadgesContainer: {
-      position: 'absolute',
-      top: spacing.md,
-      left: spacing.md,
-      right: spacing.md,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-    },
-    badgeRow: {
-      flexDirection: 'row',
-    },
-    badge: {
-      paddingHorizontal: spacing.sm,
-      paddingVertical: spacing.xs,
-      borderRadius: borderRadius.sm,
-      marginRight: spacing.xs,
-    },
-    certifiedBadge: {
-      backgroundColor: '#10B981',
-    },
-    verifiedBadge: {
-      backgroundColor: themeColors.primary,
-    },
-    badgeText: {
-      fontSize: typography.fontSizes.xs,
-      fontWeight: typography.fontWeights.bold,
-      color: themeColors.white,
-    },
-    discountBadge: {
-      backgroundColor: '#EF4444',
-      paddingHorizontal: spacing.sm,
-      paddingVertical: spacing.xs,
-      borderRadius: borderRadius.sm,
-    },
-    discountText: {
-      fontSize: typography.fontSizes.xs,
-      fontWeight: typography.fontWeights.bold,
-      color: themeColors.white,
-    },
-    favoriteButton: {
-      position: 'absolute',
-      bottom: spacing.md,
-      right: spacing.md,
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
-      borderRadius: borderRadius.full,
-      padding: spacing.sm,
+      height: scaleSize(160),
+      backgroundColor: isDark ? '#2C2C2E' : '#F3F4F6',
     },
     carContent: {
-      padding: spacing.lg,
+      padding: getResponsiveSpacing('md'),
     },
     carTitle: {
-      fontSize: typography.fontSizes.lg,
-      fontWeight: typography.fontWeights.bold,
-      color: themeColors.text,
-      marginBottom: spacing.xs,
-    },
-    carSpecs: {
-      fontSize: typography.fontSizes.sm,
-      color: themeColors.textSecondary,
-      marginBottom: spacing.md,
-    },
-    carFooter: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginTop: spacing.sm,
-      paddingTop: spacing.md,
-      borderTopWidth: 1,
-      borderTopColor: themeColors.border,
-    },
-    priceSection: {
-      flex: 1,
+      fontSize: getResponsiveTypography('md'),
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: scaleSize(4),
     },
     carPrice: {
-      fontSize: typography.fontSizes.xl,
-      fontWeight: typography.fontWeights.bold,
-      color: themeColors.primary,
+      fontSize: getResponsiveTypography('lg'),
+      fontWeight: '800',
+      color: colors.primary,
+      marginBottom: scaleSize(8),
     },
-    originalPrice: {
-      fontSize: typography.fontSizes.sm,
-      color: themeColors.textSecondary,
-      textDecorationLine: 'line-through',
-      marginTop: spacing.xs / 2,
-    },
-    savingsText: {
-      fontSize: typography.fontSizes.sm,
-      color: '#10B981',
-      fontWeight: typography.fontWeights.semibold,
-      marginTop: spacing.xs / 2,
-    },
-    ratingContainer: {
+    carDetailsRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginTop: spacing.sm,
+      flexWrap: 'wrap',
     },
-    ratingText: {
-      fontSize: typography.fontSizes.sm,
-      color: themeColors.textSecondary,
-      marginLeft: spacing.xs,
+    carDetailBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#F3F4F6',
+      paddingHorizontal: scaleSize(8),
+      paddingVertical: scaleSize(4),
+      borderRadius: getResponsiveBorderRadius('sm'),
+      marginRight: scaleSize(8),
+      marginBottom: scaleSize(4),
+    },
+    carDetailText: {
+      fontSize: getResponsiveTypography('xs'),
+      color: colors.textSecondary,
+      marginLeft: scaleSize(4),
+      fontWeight: '500',
+    },
+    bannerContainer: {
+      marginHorizontal: getResponsiveSpacing('lg'),
+      borderRadius: getResponsiveBorderRadius('xxl'),
+      overflow: 'hidden',
+      height: scaleSize(160),
+      marginBottom: getResponsiveSpacing('xxl'),
+    },
+    bannerGradient: {
+      flex: 1,
+      padding: getResponsiveSpacing('xl'),
+      justifyContent: 'center',
+    },
+    bannerTitle: {
+      fontSize: getResponsiveTypography('xl'),
+      fontWeight: '800',
+      color: '#FFFFFF',
+      marginBottom: scaleSize(8),
+      maxWidth: '70%',
+    },
+    bannerSubtitle: {
+      fontSize: getResponsiveTypography('sm'),
+      color: 'rgba(255,255,255,0.9)',
+      marginBottom: scaleSize(16),
+      maxWidth: '70%',
+    },
+    bannerButton: {
+      backgroundColor: '#FFFFFF',
+      paddingHorizontal: getResponsiveSpacing('lg'),
+      paddingVertical: scaleSize(8),
+      borderRadius: getResponsiveBorderRadius('lg'),
+      alignSelf: 'flex-start',
+    },
+    bannerButtonText: {
+      fontSize: getResponsiveTypography('xs'),
+      fontWeight: '700',
+      color: colors.primary,
     },
   }), [colors, isDark]);
 
-  // Animated header opacity based on scroll
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [1, 0.9],
-    extrapolate: 'clamp',
-  });
+  const renderHeader = () => (
+    <View style={styles.headerContainer}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.greeting}>Good Morning, Alex 👋</Text>
+          <Text style={styles.subGreeting}>Let's find your dream car</Text>
+        </View>
+        <TouchableOpacity style={styles.citySelector}>
+          <MaterialIcons name="location-on" size={scaleSize(16)} color={colors.primary} />
+          <Text style={styles.cityText}>{selectedCity}</Text>
+          <MaterialIcons name="keyboard-arrow-down" size={scaleSize(16)} color={colors.textSecondary} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
-  const renderQuickAction = useCallback((item: typeof QUICK_ACTIONS[0], index: number) => (
-    <Animatable.View
-      key={item.id}
-      animation="fadeInUp"
-      delay={index * 100}
-      style={styles.quickActionCard}
-    >
+  const renderSearchBar = () => (
+    <View style={styles.searchContainer}>
       <TouchableOpacity
-        onPress={() => {
-          if (item.route) {
-            navigation.navigate(item.route);
-          } else {
-            // Handle coming soon
-            console.log('Coming soon:', item.label);
-          }
-        }}
-        style={{ flex: 1, width: '100%' }}
+        style={styles.searchWrapper}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate('SearchResults')}
       >
-        <LinearGradient
-          colors={item.gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFillObject}
+        <MaterialIcons name="search" size={scaleSize(24)} color={colors.textSecondary} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search cars, brands, or budget..."
+          placeholderTextColor={colors.textSecondary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          editable={false} // Make it act as a button to navigate
         />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <MaterialIcons 
-            name={item.icon as any} 
-            size={28} 
-            color={themeColors.white} 
-            style={styles.quickActionIcon}
-          />
-          <Text style={styles.quickActionLabel}>{item.label}</Text>
+        <View style={{
+          backgroundColor: isDark ? '#3A3A3C' : '#F3F4F6',
+          padding: scaleSize(6),
+          borderRadius: scaleSize(8)
+        }}>
+          <MaterialIcons name="tune" size={scaleSize(20)} color={colors.text} />
         </View>
       </TouchableOpacity>
-    </Animatable.View>
-  ), [navigation, styles, colors]);
+    </View>
+  );
 
-  const renderCarCard = useCallback(({ item, index }: { item: typeof CAR_LISTINGS[0], index: number }) => (
-    <Animatable.View
-      animation="fadeInRight"
-      delay={index * 150}
-      style={styles.carCard}
-    >
-      <TouchableOpacity
-        onPress={() => navigation.navigate('CarDetails', { carId: item.id })}
-        activeOpacity={0.95}
-      >
-        <View style={styles.carImageContainer}>
-          <Animated.Image 
-            source={{ uri: item.image }} 
-            style={[styles.carImage]}
-            resizeMode="cover"
-          />
-          
-          <View style={styles.carBadgesContainer}>
-            <View style={styles.badgeRow}>
-              {item.certified && (
-                <View style={[styles.badge, styles.certifiedBadge]}>
-                  <Text style={styles.badgeText}>CERTIFIED</Text>
-                </View>
-              )}
-              {item.verified && (
-                <View style={[styles.badge, styles.verifiedBadge]}>
-                  <Text style={styles.badgeText}>VERIFIED</Text>
-                </View>
-              )}
-            </View>
-            
-            <View style={styles.discountBadge}>
-              <Text style={styles.discountText}>{item.discount}</Text>
-            </View>
-          </View>
-          
-          <TouchableOpacity style={styles.favoriteButton}>
-            <MaterialIcons name="favorite-border" size={20} color={themeColors.white} />
+  const renderQuickActions = () => (
+    <View style={styles.sectionContainer}>
+      <View style={styles.quickActionsGrid}>
+        {QUICK_ACTIONS.map((action, index) => (
+          <TouchableOpacity
+            key={action.id}
+            style={styles.quickActionItem}
+            onPress={() => action.route && navigation.navigate(action.route)}
+          >
+            <Gradient
+              colors={action.gradient}
+              style={styles.quickActionIcon}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <MaterialIcons name={action.icon} size={scaleSize(24)} color="#FFFFFF" />
+            </Gradient>
+            <Text style={styles.quickActionLabel}>{action.label}</Text>
           </TouchableOpacity>
-        </View>
-        
-        <View style={styles.carContent}>
-          <Text style={styles.carTitle}>{item.title}</Text>
-          <Text style={styles.carSpecs}>
-            {item.year} • {item.km} km • {item.fuel} • {item.location}
-          </Text>
-          
-          <View style={styles.ratingContainer}>
-            <MaterialIcons name="star" size={16} color="#F59E0B" />
-            <Text style={styles.ratingText}>{item.rating} rating</Text>
+        ))}
+      </View>
+    </View>
+  );
+
+  const renderCarCard = ({ item }: { item: any }) => (
+    <TouchableOpacity
+      style={styles.carCard}
+      onPress={() => navigation.navigate('CarDetails', { carId: item.id })}
+      activeOpacity={0.9}
+    >
+      <Image
+        source={{ uri: item.image }}
+        style={styles.carImage}
+        resizeMode="cover"
+      />
+      <Gradient
+        colors={['transparent', 'rgba(0,0,0,0.7)']}
+        style={{
+          position: 'absolute',
+          top: scaleSize(100),
+          left: 0,
+          right: 0,
+          height: scaleSize(60),
+        }}
+      />
+      <View style={{ position: 'absolute', top: scaleSize(12), right: scaleSize(12) }}>
+        <TouchableOpacity
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.9)',
+            padding: scaleSize(6),
+            borderRadius: scaleSize(20)
+          }}
+        >
+          <MaterialIcons name="favorite-border" size={scaleSize(20)} color={colors.error} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.carContent}>
+        <Text style={styles.carTitle} numberOfLines={1}>{item.title}</Text>
+        <Text style={styles.carPrice}>{item.price}</Text>
+
+        <View style={styles.carDetailsRow}>
+          <View style={styles.carDetailBadge}>
+            <MaterialIcons name="speed" size={scaleSize(12)} color={colors.textSecondary} />
+            <Text style={styles.carDetailText}>{item.km}</Text>
           </View>
-          
-          <View style={styles.carFooter}>
-            <View style={styles.priceSection}>
-              <Text style={styles.carPrice}>{item.price}</Text>
-              <Text style={styles.originalPrice}>{item.originalPrice}</Text>
-              <Text style={styles.savingsText}>{item.savings}% savings</Text>
-            </View>
-            
-            <Button
-              title="Details"
-              variant="primary"
-              size="sm"
-              radius="md"
-              onPress={() => navigation.navigate('CarDetails', { carId: item.id })}
-            />
+          <View style={styles.carDetailBadge}>
+            <MaterialIcons name="local-gas-station" size={scaleSize(12)} color={colors.textSecondary} />
+            <Text style={styles.carDetailText}>{item.fuel}</Text>
+          </View>
+          <View style={styles.carDetailBadge}>
+            <MaterialIcons name="calendar-today" size={scaleSize(12)} color={colors.textSecondary} />
+            <Text style={styles.carDetailText}>{item.year}</Text>
           </View>
         </View>
-      </TouchableOpacity>
-    </Animatable.View>
-  ), [navigation, styles, colors]);
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderFeaturedCars = () => (
+    <View style={styles.sectionContainer}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Featured Cars</Text>
+        <TouchableOpacity style={styles.viewAllButton}>
+          <Text style={styles.viewAllText}>View All</Text>
+          <MaterialIcons name="arrow-forward" size={scaleSize(16)} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
+      <FlatList
+        data={CAR_LISTINGS}
+        renderItem={renderCarCard}
+        keyExtractor={item => item.id.toString()}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingRight: getResponsiveSpacing('lg') }}
+        snapToInterval={scaleSize(280) + getResponsiveSpacing('lg')}
+        decelerationRate="fast"
+      />
+    </View>
+  );
+
+  const renderPromoBanner = () => (
+    <TouchableOpacity style={styles.bannerContainer} activeOpacity={0.95}>
+      <Gradient
+        colors={[colors.primary, colors.secondary || '#FF6B00']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.bannerGradient}
+      >
+        <Text style={styles.bannerTitle}>Sell Your Car in 29 Minutes</Text>
+        <Text style={styles.bannerSubtitle}>Get the best price and instant payment. Free home inspection.</Text>
+        <View style={styles.bannerButton}>
+          <Text style={styles.bannerButtonText}>Get Estimate</Text>
+        </View>
+
+        <Image
+          source={{ uri: 'https://pngimg.com/uploads/car/car_PNG14423.png' }}
+          style={{
+            position: 'absolute',
+            right: scaleSize(-20),
+            bottom: scaleSize(10),
+            width: scaleSize(180),
+            height: scaleSize(100),
+            opacity: 0.9
+          }}
+          resizeMode="contain"
+        />
+      </Gradient>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar
-        translucent
-        backgroundColor="transparent"
         barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
       />
-      
-      {/* Header */}
-      <Animated.View style={[styles.headerContainer, { opacity: headerOpacity }]}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.greeting}>Good Morning</Text>
-            <Text style={styles.subGreeting}>Find your perfect car today</Text>
-          </View>
-          
-          <TouchableOpacity style={styles.citySelector}>
-            <MaterialIcons name="location-on" size={16} color={themeColors.primary} />
-            <Text style={styles.cityText}>{selectedCity}</Text>
-            <MaterialIcons name="keyboard-arrow-down" size={16} color={themeColors.textSecondary} />
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchWrapper}>
-          <MaterialIcons name="search" size={20} color={themeColors.textSecondary} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search for cars, brands, models..."
-            placeholderTextColor={themeColors.textSecondary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <MaterialIcons name="clear" size={20} color={themeColors.textSecondary} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Main Content */}
-      <Animated.ScrollView
-        showsVerticalScrollIndicator={false}
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[themeColors.primary]}
-            tintColor={themeColors.primary}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
-        scrollEventThrottle={16}
       >
-        {/* Quick Actions */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-            <TouchableOpacity style={styles.viewAllButton}>
-              <Text style={styles.viewAllText}>View All</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <FlatList
-            horizontal
-            data={QUICK_ACTIONS}
-            renderItem={({ item, index }) => renderQuickAction(item, index)}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.quickActionsGrid}
-          />
-        </View>
+        {renderHeader()}
+        {renderSearchBar()}
+        {renderQuickActions()}
+        {renderPromoBanner()}
+        {renderFeaturedCars()}
 
-        {/* Featured Cars */}
+        {/* Recently Viewed Section */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Featured Cars</Text>
+            <Text style={styles.sectionTitle}>Recently Viewed</Text>
             <TouchableOpacity style={styles.viewAllButton}>
               <Text style={styles.viewAllText}>View All</Text>
+              <MaterialIcons name="arrow-forward" size={scaleSize(16)} color={colors.primary} />
             </TouchableOpacity>
           </View>
-          
           <FlatList
-            horizontal
-            data={CAR_LISTINGS}
+            data={[...CAR_LISTINGS].reverse()}
             renderItem={renderCarCard}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={item => `recent-${item.id}`}
+            horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingLeft: spacing.lg }}
+            contentContainerStyle={{ paddingRight: getResponsiveSpacing('lg') }}
+            snapToInterval={scaleSize(280) + getResponsiveSpacing('lg')}
+            decelerationRate="fast"
           />
         </View>
-      </Animated.ScrollView>
+      </ScrollView>
 
-      {/* Modern Bottom Navigation */}
       <BottomNavigation
         items={BOTTOM_NAV_ITEMS}
         activeRoute={currentRoute}
@@ -612,5 +596,3 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
 };
 
 export default DashboardScreenModern;
-
-

@@ -1,8 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { useTheme } from '../../theme';
-import LinearGradient from 'react-native-linear-gradient';
-import * as Animatable from 'react-native-animatable';
+import { View, Text, StyleSheet, Dimensions, Animated } from 'react-native';
+
 
 const { width } = Dimensions.get('window');
 
@@ -31,7 +29,13 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
   showValues = true,
   animated = true,
 }) => {
-  const { colors: themeColors, spacing, borderRadius, shadows } = useTheme();
+  const colors = {
+    text: '#1A202C',
+    textSecondary: '#4A5568',
+    border: '#E2E8F0',
+    primary: '#FFD700',
+    surface: '#FFFFFF',
+  };
 
   const maxValue = Math.max(...data.map(item => item.value));
   const totalValue = data.reduce((sum, item) => sum + item.value, 0);
@@ -43,26 +47,23 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
 
   const renderBarChart = () => {
     const barWidth = (width - 80) / data.length - 8;
-    
+
     return (
       <View style={styles.chartContainer}>
         <View style={[styles.barsContainer, { height: height - 60 }]}>
           {data.map((item, index) => {
             const barHeight = ((item.value / maxValue) * (height - 100)) || 1;
             const color = item.color || defaultColors[index % defaultColors.length];
-            
+
             return (
               <View key={index} style={styles.barWrapper}>
                 <View style={styles.barContainer}>
                   {showValues && (
-                    <Text style={[styles.barValue, { color: themeColors.text }]}>
+                    <Text style={[styles.barValue, { color: colors.text }]}>
                       {item.value}
                     </Text>
                   )}
-                  <Animatable.View
-                    animation={animated ? "fadeInUp" : undefined}
-                    delay={animated ? index * 200 : 0}
-                    duration={800}
+                  <View
                     style={[
                       styles.bar,
                       {
@@ -73,7 +74,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                     ]}
                   />
                 </View>
-                <Text style={[styles.barLabel, { color: themeColors.textSecondary }]}>
+                <Text style={[styles.barLabel, { color: colors.textSecondary }]}>
                   {item.label}
                 </Text>
               </View>
@@ -88,7 +89,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
     const chartWidth = width - 80;
     const chartHeight = height - 80;
     const stepX = chartWidth / (data.length - 1);
-    
+
     return (
       <View style={styles.chartContainer}>
         <View style={[styles.lineChartContainer, { height: chartHeight }]}>
@@ -101,25 +102,23 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                   styles.gridLine,
                   {
                     bottom: ratio * chartHeight,
-                    backgroundColor: themeColors.border,
+                    backgroundColor: colors.border
                   },
                 ]}
               />
             ))}
           </View>
-          
+
           {/* Data points and line */}
           <View style={styles.lineContainer}>
             {data.map((item, index) => {
               const x = index * stepX;
               const y = chartHeight - ((item.value / maxValue) * chartHeight);
-              const color = item.color || themeColors.primary;
-              
+              const color = item.color || colors.primary;
+
               return (
-                <Animatable.View
+                <View
                   key={index}
-                  animation={animated ? "zoomIn" : undefined}
-                  delay={animated ? index * 200 : 0}
                   style={[
                     styles.dataPoint,
                     {
@@ -130,33 +129,31 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                   ]}
                 >
                   {showValues && (
-                    <View style={[styles.valueLabel, { backgroundColor: themeColors.surface }]}>
-                      <Text style={[styles.valueLabelText, { color: themeColors.text }]}>
+                    <View style={[styles.valueLabel, { backgroundColor: colors.surface }]}>
+                      <Text style={[styles.valueLabelText, { color: colors.text }]}>
                         {item.value}
                       </Text>
                     </View>
                   )}
-                </Animatable.View>
+                </View>
               );
             })}
-            
+
             {/* Connect points with lines */}
             {data.map((_, index) => {
               if (index === data.length - 1) return null;
-              
+
               const x1 = index * stepX;
               const y1 = chartHeight - ((data[index].value / maxValue) * chartHeight);
               const x2 = (index + 1) * stepX;
               const y2 = chartHeight - ((data[index + 1].value / maxValue) * chartHeight);
-              
+
               const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
               const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
-              
+
               return (
-                <Animatable.View
+                <View
                   key={`line-${index}`}
-                  animation={animated ? "fadeIn" : undefined}
-                  delay={animated ? (index + 1) * 200 : 0}
                   style={[
                     styles.connectingLine,
                     {
@@ -164,14 +161,14 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                       top: y1,
                       width: length,
                       transform: [{ rotate: `${angle}deg` }],
-                      backgroundColor: themeColors.primary,
+                      backgroundColor: colors.primary
                     },
                   ]}
                 />
               );
             })}
           </View>
-          
+
           {/* X-axis labels */}
           <View style={styles.xAxisLabels}>
             {data.map((item, index) => (
@@ -181,7 +178,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                   styles.xAxisLabel,
                   {
                     left: index * stepX - 20,
-                    color: themeColors.textSecondary,
+                    color: colors.textSecondary
                   },
                 ]}
               >
@@ -198,9 +195,9 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
     const centerX = (width - 80) / 2;
     const centerY = (height - 80) / 2;
     const radius = Math.min(centerX, centerY) - 20;
-    
+
     let currentAngle = 0;
-    
+
     return (
       <View style={styles.chartContainer}>
         <View style={[styles.pieChartContainer, { height: height - 80 }]}>
@@ -208,18 +205,16 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
             const percentage = (item.value / totalValue) * 100;
             const angle = (item.value / totalValue) * 360;
             const color = item.color || defaultColors[index % defaultColors.length];
-            
+
             // Calculate position for percentage label
             const labelAngle = currentAngle + (angle / 2);
             const labelRadius = radius * 0.7;
             const labelX = centerX + Math.cos((labelAngle - 90) * (Math.PI / 180)) * labelRadius;
             const labelY = centerY + Math.sin((labelAngle - 90) * (Math.PI / 180)) * labelRadius;
-            
+
             const slice = (
-              <Animatable.View
+              <View
                 key={index}
-                animation={animated ? "fadeIn" : undefined}
-                delay={animated ? index * 200 : 0}
                 style={[
                   styles.pieSlice,
                   {
@@ -234,9 +229,9 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                 ]}
               />
             );
-            
+
             currentAngle += angle;
-            
+
             return (
               <View key={index}>
                 {slice}
@@ -250,7 +245,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                       },
                     ]}
                   >
-                    <Text style={[styles.pieLabelText, { color: themeColors.text }]}>
+                    <Text style={[styles.pieLabelText, { color: colors.text }]}>
                       {percentage.toFixed(0)}%
                     </Text>
                   </View>
@@ -259,7 +254,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
             );
           })}
         </View>
-        
+
         {/* Legend */}
         <View style={styles.legend}>
           {data.map((item, index) => (
@@ -272,7 +267,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
                   },
                 ]}
               />
-              <Text style={[styles.legendLabel, { color: themeColors.text }]}>
+              <Text style={[styles.legendLabel, { color: colors.text }]}>
                 {item.label}: {item.value}
               </Text>
             </View>
@@ -296,11 +291,11 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.surface }, shadows.md]}>
+    <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: themeColors.text }]}>{title}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
         {subtitle && (
-          <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             {subtitle}
           </Text>
         )}
@@ -327,7 +322,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 12,
   },
-  
+
   // Bar Chart Styles
   chartContainer: {
     alignItems: 'center',
@@ -360,7 +355,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
-  
+
   // Line Chart Styles
   lineChartContainer: {
     position: 'relative',
@@ -388,7 +383,7 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    color: '#FFFFFF',
   },
   valueLabel: {
     position: 'absolute',
@@ -420,7 +415,7 @@ const styles = StyleSheet.create({
     width: 40,
     textAlign: 'center',
   },
-  
+
   // Pie Chart Styles
   pieChartContainer: {
     alignItems: 'center',
