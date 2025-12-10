@@ -11,7 +11,7 @@ export const BREAKPOINTS = {
   lg: 768,  // Tablets (iPad, Android tablets)
   xl: 1024, // Large tablets/small laptops
   xxl: 1440, // Desktop screens
-} as const;
+} ;
 
 export type Breakpoint = keyof typeof BREAKPOINTS;
 
@@ -20,7 +20,7 @@ export const DEVICE_TYPES = {
   PHONE: 'phone',
   TABLET: 'tablet',
   DESKTOP: 'desktop',
-} as const;
+} ;
 
 export type DeviceType = typeof DEVICE_TYPES[keyof typeof DEVICE_TYPES];
 
@@ -118,22 +118,57 @@ export const RESPONSIVE_SCALES = {
       full: 9999,
     },
   },
-} as const;
+} ;
 
-// Enhanced responsive functions
+// Enhanced responsive functions with memoization
+let cachedDeviceType: DeviceType | null = null;
+let cachedBreakpoint: Breakpoint | null = null;
+let lastScreenWidth = SCREEN_WIDTH;
+
 export const getDeviceType = (): DeviceType => {
-  if (Platform.OS === 'web') return DEVICE_TYPES.DESKTOP;
-  if (SCREEN_WIDTH >= BREAKPOINTS.lg) return DEVICE_TYPES.TABLET;
-  return DEVICE_TYPES.PHONE;
+  if (SCREEN_WIDTH !== lastScreenWidth) {
+    cachedDeviceType = null;
+    cachedBreakpoint = null;
+    lastScreenWidth = SCREEN_WIDTH;
+  }
+  
+  if (cachedDeviceType === null) {
+    if (Platform.OS === 'web') {
+      cachedDeviceType = DEVICE_TYPES.DESKTOP;
+    } else if (SCREEN_WIDTH >= BREAKPOINTS.lg) {
+      cachedDeviceType = DEVICE_TYPES.TABLET;
+    } else {
+      cachedDeviceType = DEVICE_TYPES.PHONE;
+    }
+  }
+  
+  return cachedDeviceType;
 };
 
 export const getCurrentBreakpoint = (): Breakpoint => {
-  if (SCREEN_WIDTH >= BREAKPOINTS.xxl) return 'xxl';
-  if (SCREEN_WIDTH >= BREAKPOINTS.xl) return 'xl';
-  if (SCREEN_WIDTH >= BREAKPOINTS.lg) return 'lg';
-  if (SCREEN_WIDTH >= BREAKPOINTS.md) return 'md';
-  if (SCREEN_WIDTH >= BREAKPOINTS.sm) return 'sm';
-  return 'xs';
+  if (SCREEN_WIDTH !== lastScreenWidth) {
+    cachedDeviceType = null;
+    cachedBreakpoint = null;
+    lastScreenWidth = SCREEN_WIDTH;
+  }
+  
+  if (cachedBreakpoint === null) {
+    if (SCREEN_WIDTH >= BREAKPOINTS.xxl) {
+      cachedBreakpoint = 'xxl';
+    } else if (SCREEN_WIDTH >= BREAKPOINTS.xl) {
+      cachedBreakpoint = 'xl';
+    } else if (SCREEN_WIDTH >= BREAKPOINTS.lg) {
+      cachedBreakpoint = 'lg';
+    } else if (SCREEN_WIDTH >= BREAKPOINTS.md) {
+      cachedBreakpoint = 'md';
+    } else if (SCREEN_WIDTH >= BREAKPOINTS.sm) {
+      cachedBreakpoint = 'sm';
+    } else {
+      cachedBreakpoint = 'xs';
+    }
+  }
+  
+  return cachedBreakpoint;
 };
 
 export const isBreakpoint = (breakpoint: Breakpoint): boolean => {
@@ -191,19 +226,19 @@ export const getResponsiveValue = <T>(values: {
 // Get responsive spacing
 export const getResponsiveSpacing = (size: keyof typeof RESPONSIVE_SCALES.spacing.phone): number => {
   const deviceType = getDeviceType();
-  return RESPONSIVE_SCALES.spacing[deviceType][size];
+  return (RESPONSIVE_SCALES.spacing as any)[deviceType][size];
 };
 
 // Get responsive typography
 export const getResponsiveTypography = (size: keyof typeof RESPONSIVE_SCALES.typography.phone): number => {
   const deviceType = getDeviceType();
-  return RESPONSIVE_SCALES.typography[deviceType][size];
+  return (RESPONSIVE_SCALES.typography as any)[deviceType][size];
 };
 
 // Get responsive border radius
 export const getResponsiveBorderRadius = (size: keyof typeof RESPONSIVE_SCALES.borderRadius.phone): number => {
   const deviceType = getDeviceType();
-  return RESPONSIVE_SCALES.borderRadius[deviceType][size];
+  return (RESPONSIVE_SCALES.borderRadius as any)[deviceType][size];
 };
 
 // Enhanced width and height percentage functions
@@ -221,17 +256,24 @@ export const maxSize = (size: number, max: number): number => Math.min(size, max
 export const clampSize = (size: number, min: number, max: number): number => 
   Math.min(Math.max(size, min), max);
 
-// Enhanced responsive hook
+// Enhanced responsive hook with optimizations
 export const useResponsiveLayout = () => {
   const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
   
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
-      setDimensions(window);
+      // Only update if dimensions actually changed significantly
+      if (Math.abs(window.width - dimensions.width) > 1 || 
+          Math.abs(window.height - dimensions.height) > 1) {
+        setDimensions(window);
+        // Invalidate cache when dimensions change
+        cachedDeviceType = null;
+        cachedBreakpoint = null;
+      }
     });
     
     return () => subscription?.remove();
-  }, []);
+  }, [dimensions]);
   
   const deviceType = getDeviceType();
   const breakpoint = getCurrentBreakpoint();
@@ -252,6 +294,38 @@ export const useResponsiveLayout = () => {
     isDesktop,
     isLandscape: dimensions.width > dimensions.height,
     isPortrait: dimensions.width <= dimensions.height,
+    
+    // Device info object for backward compatibility
+    deviceInfo: {
+      type: deviceType,
+      width: dimensions.width,
+      height: dimensions.height,
+      isTablet,
+      isPhone,
+      isDesktop,
+      isLandscape: dimensions.width > dimensions.height,
+      isPortrait: dimensions.width <= dimensions.height,
+    },
+    
+    // Legacy constants for backward compatibility
+    SPACING: {
+      xs: getResponsiveSpacing('xs'),
+      sm: getResponsiveSpacing('sm'),
+      md: getResponsiveSpacing('md'),
+      lg: getResponsiveSpacing('lg'),
+      xl: getResponsiveSpacing('xl'),
+      xxl: getResponsiveSpacing('xxl'),
+    },
+    
+    FONT_SIZES: {
+      xs: getResponsiveTypography('xs'),
+      sm: getResponsiveTypography('sm'),
+      base: getResponsiveTypography('md'),
+      md: getResponsiveTypography('md'),
+      lg: getResponsiveTypography('lg'),
+      xl: getResponsiveTypography('xl'),
+      xxl: getResponsiveTypography('xxl'),
+    },
     
     // Responsive utilities
     wp,

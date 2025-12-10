@@ -1,5 +1,3 @@
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiClient, apiClient } from './ApiClient';
 
 // Vehicle interfaces
@@ -96,7 +94,7 @@ class CarApiService {
   }
 
   // Get all cars
-  async getAllVehicles(page = 0, size = 20, sort = 'createdAt,desc'): Promise<{ content: Vehicle[], totalElements: number, totalPages: number }> {
+  async getAllVehicles(page = 0, size = 20, sort = 'createdAt,desc'): Promise<{ content: Vehicle[], totalElements: number, totalPages: number, number: number, pageable: any }> {
     try {
       const response = await this.apiClient.getCars(page, size, sort);
       return response;
@@ -117,7 +115,7 @@ class CarApiService {
   }
 
   // Create new car listing
-  async createVehicle(vehicleData: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'inquiries' | 'shares'>): Promise<Vehicle> {
+  async createVehicle(vehicleData: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'inquiries' | 'shares' | 'dealerName'>): Promise<Vehicle> {
     try {
       return await this.apiClient.createCar(vehicleData);
     } catch (error) {
@@ -149,8 +147,7 @@ class CarApiService {
   // Update car status
   async updateVehicleStatus(id: string, status: Vehicle['status']): Promise<Vehicle> {
     try {
-      const response = await this.apiClient.post<Vehicle>(`/api/v2/cars/${id}/status`, { status });
-      return response.data;
+      return await this.apiClient.updateCarStatus(Number(id), status);
     } catch (error) {
       console.error('Error updating vehicle status:', error);
       throw error;
@@ -160,15 +157,7 @@ class CarApiService {
   // Search vehicles with filters
   async searchVehicles(filters: VehicleSearchFilters): Promise<{ content: Vehicle[], totalElements: number, totalPages: number }> {
     try {
-      const queryParams = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          queryParams.append(key, value.toString());
-        }
-      });
-      
-      const response = await this.apiClient.get(`/api/v2/cars/search?${queryParams}`);
-      return response.data;
+      return await this.apiClient.searchCars(filters);
     } catch (error) {
       console.error('Error searching vehicles:', error);
       throw error;
@@ -212,8 +201,7 @@ class CarApiService {
   // Feature/Unfeature vehicle (admin only)
   async featureVehicle(vehicleId: string, featured: boolean = true): Promise<Vehicle> {
     try {
-      const response = await this.apiClient.post<Vehicle>(`/api/v2/cars/${vehicleId}/feature?featured=${featured}`);
-      return response.data;
+      return await this.apiClient.featureCar(Number(vehicleId), featured);
     } catch (error) {
       console.error('Error featuring vehicle:', error);
       throw error;
@@ -395,7 +383,7 @@ class CarApiService {
   // Messaging API
   async getConversations(): Promise<any[]> {
     try {
-      const response = await this.apiClient.get('/api/v2/messages/conversations');
+      const response = await this.apiClient.get<any[]>('/api/v2/messages/conversations');
       return response.data;
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -405,7 +393,7 @@ class CarApiService {
 
   async getChatMessages(dealerId: string, page: number = 0, size: number = 50): Promise<any[]> {
     try {
-      const response = await this.apiClient.get(`/api/v2/messages/${dealerId}?page=${page}&size=${size}`);
+      const response = await this.apiClient.get<any[]>(`/api/v2/messages/${dealerId}?page=${page}&size=${size}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching chat messages:', error);
@@ -440,7 +428,7 @@ class CarApiService {
   // Notification API
   async getNotifications(page: number = 0, size: number = 20): Promise<any[]> {
     try {
-      const response = await this.apiClient.get(`/api/v2/notifications?page=${page}&size=${size}`);
+      const response = await this.apiClient.get<any[]>(`/api/v2/notifications?page=${page}&size=${size}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching notifications:', error);

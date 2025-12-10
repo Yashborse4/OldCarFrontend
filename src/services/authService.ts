@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
-import { apiService } from './apiService';
+import { apiClient } from './ApiClient';
 
 // Types for authentication
 export interface User {
@@ -62,7 +62,7 @@ const STORAGE_KEYS = {
   REFRESH_EXPIRY: '@carworld_refresh_expiry',
   BIOMETRIC_ENABLED: '@carworld_biometric_enabled',
   AUTO_LOGIN: '@carworld_auto_login',
-} as const;
+} ;
 
 class AuthService {
   private isRefreshing = false;
@@ -74,7 +74,7 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await apiService.post<AuthResponse>('/auth/login', {
+      const response = await apiClient.post<AuthResponse>('/auth/login', {
         usernameOrEmail: credentials.usernameOrEmail.trim().toLowerCase(),
         password: credentials.password,
         deviceInfo: await this.getDeviceInfo(),
@@ -98,7 +98,7 @@ class AuthService {
       // Client-side validation
       this.validateRegistrationCredentials(credentials);
 
-      const response = await apiService.post<AuthResponse>('/auth/register', {
+      const response = await apiClient.post<AuthResponse>('/auth/register', {
         ...credentials,
         email: credentials.email.trim().toLowerCase(),
         deviceInfo: await this.getDeviceInfo(),
@@ -123,7 +123,7 @@ class AuthService {
       
       if (refreshToken) {
         // Notify server about logout to invalidate tokens
-        await apiService.post('/auth/logout', { refreshToken }).catch(() => {
+        await apiClient.post('/auth/logout', { refreshToken }).catch(() => {
           // Ignore logout API errors as we're clearing local data anyway
         });
       }
@@ -139,7 +139,7 @@ class AuthService {
    */
   async forgotPassword(request: ForgotPasswordRequest): Promise<{ message: string }> {
     try {
-      const response = await apiService.post<{ message: string }>('/auth/forgot-password', {
+      const response = await apiClient.post<{ message: string }>('/auth/forgot-password', {
         email: request.email.trim().toLowerCase(),
       });
       
@@ -159,7 +159,7 @@ class AuthService {
         throw new Error('Passwords do not match');
       }
 
-      const response = await apiService.post<{ message: string }>('/auth/reset-password', {
+      const response = await apiClient.post<{ message: string }>('/auth/reset-password', {
         token: request.token,
         password: request.password,
       });
@@ -252,11 +252,18 @@ class AuthService {
   }
 
   /**
+   * Check if user is authorized (alias for isAuthenticated)
+   */
+  async isUserAuthorized(): Promise<boolean> {
+    return this.isAuthenticated();
+  }
+
+  /**
    * Verify email
    */
   async verifyEmail(token: string): Promise<{ message: string }> {
     try {
-      const response = await apiService.post<{ message: string }>('/auth/verify-email', {
+      const response = await apiClient.post<{ message: string }>('/auth/verify-email', {
         token,
       });
       
@@ -279,7 +286,7 @@ class AuthService {
    */
   async updateProfile(updates: Partial<User>): Promise<User> {
     try {
-      const response = await apiService.patch<{ user: User }>('/auth/profile', updates);
+      const response = await apiClient.patch<{ user: User }>('/auth/profile', updates);
       
       // Update stored user data
       await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.data.user));
@@ -296,7 +303,7 @@ class AuthService {
    */
   async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
     try {
-      const response = await apiService.post<{ message: string }>('/auth/change-password', {
+      const response = await apiClient.post<{ message: string }>('/auth/change-password', {
         currentPassword,
         newPassword,
       });
@@ -340,7 +347,7 @@ class AuthService {
       throw new Error('Refresh token expired');
     }
     
-    const response = await apiService.post<{ tokens: AuthTokens }>('/auth/refresh', {
+    const response = await apiClient.post<{ tokens: AuthTokens }>('/auth/refresh', {
       refreshToken,
       deviceInfo: await this.getDeviceInfo(),
     });
@@ -521,4 +528,7 @@ class AuthService {
 
 export const authService = new AuthService();
 
+// Export convenience functions for backward compatibility
+export const isUserAuthorized = () => authService.isUserAuthorized();
+export const isAuthenticated = () => authService.isAuthenticated();
 

@@ -5,15 +5,14 @@ import React, {
   useState,
   ReactNode,
 } from 'react';
-import {apiClient, ApiError, AuthTokens, UserData} from '../services/ApiClient';
-import Toast from 'react-native-toast-message';
+import { apiClient, ApiError, AuthTokens, UserData } from '../services/ApiClient';
 
 interface AuthContextType {
   // State
   isAuthenticated: boolean;
   isLoading: boolean;
   user: UserData | null;
-  
+
   // Authentication methods
   login: (credentials: {
     usernameOrEmail: string;
@@ -23,6 +22,9 @@ interface AuthContextType {
     username: string;
     email: string;
     password: string;
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string;
     role?: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
@@ -32,7 +34,7 @@ interface AuthContextType {
     otp: string;
     newPassword: string;
   }) => Promise<void>;
-  
+
   // Utility methods
   refreshUserData: () => Promise<void>;
   hasRole: (role: string) => boolean;
@@ -52,7 +54,7 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<UserData | null>(null);
@@ -66,7 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     try {
       setIsLoading(true);
       const token = await apiClient.getStoredAccessToken();
-      
+
       if (token) {
         // Validate token and get user data
         const validation = await apiClient.validateToken();
@@ -100,7 +102,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     try {
       setIsLoading(true);
       const authData = await apiClient.login(credentials);
-      
+
       setUser({
         userId: authData.userId,
         username: authData.username,
@@ -109,29 +111,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
         location: authData.location,
       });
       setIsAuthenticated(true);
-      
-      Toast.show({
-        type: 'success',
-        text1: 'Login Successful',
-        text2: `Welcome back, ${authData.username}!`,
-        position: 'top',
-      });
+
+      // Toast notification removed
     } catch (error) {
       console.error('Login failed:', error);
       if (error instanceof ApiError) {
-        Toast.show({
-          type: 'error',
-          text1: 'Login Failed',
-          text2: (error as any).message,
-          position: 'top',
-        });
+        // Toast notification removed
       } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Login Failed',
-          text2: 'An unexpected error occurred. Please try again.',
-          position: 'top',
-        });
+        // Toast notification removed
       }
       throw error;
     } finally {
@@ -143,42 +130,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     username: string;
     email: string;
     password: string;
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string;
     role?: string;
   }) => {
     try {
       setIsLoading(true);
       await apiClient.register(userData);
-      
-      Toast.show({
-        type: 'success',
-        text1: 'Registration Successful',
-        text2: 'Your account has been created. Please login.',
-        position: 'top',
-      });
+
+      // Toast notification removed
     } catch (error) {
       console.error('Registration failed:', error);
       if (error instanceof ApiError) {
         let errorMessage = (error as any).message;
-        
+
         // Show field-specific errors if available
         if ((error as any).fieldErrors) {
           const fieldErrors = Object.values((error as any).fieldErrors).join(', ');
           errorMessage = fieldErrors;
         }
-        
-        Toast.show({
-          type: 'error',
-          text1: 'Registration Failed',
-          text2: errorMessage,
-          position: 'top',
-        });
+
+        // Toast notification removed
+        console.error('Registration Failed:', errorMessage);
       } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Registration Failed',
-          text2: 'An unexpected error occurred. Please try again.',
-          position: 'top',
-        });
+        // Toast notification removed
       }
       throw error;
     } finally {
@@ -192,13 +168,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
       await apiClient.logout();
       setUser(null);
       setIsAuthenticated(false);
-      
-      Toast.show({
-        type: 'info',
-        text1: 'Logged Out',
-        text2: 'You have been successfully logged out.',
-        position: 'top',
-      });
+
+      // Toast notification removed
     } catch (error) {
       console.error('Logout failed:', error);
       // Still log out locally even if server call fails
@@ -209,39 +180,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     }
   };
 
+  // First forgotPassword removed - duplicate
+
   const forgotPassword = async (username: string) => {
     try {
       setIsLoading(true);
       await apiClient.forgotPassword(username);
-      
-      Toast.show({
-        type: 'success',
-        text1: 'Reset Code Sent',
-        text2: 'Please check your email for the reset code.',
-        position: 'top',
-      });
+
+      // Toast notification removed
     } catch (error) {
       console.error('Forgot password failed:', error);
       if (error instanceof ApiError) {
-        Toast.show({
-          type: 'error',
-          text1: 'Reset Failed',
-          text2: (error as any).message,
-          position: 'top',
-        });
+        // Toast notification removed
       } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Reset Failed',
-          text2: 'An unexpected error occurred. Please try again.',
-          position: 'top',
-        });
+        // Toast notification removed
       }
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
+
+  // First resetPassword removed - duplicate
 
   const resetPassword = async (data: {
     username: string;
@@ -251,35 +211,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     try {
       setIsLoading(true);
       await apiClient.resetPassword(data);
-      
-      Toast.show({
-        type: 'success',
-        text1: 'Password Reset Successful',
-        text2: 'Your password has been updated. Please login.',
-        position: 'top',
-      });
+
+      // Toast notification removed
     } catch (error) {
       console.error('Reset password failed:', error);
       if (error instanceof ApiError) {
-        Toast.show({
-          type: 'error',
-          text1: 'Reset Failed',
-          text2: (error as any).message,
-          position: 'top',
-        });
+        // Toast notification removed
       } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Reset Failed',
-          text2: 'An unexpected error occurred. Please try again.',
-          position: 'top',
-        });
+        // Toast notification removed
       }
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
+
+  // First refreshUserData removed - duplicate
 
   const refreshUserData = async () => {
     try {
@@ -340,14 +287,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     isAuthenticated,
     isLoading,
     user,
-    
+
     // Auth methods
     login,
     register,
     logout,
     forgotPassword,
     resetPassword,
-    
+
     // Utility methods
     refreshUserData,
     hasRole,

@@ -7,14 +7,16 @@ import {
   Platform,
   KeyboardAvoidingView,
   Modal,
+  ScrollView,
+  StyleSheet,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '../../theme';
-import Toast from 'react-native-toast-message';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import { Gradient } from '../../components/ui/Gradient';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 import { useAuth } from '../../context/AuthContext';
 import { validateRegistrationForm } from '../../utils/validation';
-import { ErrorHandler } from '../../components/ErrorHandler';
+import { useTheme } from '../../theme/ThemeContext';
 import { getRoleName } from '../../utils/permissions';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -26,16 +28,12 @@ interface Props {
 }
 
 const RegisterUser: React.FC<Props> = ({ navigation }) => {
-  const { colors: themeColors } = useTheme();
+  const { theme, isDark } = useTheme();
+  const { colors } = theme;
   const { register, isLoading: authLoading } = useAuth();
 
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [role, setRole] = useState('VIEWER');
   const [isLoading, setIsLoading] = useState(false);
   const [isPickerVisible, setPickerVisible] = useState(false);
@@ -44,37 +42,43 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
   const handleRegister = async () => {
     // Clear previous errors
     setError(null);
-    
-    // Validate form
-    const validationResult = validateRegistrationForm({
-      username,
-      email,
-      password,
-      confirmPassword,
-      firstName: firstName || undefined,
-      lastName: lastName || undefined,
-      phoneNumber: phoneNumber || undefined,
-    });
 
-    if (!validationResult.isValid) {
-      Toast.show({
-        type: 'error',
-        text1: 'Validation Error',
-        text2: validationResult.errors[0], // Show first error
-      });
+    // Basic validation
+    if (!email || !password) {
+      Alert.alert(
+        'Required Fields',
+        'Please enter your email and password'
+      );
+      return;
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert(
+        'Invalid Email',
+        'Please enter a valid email address'
+      );
+      return;
+    }
+
+    // Password length validation
+    if (password.length < 6) {
+      Alert.alert(
+        'Weak Password',
+        'Password must be at least 6 characters'
+      );
       return;
     }
 
     setIsLoading(true);
     try {
-      await register({ 
-        username, 
-        email, 
-        password, 
-        firstName: firstName || undefined,
-        lastName: lastName || undefined,
-        phoneNumber: phoneNumber || undefined,
-        role 
+      // Use email as username
+      await register({
+        username: email,
+        email,
+        password,
+        role
       });
       // AuthContext handles navigation on successful registration
     } catch (error: any) {
@@ -94,142 +98,370 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
     setError(null);
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    gradientHeader: {
+      paddingBottom: 25,
+      borderBottomLeftRadius: 28,
+      borderBottomRightRadius: 28,
+    },
+    headerSafe: {
+      paddingHorizontal: 20,
+    },
+    header: {
+      alignItems: 'center',
+      paddingTop: 16,
+      paddingBottom: 5,
+    },
+    iconContainer: {
+      width: 70,
+      height: 70,
+      borderRadius: 35,
+      backgroundColor: 'rgba(255, 255, 255, 0.25)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 12,
+      borderWidth: 2,
+      borderColor: 'rgba(255, 255, 255, 0.4)',
+    },
+    title: {
+      fontSize: 26,
+      fontWeight: '800',
+      color: '#FFFFFF',
+      marginBottom: 6,
+      letterSpacing: 0.5,
+    },
+    subtitle: {
+      fontSize: 14,
+      color: 'rgba(255, 255, 255, 0.9)',
+      textAlign: 'center',
+      fontWeight: '500',
+      paddingHorizontal: 20,
+    },
+    keyboardView: {
+      flex: 1,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: 50,
+    },
+    formCard: {
+      marginTop: -30,
+      marginHorizontal: 16,
+      backgroundColor: colors.surface,
+      borderRadius: 28,
+      borderWidth: 1,
+      borderColor: isDark ? colors.border : 'rgba(99, 102, 241, 0.1)',
+    },
+    formCardInner: {
+      padding: 28,
+    },
+    sectionDivider: {
+      height: 1,
+      backgroundColor: isDark ? colors.border : '#E5E7EB',
+      marginVertical: 24,
+      marginHorizontal: -8,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 20,
+      marginTop: 16,
+    },
+    sectionIconContainer: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      backgroundColor: isDark ? `${colors.primary}20` : `${colors.primary}10`,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text,
+      letterSpacing: 0.3,
+    },
+    inputSection: {
+      marginBottom: 15,
+
+    },
+    row: {
+      flexDirection: 'row',
+      gap: 14,
+      marginBottom: 18,
+    },
+    halfWidth: {
+      flex: 1,
+    },
+    halfInput: {
+      marginBottom: 0,
+    },
+    rolePicker: {
+      marginBottom: 0,
+    },
+    roleLabel: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 10,
+      letterSpacing: 0.3,
+    },
+    roleButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: 16,
+      borderWidth: 2,
+      borderColor: isDark ? colors.border : '#E5E7EB',
+      backgroundColor: isDark ? colors.surfaceVariant : '#FAFBFC',
+      paddingHorizontal: 18,
+      paddingVertical: 16,
+      minHeight: 60,
+    },
+    roleIconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: isDark
+        ? `${colors.primary}25`
+        : `${colors.primary}15`,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 14,
+    },
+    roleText: {
+      flex: 1,
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    registerButton: {
+      marginTop: 32,
+      marginBottom: 24,
+      borderRadius: 16,
+      height: 58,
+    },
+    signInLink: {
+      alignSelf: 'center',
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+    },
+    signInText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      fontWeight: '500',
+      textAlign: 'center',
+    },
+    signInAccent: {
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.65)',
+      justifyContent: 'flex-end',
+      padding: 0,
+    },
+    modalContent: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 28,
+      borderTopRightRadius: 28,
+      paddingBottom: Platform.OS === 'ios' ? 38 : 28,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 28,
+      paddingVertical: 24,
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? colors.border : '#F3F4F6',
+    },
+    modalTitle: {
+      fontSize: 22,
+      fontWeight: '800',
+      color: colors.text,
+      letterSpacing: 0.3,
+    },
+    modalClose: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: isDark ? colors.surfaceVariant : '#F3F4F6',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 28,
+      paddingVertical: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? colors.border : '#F3F4F6',
+      backgroundColor: colors.surface,
+    },
+    modalOptionSelected: {
+      backgroundColor: isDark
+        ? `${colors.primary}18`
+        : `${colors.primary}10`,
+      borderLeftWidth: 5,
+      borderLeftColor: colors.primary,
+    },
+    modalOptionLast: {
+      borderBottomWidth: 0,
+    },
+    modalOptionIcon: {
+      width: 52,
+      height: 52,
+      borderRadius: 14,
+      backgroundColor: isDark ? colors.surfaceVariant : '#F3F4F6',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 18,
+    },
+    modalOptionIconSelected: {
+      backgroundColor: isDark
+        ? `${colors.primary}30`
+        : `${colors.primary}20`,
+    },
+    modalOptionContent: {
+      flex: 1,
+    },
+    modalOptionTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 5,
+      letterSpacing: 0.2,
+    },
+    modalOptionSubtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+  });
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="default" />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join us to find your perfect car</Text>
-          </View>
+    <>
+      <View style={styles.container}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+        <Gradient
+          colors={isDark
+            ? [colors.primary, '#3730A3']
+            : [colors.primary, '#6366F1']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradientHeader}
+        >
+          <SafeAreaView edges={['top']} style={styles.headerSafe}>
+            <View style={styles.header}>
+              <Text style={styles.title}>Create Account</Text>
+              <Text style={styles.subtitle}>Join in seconds - it's quick and easy!</Text>
+            </View>
+          </SafeAreaView>
+        </Gradient>
 
-          <View style={styles.form}>
-            <ErrorHandler 
-              error={error} 
-              onRetry={handleRetryRegistration}
-              onDismiss={dismissError}
-            />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.formCard}>
+              <View style={styles.formCardInner}>
 
-            <Input
-              label="Username"
-              value={username}
-              onChangeText={setUsername}
-              leftIcon="person"
-              placeholder="Enter your username"
-              autoCapitalize="none"
-              returnKeyType="next"
-              required
-            />
+                {/* Quick Sign Up */}
+                <View style={styles.sectionHeader}>
+                  <View style={styles.sectionIconContainer}>
+                    <MaterialIcons name="rocket-launch" size={18} color={colors.primary} />
+                  </View>
+                  <Text style={styles.sectionTitle}>Quick Sign Up</Text>
+                </View>
 
-            <View style={styles.row}>
-              <View style={styles.halfWidth}>
-                <Input
-                  label="First Name"
-                  value={firstName}
-                  onChangeText={setFirstName}
-                  leftIcon="person"
-                  placeholder="First name"
-                  returnKeyType="next"
-                  containerStyle={styles.halfInput}
+                <View style={styles.inputSection}>
+                  <Input
+                    label="Email Address"
+                    value={email}
+                    onChangeText={setEmail}
+                    leftIcon="email"
+                    placeholder="your.email@example.com"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    returnKeyType="next"
+                    required
+                  />
+                </View>
+
+
+
+                <View style={styles.inputSection}>
+                  <TouchableOpacity
+                    style={styles.rolePicker}
+                    onPress={() => setPickerVisible(true)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.roleLabel}>I want to *</Text>
+                    <View style={styles.roleButton}>
+                      <View style={styles.roleIconContainer}>
+                        <MaterialIcons name="group" size={24} color={colors.primary} />
+                      </View>
+                      <Text style={styles.roleText}>{getRoleName(role)}</Text>
+                      <MaterialIcons name="keyboard-arrow-down" size={26} color={colors.textSecondary} />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.inputSection}>
+                  <Input
+                    label="Password"
+                    value={password}
+                    onChangeText={setPassword}
+                    leftIcon="lock"
+                    placeholder="Create a password (min 6 characters)"
+                    secureTextEntry
+                    returnKeyType="done"
+                    required
+                  />
+                </View>
+
+                <Button
+                  title="Create Account"
+                  onPress={handleRegister}
+                  loading={isLoading || authLoading}
+                  disabled={isLoading || authLoading}
+                  fullWidth
+                  style={styles.registerButton}
                 />
-              </View>
-              <View style={styles.halfWidth}>
-                <Input
-                  label="Last Name"
-                  value={lastName}
-                  onChangeText={setLastName}
-                  leftIcon="person"
-                  placeholder="Last name"
-                  returnKeyType="next"
-                  containerStyle={styles.halfInput}
-                />
+
+                <TouchableOpacity
+                  style={styles.signInLink}
+                  onPress={() => navigation.goBack()}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.signInText}>
+                    Already have an account?{' '}
+                    <Text style={styles.signInAccent}>Sign In</Text>
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
-
-            <Input
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              leftIcon="email"
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              returnKeyType="next"
-              required
-            />
-
-            <Input
-              label="Phone Number"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              leftIcon="phone"
-              placeholder="Enter your phone number"
-              keyboardType="phone-pad"
-              returnKeyType="next"
-            />
-
-            <Input
-              label="Password"
-              value={password}
-              onChangeText={setPassword}
-              leftIcon="lock"
-              placeholder="Enter your password"
-              secureTextEntry
-              returnKeyType="next"
-              required
-            />
-
-            <Input
-              label="Confirm Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              leftIcon="lock"
-              placeholder="Confirm your password"
-              secureTextEntry
-              returnKeyType="done"
-              required
-            />
-
-            <TouchableOpacity
-              style={styles.rolePicker}
-              onPress={() => setPickerVisible(true)}
-            >
-              <Text style={styles.roleLabel}>Role</Text>
-              <View style={styles.roleButton}>
-                <MaterialIcons name="group" size={20} color={themeColors.textSecondary} />
-                <Text style={styles.roleText}>{getRoleName(role)}</Text>
-                <MaterialIcons name="keyboard-arrow-down" size={20} color={themeColors.textSecondary} />
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          <Button
-            title="Create Account"
-            onPress={handleRegister}
-            loading={isLoading || authLoading}
-            disabled={isLoading || authLoading}
-            fullWidth
-            style={styles.registerButton}
-          />
-
-          <TouchableOpacity
-            style={styles.signInLink}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.signInText}>
-              Already have an account?{' '}
-              <Text style={styles.signInAccent}>Sign In</Text>
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </View>
 
       <Modal
-        animationType="fade"
+        animationType="slide"
         transparent
         visible={isPickerVisible}
         onRequestClose={() => setPickerVisible(false)}
@@ -240,167 +472,84 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
           onPress={() => setPickerVisible(false)}
         >
           <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Your Role</Text>
+              <TouchableOpacity
+                onPress={() => setPickerVisible(false)}
+                style={styles.modalClose}
+              >
+                <MaterialIcons name="close" size={24} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity
-              style={styles.modalOption}
+              style={[
+                styles.modalOption,
+                role === 'VIEWER' && styles.modalOptionSelected
+              ]}
               onPress={() => {
                 setRole('VIEWER');
                 setPickerVisible(false);
               }}
+              activeOpacity={0.7}
             >
-              <Text style={styles.modalOptionTitle}>Viewer</Text>
-              <Text style={styles.modalOptionSubtitle}>Browse and view cars</Text>
+              <View style={[
+                styles.modalOptionIcon,
+                role === 'VIEWER' && styles.modalOptionIconSelected
+              ]}>
+                <MaterialIcons
+                  name="person"
+                  size={24}
+                  color={role === 'VIEWER' ? colors.primary : colors.textSecondary}
+                />
+              </View>
+              <View style={styles.modalOptionContent}>
+                <Text style={styles.modalOptionTitle}>Normal User</Text>
+                <Text style={styles.modalOptionSubtitle}>Browse, buy and sell cars</Text>
+              </View>
+              {role === 'VIEWER' && (
+                <MaterialIcons name="check-circle" size={24} color={colors.primary} />
+              )}
             </TouchableOpacity>
+
+
+
             <TouchableOpacity
-              style={styles.modalOption}
-              onPress={() => {
-                setRole('SELLER');
-                setPickerVisible(false);
-              }}
-            >
-              <Text style={styles.modalOptionTitle}>Seller</Text>
-              <Text style={styles.modalOptionSubtitle}>List and sell your cars</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalOption, styles.modalOptionLast]}
+              style={[
+                styles.modalOption,
+                styles.modalOptionLast,
+                role === 'DEALER' && styles.modalOptionSelected
+              ]}
               onPress={() => {
                 setRole('DEALER');
                 setPickerVisible(false);
               }}
+              activeOpacity={0.7}
             >
-              <Text style={styles.modalOptionTitle}>Dealer</Text>
-              <Text style={styles.modalOptionSubtitle}>Professional car dealer</Text>
+              <View style={[
+                styles.modalOptionIcon,
+                role === 'DEALER' && styles.modalOptionIconSelected
+              ]}>
+                <MaterialIcons
+                  name="business"
+                  size={24}
+                  color={role === 'DEALER' ? colors.primary : colors.textSecondary}
+                />
+              </View>
+              <View style={styles.modalOptionContent}>
+                <Text style={styles.modalOptionTitle}>Dealer</Text>
+                <Text style={styles.modalOptionSubtitle}>Professional car dealer</Text>
+              </View>
+              {role === 'DEALER' && (
+                <MaterialIcons name="check-circle" size={24} color={colors.primary} />
+              )}
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
-  );
+    </>);
 };
 
-import { StyleSheet } from 'react-native';
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-    justifyContent: 'center',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1A202C',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#718096',
-    textAlign: 'center',
-  },
-  form: {
-    gap: 20,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  halfWidth: {
-    flex: 1,
-  },
-  halfInput: {
-    marginBottom: 0,
-  },
-  rolePicker: {
-    marginBottom: 16,
-  },
-  roleLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1A202C',
-    marginBottom: 8,
-  },
-  roleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#F7FAFC',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    height: 48,
-  },
-  roleText: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '400',
-    color: '#1A202C',
-    marginLeft: 12,
-  },
-  registerButton: {
-    marginTop: 16,
-    marginBottom: 24,
-  },
-  signInLink: {
-    alignSelf: 'center',
-  },
-  signInText: {
-    fontSize: 15,
-    color: '#718096',
-  },
-  signInAccent: {
-    fontWeight: '600',
-    color: '#FFD700',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    width: '80%',
-    maxWidth: 300,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    overflow: 'hidden',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-  },
-  modalOption: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  modalOptionLast: {
-    borderBottomWidth: 0,
-  },
-  modalOptionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1A202C',
-    marginBottom: 4,
-  },
-  modalOptionSubtitle: {
-    fontSize: 14,
-    color: '#718096',
-  },
-});
 
 export default RegisterUser;
-
 

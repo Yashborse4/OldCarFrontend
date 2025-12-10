@@ -61,8 +61,10 @@ export interface AuthTokens {
 }
 
 export interface UserData {
+  id?: string | number; // For backward compatibility with chat features
   userId: number;
   username: string;
+  name?: string; // Display name for chat features
   email: string;
   role: string;
   location?: string;
@@ -104,13 +106,22 @@ class ApiClient {
     resolve: (value: any) => void;
     reject: (error: any) => void;
   }> = [];
-  private networkCheckInterval: number | null = null;
+  private networkCheckInterval: ReturnType<typeof setTimeout> | null = null;
   private retryConfig = {
     retries: 3,
     retryDelay: 1000, // Base delay in milliseconds
     retryCondition: (error: any) => {
-      return !error.response || error.response.status >= 500 || error.code === 'NETWORK_ERROR';
-    }
+      const status = error.response?.status;
+      const code = error.code;
+
+      return (
+        !status ||
+        status >= 500 ||
+        code === 'NETWORK_ERROR' ||
+        code === 'ERR_NETWORK' ||
+        code === 'ECONNABORTED'
+      );
+    },
   };
 
   constructor() {
@@ -255,61 +266,50 @@ class ApiClient {
       (response) => response,
       async (error) => {
         const config = error.config;
-        
+
+        // If there is no config, we can't retry this request
+        if (!config) {
+          return Promise.reject(error);
+        }
+
         // Initialize retry count if not present
         if (!config.__retryCount) {
           config.__retryCount = 0;
         }
-        
+
         // Check if we should retry
-        const shouldRetry = this.retryConfig.retryCondition(error) && 
-                           config.__retryCount < this.retryConfig.retries;
-        
+        const shouldRetry =
+          this.retryConfig.retryCondition(error) &&
+          config.__retryCount < this.retryConfig.retries;
+
         if (shouldRetry) {
           config.__retryCount += 1;
-          
+
           // Exponential backoff
-          const delay = this.retryConfig.retryDelay * Math.pow(2, config.__retryCount - 1);
-          
-          console.log(`Retrying request (attempt ${config.__retryCount}/${this.retryConfig.retries}) after ${delay}ms`);
-          
-          await new Promise(resolve => setTimeout(resolve, delay));
-          
+          const delay =
+            this.retryConfig.retryDelay * Math.pow(2, config.__retryCount - 1);
+
+          console.log(
+            `Retrying request (attempt ${config.__retryCount}/${this.retryConfig.retries}) after ${delay}ms`,
+          );
+
+          await new Promise<void>((resolve) =>
+            setTimeout(() => resolve(), delay),
+          );
+
           return this.instance(config);
         }
-        
+
         return Promise.reject(error);
-      }
+      },
     );
   }
 
-  private async retryRequest<T>(requestFn: () => Promise<T>, maxRetries = 3): Promise<T> {
-    let lastError: any;
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        return await requestFn();
-      } catch (error: any) {
-        lastError = error;
-        
-        // Don't retry for certain error types
-        if (error.response && [400, 401, 403, 404, 422].includes(error.response.status)) {
-          throw error;
-        }
-        
-        if (attempt === maxRetries) {
-          throw error;
-        }
-        
-        // Exponential backoff
-        const delay = 1000 * Math.pow(2, attempt - 1);
-        console.log(`Request failed (attempt ${attempt}/${maxRetries}), retrying in ${delay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
-    
-    throw lastError;
+  private async retryRequest<T>(requestFn: () => Promise<AxiosResponse<T>>): Promise<AxiosResponse<T>> {
+    // The retry logic is handled by interceptors, so just call the function
+    return requestFn();
   }
+
 
   // Auth methods
   async login(credentials: {
@@ -317,11 +317,9 @@ class ApiClient {
     password: string;
   }): Promise<AuthTokens> {
     try {
-      const response = await this.retryRequest(() => 
-        this.instance.post<ApiSuccessResponse<AuthTokens>>(
-          '/api/auth/login',
-          credentials,
-        )
+      const response = await this.instance.post<ApiSuccessResponse<AuthTokens>>(
+        '/api/auth/login',
+        credentials,
       );
       
       const authData = response.data.data;
@@ -346,11 +344,9 @@ class ApiClient {
     phoneNumber?: string;
   }): Promise<AuthTokens> {
     try {
-      const response = await this.retryRequest(() =>
-        this.instance.post<ApiSuccessResponse<AuthTokens>>(
-          '/api/auth/register',
-          userData
-        )
+      const response = await this.instance.post<ApiSuccessResponse<AuthTokens>>(
+        '/api/auth/register',
+        userData
       );
       
       const authData = response.data.data;
@@ -447,9 +443,7 @@ class ApiClient {
   // Car management methods
   async getCars(page = 0, size = 20, sort = 'createdAt,desc'): Promise<any> {
     try {
-      const response = await this.retryRequest(() =>
-        this.instance.get(`/api/v2/cars?page=${page}&size=${size}&sort=${sort}`)
-      );
+      const response = await this.instance.get(`/api/v2/cars?page=${page}&size=${size}&sort=${sort}`);
       // Backend returns ApiResponse<Page<CarResponseV2>>
       if (response.data && response.data.success && response.data.data) {
         return response.data.data; // Return the Page<CarResponseV2>
@@ -463,9 +457,7 @@ class ApiClient {
 
   async getCarById(id: string | number): Promise<any> {
     try {
-      const response = await this.retryRequest(() =>
-        this.instance.get(`/api/v2/cars/${id}`)
-      );
+      const response = await this.instance.get(`/api/v2/cars/${id}`);
       // Backend returns ApiResponse<CarResponseV2>
       if (response.data && response.data.success && response.data.data) {
         return response.data.data; // Return the CarResponseV2
@@ -479,9 +471,7 @@ class ApiClient {
 
   async createCar(carData: any): Promise<any> {
     try {
-      const response = await this.retryRequest(() =>
-        this.instance.post('/api/v2/cars', carData)
-      );
+      const response = await this.instance.post('/api/v2/cars', carData);
       // Backend returns ApiResponse<CarResponseV2>
       if (response.data && response.data.success && response.data.data) {
         return response.data.data; // Return the created CarResponseV2
@@ -495,9 +485,7 @@ class ApiClient {
 
   async updateCar(id: string | number, carData: any): Promise<any> {
     try {
-      const response = await this.retryRequest(() =>
-        this.instance.patch(`/api/v2/cars/${id}`, carData)
-      );
+      const response = await this.instance.patch(`/api/v2/cars/${id}`, carData);
       // Backend returns ApiResponse<CarResponseV2>
       if (response.data && response.data.success && response.data.data) {
         return response.data.data; // Return the updated CarResponseV2
@@ -511,9 +499,7 @@ class ApiClient {
 
   async deleteCar(id: string | number, hard: boolean = false): Promise<void> {
     try {
-      await this.retryRequest(() =>
-        this.instance.delete(`/api/v2/cars/${id}?hard=${hard}`)
-      );
+      await this.instance.delete(`/api/v2/cars/${id}?hard=${hard}`);
     } catch (error: any) {
       console.error('Error deleting car:', error);
       throw this.handleApiError(error, 'Failed to delete vehicle listing');
@@ -559,9 +545,7 @@ class ApiClient {
         }
       });
 
-      const response = await this.retryRequest(() =>
-        this.instance.get(`/api/v2/cars/search?${params.toString()}`)
-      );
+      const response = await this.instance.get(`/api/v2/cars/search?${params.toString()}`);
       
       // Backend returns ApiResponse<Page<CarResponseV2>>
       if (response.data && response.data.success && response.data.data) {

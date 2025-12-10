@@ -10,18 +10,19 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import { useTheme } from '../../theme';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
+import { Input } from '../../config';
 
 interface Props {
   navigation: any;
 }
 
 const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
-  const { colors: themeColors } = useTheme();
-  
+  const colors = {
+    color: '#1A202C',
+  };
+
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -31,15 +32,15 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert('Email Required', 'Please enter your email address.');
       return;
     }
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert('Invalid Email', 'Please enter a valid email address.');
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       setEmailSent(true);
@@ -69,12 +70,12 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
+            <MaterialIcons name="arrow-back" size={24} color={colors.color} />
           </TouchableOpacity>
 
           <View style={styles.header}>
             <View style={styles.iconContainer}>
-              <MaterialIcons name="lock-reset" size={48} color={themeColors.primary} />
+              <MaterialIcons name="lock-reset" size={48} color={colors.color} />
             </View>
             <Text style={styles.title}>Reset Password</Text>
             <Text style={styles.subtitle}>
@@ -123,7 +124,7 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    color: '#FAFAFA',
   },
   keyboardView: {
     flex: 1,
@@ -141,14 +142,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F7FAFC',
+    color: '#F7FAFC',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
   },
   header: {
     alignItems: 'center',
@@ -158,15 +156,12 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#FFF7ED',
+    color: '#FFF7ED',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
   },
   title: {
     fontSize: 28,

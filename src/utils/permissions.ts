@@ -16,18 +16,18 @@ export enum Permission {
   DELETE_CAR = 'DELETE_CAR',
   VIEW_CAR = 'VIEW_CAR',
   FEATURE_CAR = 'FEATURE_CAR',
-  
+
   // User management permissions
   MANAGE_USERS = 'MANAGE_USERS',
   VIEW_USERS = 'VIEW_USERS',
-  
+
   // Chat permissions
   CHAT_WITH_USERS = 'CHAT_WITH_USERS',
-  
+
   // Analytics permissions
   VIEW_ANALYTICS = 'VIEW_ANALYTICS',
   VIEW_SYSTEM_ANALYTICS = 'VIEW_SYSTEM_ANALYTICS',
-  
+
   // Admin permissions
   ADMIN_ACCESS = 'ADMIN_ACCESS',
 }
@@ -70,16 +70,33 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ],
 };
 
+// Cache for permission lookups to avoid repeated calculations
+const permissionCache = new Map<string, boolean>();
+
 /**
- * Check if a user has a specific permission
+ * Check if a user has a specific permission (with caching)
  */
 export const hasPermission = (user: UserData | null, permission: Permission): boolean => {
   if (!user || !user.role) return false;
-  
+
+  const cacheKey = `${user.userId}-${user.role}-${permission}`;
+  const cached = permissionCache.get(cacheKey);
+
+  if (cached !== undefined) {
+    return cached;
+  }
+
   const userRole = user.role.toUpperCase() as UserRole;
   const rolePermissions = ROLE_PERMISSIONS[userRole];
-  
-  return rolePermissions ? rolePermissions.includes(permission) : false;
+  const result = rolePermissions ? rolePermissions.includes(permission) : false;
+
+  // Cache the result (limit cache size to prevent memory leaks)
+  if (permissionCache.size > 1000) {
+    permissionCache.clear();
+  }
+  permissionCache.set(cacheKey, result);
+
+  return result;
 };
 
 /**
@@ -171,7 +188,7 @@ export const getRoleName = (role: string): string => {
     case UserRole.SELLER:
       return 'Seller';
     case UserRole.VIEWER:
-      return 'Viewer';
+      return 'Normal User';
     default:
       return 'Unknown';
   }
@@ -185,7 +202,7 @@ export const getPermissionsForRole = (role: UserRole): Permission[] => {
 };
 
 /**
- * Check if user can perform action on a specific car
+ * Check if user can perform action on a specific car (optimized)
  * (e.g., update/delete their own cars)
  */
 export const canPerformActionOnCar = (
@@ -194,18 +211,40 @@ export const canPerformActionOnCar = (
   carOwnerId?: string | number
 ): boolean => {
   if (!user) return false;
-  
+
+  // Cache key for ownership checks
+  const cacheKey = `${user.userId}-${permission}-${carOwnerId || 'no-owner'}`;
+  const cached = permissionCache.get(cacheKey);
+
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  let result = false;
+
   // Admins can do anything
-  if (isAdmin(user)) return true;
-  
-  // Check if user has the general permission
-  if (!hasPermission(user, permission)) return false;
-  
-  // If no car owner ID provided, assume general permission check
-  if (carOwnerId === undefined) return true;
-  
-  // Users can only modify their own cars (unless admin)
-  return user.userId.toString() === carOwnerId?.toString();
+  if (isAdmin(user)) {
+    result = true;
+  } else {
+    // Check if user has the general permission
+    if (!hasPermission(user, permission)) {
+      result = false;
+    } else if (carOwnerId === undefined) {
+      // If no car owner ID provided, assume general permission check
+      result = true;
+    } else {
+      // Users can only modify their own cars (unless admin)
+      result = user.userId.toString() === carOwnerId?.toString();
+    }
+  }
+
+  // Cache the result
+  if (permissionCache.size > 1000) {
+    permissionCache.clear();
+  }
+  permissionCache.set(cacheKey, result);
+
+  return result;
 };
 
 

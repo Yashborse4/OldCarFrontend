@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,29 +6,36 @@ import {
   Platform,
   KeyboardAvoidingView,
   StyleSheet,
-  Dimensions,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../components/ui/ToastManager';
 import { Button } from '../../components/ui/Button';
 import { ModernInput as Input } from '../../components/ui/InputModern';
-import { useTheme } from '../../theme';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import LinearGradient from 'react-native-linear-gradient';
+import MaterialIcons from '@react-native-vector-icons/material-icons';
 
-const { width, height } = Dimensions.get('window');
+import { useTheme } from '../../theme';
+import {
+  scaleSize,
+  getResponsiveSpacing,
+  getResponsiveTypography,
+  getResponsiveBorderRadius,
+  hp,
+  wp
+} from '../../utils/responsiveEnhanced';
 
 interface Props {
   navigation: any;
 }
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
-  const { isDark, colors: themeColors } = useTheme();
+  const { theme, isDark } = useTheme();
+  const { colors } = theme;
   const { login } = useAuth();
   const { notifyLoginSuccess, notifyLoginError } = useNotifications();
-  
+
   // State management
   const [formData, setFormData] = useState({
     email: '',
@@ -49,7 +56,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   // Handle input changes
   const handleInputChange = useCallback((field: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     // Clear previous errors
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -60,11 +67,11 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const handleLogin = useCallback(async () => {
     // Clear previous errors
     setErrors({ email: '', password: '' });
-    
+
     // Validation
     let hasErrors = false;
     const newErrors = { email: '', password: '' };
-    
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
       hasErrors = true;
@@ -72,7 +79,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       newErrors.email = 'Please enter a valid email address';
       hasErrors = true;
     }
-    
+
     if (!formData.password.trim()) {
       newErrors.password = 'Password is required';
       hasErrors = true;
@@ -80,19 +87,19 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       newErrors.password = 'Password must be at least 6 characters';
       hasErrors = true;
     }
-    
+
     if (hasErrors) {
       setErrors(newErrors);
       return;
     }
-    
+
     try {
       setIsLoading(true);
-      await login({ 
-        usernameOrEmail: formData.email.trim(), 
+      await login({
+        usernameOrEmail: formData.email.trim(),
         password: formData.password.trim()
       });
-      
+
       notifyLoginSuccess('Welcome back! 🎉');
       navigation.replace('Dashboard');
     } catch (error: any) {
@@ -103,207 +110,240 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [formData, validateEmail, login, notifyLoginSuccess, notifyLoginError, navigation]);
 
-  // Check if form is valid
-  const isFormValid = formData.email.length > 0 && formData.password.length > 0;
+  // Memoize form validation
+  const isFormValid = useMemo(() => {
+    return formData.email.length > 0 && formData.password.length > 0 &&
+      !errors.email && !errors.password;
+  }, [formData.email, formData.password, errors.email, errors.password]);
 
-  const styles = StyleSheet.create({
+  // Memoize styles to prevent recreation on every render
+  const styles = useMemo(() => StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: themeColors.background,
+      backgroundColor: colors.background,
     },
     gradientBackground: {
       ...StyleSheet.absoluteFillObject,
+      backgroundColor: isDark ? '#1a1a1a' : '#f8f9fa',
+    },
+    scrollContent: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      paddingHorizontal: getResponsiveSpacing('lg'),
+      paddingBottom: hp(15), // Enough space for footer
+      paddingTop: getResponsiveSpacing('xl'),
     },
     content: {
-      flex: 1,
-      justifyContent: 'center',
-      paddingHorizontal: 24,
+      width: '100%',
+      maxWidth: scaleSize(440),
+      alignSelf: 'center',
     },
     header: {
       alignItems: 'center',
-      marginBottom: 48,
+      marginBottom: getResponsiveSpacing('xxl'),
     },
     logoContainer: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+      width: scaleSize(90),
+      height: scaleSize(90),
+      borderRadius: getResponsiveBorderRadius('xl'),
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: 24,
-      elevation: 4,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
+      marginBottom: getResponsiveSpacing('lg'),
+
     },
     logo: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+      width: scaleSize(90),
+      height: scaleSize(90),
+      borderRadius: getResponsiveBorderRadius('xl'),
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: colors.primary,
     },
     title: {
-      fontSize: 32,
-      fontWeight: '700',
-      color: themeColors.text,
+      fontSize: getResponsiveTypography('hero'),
+      fontWeight: '900',
+      color: colors.text,
       textAlign: 'center',
-      marginBottom: 8,
+      marginBottom: getResponsiveSpacing('xs'),
+      letterSpacing: -0.8,
     },
     subtitle: {
-      fontSize: 16,
-      color: themeColors.textSecondary,
+      fontSize: getResponsiveTypography('md'),
+      color: colors.textSecondary,
       textAlign: 'center',
-      fontWeight: '400',
+      fontWeight: '500',
+      letterSpacing: 0.3,
     },
     form: {
-      marginTop: 32,
+      marginTop: getResponsiveSpacing('xl'),
+      backgroundColor: colors.surface,
+      borderRadius: getResponsiveBorderRadius('xxl'),
+      padding: getResponsiveSpacing('xl'),
+      borderWidth: 1,
+      borderColor: isDark ? colors.border : 'rgba(0, 0, 0, 0.08)',
+
     },
     inputContainer: {
-      marginBottom: 20,
+      marginBottom: getResponsiveSpacing('md'),
     },
     loginButton: {
-      marginTop: 32,
-      height: 52,
-      borderRadius: 12,
+      marginTop: getResponsiveSpacing('lg'),
+      height: scaleSize(56),
+      borderRadius: getResponsiveBorderRadius('lg'),
     },
     forgotPassword: {
       alignSelf: 'center',
-      marginTop: 16,
-      paddingVertical: 8,
+      marginTop: getResponsiveSpacing('md'),
+      paddingVertical: scaleSize(10),
+      paddingHorizontal: scaleSize(16),
+      borderRadius: getResponsiveBorderRadius('sm'),
     },
     forgotPasswordText: {
-      fontSize: 14,
-      color: themeColors.primary,
-      fontWeight: '500',
+      fontSize: getResponsiveTypography('sm'),
+      color: colors.primary,
+      fontWeight: '700',
+      letterSpacing: 0.2,
     },
     footer: {
       position: 'absolute',
-      bottom: 40,
-      left: 24,
-      right: 24,
+      bottom: hp(4),
+      left: getResponsiveSpacing('lg'),
+      right: getResponsiveSpacing('lg'),
       alignItems: 'center',
+      backgroundColor: isDark ? 'rgba(28, 28, 30, 0.95)' : colors.surface,
+      paddingVertical: getResponsiveSpacing('md'),
+      paddingHorizontal: getResponsiveSpacing('lg'),
+      borderRadius: getResponsiveBorderRadius('xl'),
+      borderWidth: 1,
+      borderColor: isDark ? colors.border : 'rgba(0, 0, 0, 0.08)',
     },
     signUpContainer: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
+      flexWrap: 'wrap',
     },
     signUpText: {
-      fontSize: 14,
-      color: themeColors.textSecondary,
-      marginRight: 4,
+      fontSize: getResponsiveTypography('sm'),
+      color: colors.textSecondary,
+      marginRight: scaleSize(6),
+      fontWeight: '500',
     },
     signUpButton: {
-      paddingVertical: 4,
-      paddingHorizontal: 8,
+      paddingVertical: scaleSize(6),
     },
     signUpButtonText: {
-      fontSize: 14,
-      color: themeColors.primary,
-      fontWeight: '600',
+      fontSize: getResponsiveTypography('sm'),
+      color: colors.primary,
+      fontWeight: '700',
     },
-  });
+  }), [colors, isDark]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar 
-        barStyle={isDark ? "light-content" : "dark-content"} 
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor="transparent"
         translucent
       />
-      
-      {/* Subtle Gradient Background */}
-      <LinearGradient
-        colors={
-          isDark 
-            ? [themeColors.background, themeColors.surface] 
-            : ['#FAFBFC', '#FFFFFF']
-        }
-        style={styles.gradientBackground}
-      />
 
-      <KeyboardAvoidingView 
-        style={{ flex: 1 }}
+      <View style={styles.gradientBackground} />
+
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
       >
-        <View style={styles.content}>
-          {/* Header Section */}
-          <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <LinearGradient
-                colors={['#FFD700', '#F7931E']}
-                style={styles.logo}
-              >
-                <MaterialIcons
-                  name="directions-car"
-                  size={36}
-                  color="#FFFFFF"
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.content}>
+            <View style={styles.header}>
+              <View style={styles.logoContainer}>
+                <View style={styles.logo}>
+                  <MaterialIcons
+                    name="directions-car"
+                    size={scaleSize(48)}
+                    color="#FFFFFF"
+                  />
+                </View>
+              </View>
+              <Text style={styles.title}>Welcome Back</Text>
+              <Text style={styles.subtitle}>Sign in to continue to your garage</Text>
+            </View>
+
+            <View style={styles.form}>
+              <View style={styles.inputContainer}>
+                <Input
+                  label="Email Address"
+                  value={formData.email}
+                  onChangeText={(value) => handleInputChange('email', value)}
+                  placeholder="john@example.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  error={errors.email}
+                  leftIcon="email"
+                  variant="filled"
+                  accessibilityLabel="Email address input"
+                  accessibilityHint="Enter your email address"
                 />
-              </LinearGradient>
-            </View>
-            
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to your account</Text>
-          </View>
+              </View>
 
-          {/* Login Form */}
-          <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Input
-                label="Email"
-                value={formData.email}
-                onChangeText={(value) => handleInputChange('email', value)}
-                leftIcon="email"
-                variant="outline"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                error={errors.email}
-                placeholder="Enter your email"
+              <View style={styles.inputContainer}>
+                <Input
+                  label="Password"
+                  value={formData.password}
+                  onChangeText={(value) => handleInputChange('password', value)}
+                  placeholder="••••••••"
+                  secureTextEntry
+                  error={errors.password}
+                  leftIcon="lock"
+                  variant="filled"
+                  accessibilityLabel="Password input"
+                  accessibilityHint="Enter your password"
+                  textContentType="password"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={styles.forgotPassword}
+                onPress={() => navigation.navigate('ForgotPasswordScreen')}
+                activeOpacity={0.7}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel="Forgot Password"
+              >
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </TouchableOpacity>
+
+              <Button
+                title={isLoading ? "Signing in..." : "Sign In"}
+                onPress={handleLogin}
+                variant="primary"
+                size="lg"
+                loading={isLoading}
+                disabled={isLoading || !isFormValid}
+                style={styles.loginButton}
+                icon="login"
               />
             </View>
-
-            <View style={styles.inputContainer}>
-              <Input
-                label="Password"
-                value={formData.password}
-                onChangeText={(value) => handleInputChange('password', value)}
-                leftIcon="lock"
-                variant="outline"
-                secureTextEntry
-                error={errors.password}
-                placeholder="Enter your password"
-              />
-            </View>
-
-            <Button
-              title={isLoading ? "Signing In..." : "Sign In"}
-              onPress={handleLogin}
-              variant="primary"
-              fullWidth
-              disabled={!isFormValid || isLoading}
-              loading={isLoading}
-              style={styles.loginButton}
-            />
-
-            <TouchableOpacity 
-              style={styles.forgotPassword}
-              onPress={() => navigation.navigate('ForgotPasswordScreen')}
-            >
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-            </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
 
-        {/* Footer */}
         <View style={styles.footer}>
           <View style={styles.signUpContainer}>
             <Text style={styles.signUpText}>Don't have an account?</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.signUpButton}
               onPress={() => navigation.navigate('RegisterUser')}
+              activeOpacity={0.7}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Create new account"
             >
-              <Text style={styles.signUpButtonText}>Sign Up</Text>
+              <Text style={styles.signUpButtonText}>Create Account</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -12,7 +12,7 @@ export interface FieldValidationResult {
   error?: string;
 }
 
-// Email validation regex
+// Pre-compiled and optimized regex patterns
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Password validation regex - at least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
@@ -23,6 +23,25 @@ const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,30}$/;
 
 // Phone number validation regex (supports various formats)
 const PHONE_REGEX = /^[\+]?[1-9][\d]{0,15}$/;
+
+// Name validation regex (cached for performance)
+const NAME_REGEX = /^[a-zA-Z\s\-\']+$/;
+
+// OTP validation regex
+const OTP_REGEX = /^\d{6}$/;
+
+// Constants for validation limits
+const VALIDATION_LIMITS = {
+  MIN_PASSWORD_LENGTH: 8,
+  MIN_USERNAME_LENGTH: 3,
+  MAX_USERNAME_LENGTH: 30,
+  MIN_NAME_LENGTH: 2,
+  MAX_NAME_LENGTH: 50,
+  OTP_LENGTH: 6,
+  MIN_YEAR: 1900,
+  MAX_PRICE: 10000000,
+  MAX_MILEAGE: 1000000,
+} as const;
 
 /**
  * Validate email address
@@ -43,15 +62,17 @@ export const validateEmail = (email: string): FieldValidationResult => {
  * Validate password
  */
 export const validatePassword = (password: string): FieldValidationResult => {
-  if (!password) {
+  if (!password?.trim()) {
     return { isValid: false, error: 'Password is required' };
   }
   
-  if (password.length < 8) {
-    return { isValid: false, error: 'Password must be at least 8 characters long' };
+  const trimmedPassword = password.trim();
+  
+  if (trimmedPassword.length < VALIDATION_LIMITS.MIN_PASSWORD_LENGTH) {
+    return { isValid: false, error: `Password must be at least ${VALIDATION_LIMITS.MIN_PASSWORD_LENGTH} characters long` };
   }
   
-  if (!PASSWORD_REGEX.test(password)) {
+  if (!PASSWORD_REGEX.test(trimmedPassword)) {
     return { 
       isValid: false, 
       error: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character' 
@@ -83,19 +104,21 @@ export const validatePasswordConfirmation = (
  * Validate username
  */
 export const validateUsername = (username: string): FieldValidationResult => {
-  if (!username) {
+  if (!username?.trim()) {
     return { isValid: false, error: 'Username is required' };
   }
   
-  if (username.length < 3) {
-    return { isValid: false, error: 'Username must be at least 3 characters long' };
+  const trimmedUsername = username.trim();
+  
+  if (trimmedUsername.length < VALIDATION_LIMITS.MIN_USERNAME_LENGTH) {
+    return { isValid: false, error: `Username must be at least ${VALIDATION_LIMITS.MIN_USERNAME_LENGTH} characters long` };
   }
   
-  if (username.length > 30) {
-    return { isValid: false, error: 'Username must be no more than 30 characters long' };
+  if (trimmedUsername.length > VALIDATION_LIMITS.MAX_USERNAME_LENGTH) {
+    return { isValid: false, error: `Username must be no more than ${VALIDATION_LIMITS.MAX_USERNAME_LENGTH} characters long` };
   }
   
-  if (!USERNAME_REGEX.test(username)) {
+  if (!USERNAME_REGEX.test(trimmedUsername)) {
     return { 
       isValid: false, 
       error: 'Username can only contain letters, numbers, and underscores' 
@@ -167,12 +190,14 @@ export const validatePhoneNumber = (phone: string): FieldValidationResult => {
  * Validate OTP code
  */
 export const validateOTP = (otp: string): FieldValidationResult => {
-  if (!otp) {
+  if (!otp?.trim()) {
     return { isValid: false, error: 'OTP is required' };
   }
   
-  if (!/^\d{6}$/.test(otp)) {
-    return { isValid: false, error: 'OTP must be 6 digits' };
+  const trimmedOTP = otp.trim();
+  
+  if (!OTP_REGEX.test(trimmedOTP)) {
+    return { isValid: false, error: `OTP must be ${VALIDATION_LIMITS.OTP_LENGTH} digits` };
   }
   
   return { isValid: true };

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { isUserAuthorized, AUTH_STATUS_KEY } from '../services/auth';
+import { isUserAuthorized } from '../services/auth';
 
 /**
  * A lightweight hook that provides authentication state and handles

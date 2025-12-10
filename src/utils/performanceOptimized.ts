@@ -67,7 +67,7 @@ export const PERFORMANCE_ANIMATION_CONFIG = {
       property: LayoutAnimation.Properties.opacity,
     },
   },
-} as const;
+} ;
 
 // Performance monitoring utilities
 export class PerformanceMonitor {
@@ -130,10 +130,19 @@ export const useOptimizedCallback = <T extends (...args: any[]) => any>(
   options: { debounceMs?: number; throttleMs?: number } = {}
 ): T => {
   const { debounceMs, throttleMs } = options;
-  const timeoutRef = useRef<number | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastCallRef = useRef<number>(0);
 
-    return useCallback(
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  return useCallback(
     ((...args: Parameters<T>) => {
       const now = Date.now();
       
@@ -212,7 +221,7 @@ export const OPTIMIZED_FLATLIST_PROPS = {
       index,
     }),
   },
-} as const;
+} ;
 
 // Optimized animation hook
 export const useOptimizedAnimation = (
@@ -283,10 +292,19 @@ export const useInteractionSafeAsync = () => {
 };
 
 // Optimized state management with batching
-export const useBatchedState = <T>(initialState: T) => {
+export const useBatchedState = <T extends Record<string, any>>(initialState: T) => {
   const [state, setState] = useState(initialState);
   const pendingUpdatesRef = useRef<Partial<T>[]>([]);
-  const timeoutRef = useRef<number | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const batchedSetState = useCallback((update: Partial<T> | ((prevState: T) => Partial<T>)) => {
     const updateObj = typeof update === 'function' ? update(state) : update;
@@ -324,7 +342,7 @@ export const getOptimizedImageProps = (
   };
 
   return {
-    resizeMode: 'cover' as const,
+    resizeMode: 'cover' ,
     style: { width, height },
     fadeDuration: 300,
     progressiveRenderingEnabled: true,
