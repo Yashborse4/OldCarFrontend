@@ -121,3 +121,10 @@ $RECYCLE.BIN/
 
 # Warp AI
 WARP.md
+
+# Bundle analysis files
+*-bundle.js
+*-assets/
+bundle-analysis-report.json
+*.map
+*.stats.json
