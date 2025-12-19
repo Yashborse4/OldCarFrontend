@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Gradient } from './Gradient';
 
 interface NavigationItem {
@@ -117,7 +117,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
             },
           ]}
         >
-          <MaterialIcons
+          <Ionicons
             name={item.icon as any}
             size={24}
             color={isActive ? colors.primary : colors.textSecondary}
