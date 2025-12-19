@@ -1,14 +1,19 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  Animated,
   TouchableOpacity,
   Dimensions,
   Platform,
+  Easing,
 } from 'react-native';
 
+import { BlurView } from '@react-native-community/blur';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { ADVANCED_ANIMATIONS, hapticFeedback } from './MicroInteractionsModern';
+
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -40,80 +45,383 @@ const ToastItem: React.FC<ToastItemProps> = ({
   message,
   position = 'top',
   duration = 3000,
+  backdrop = false,
+  icon,
   onPress,
   onDismiss,
   onRemove,
   index,
 }) => {
+  const colors = {
+    surface: '#FFFFFF',
+    card: '#F3F4F6',
+    border: '#E5E7EB',
+    text: '#1F2937'
+  };
+  const spacing = {
+    lg: 16,
+    sm: 8
+  };
+  const borderRadius = {
+    lg: 16
+  };
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+
+  const getToast = () => {
+    switch (type) {
+      case 'success':
+        return {
+          background: ['#10B981', '#059669'],
+          border: '#10B981',
+          icon: '#FFFFFF',
+          text: '#FFFFFF',
+          glow: 'rgba(16, 185, 129, 0.3)',
+        };
+      case 'error':
+        return {
+          background: ['#EF4444', '#DC2626'],
+          border: '#EF4444',
+          icon: '#FFFFFF',
+          text: '#FFFFFF',
+          glow: 'rgba(239, 68, 68, 0.3)',
+        };
+      case 'warning':
+        return {
+          background: ['#F59E0B', '#D97706'],
+          border: '#F59E0B',
+          icon: '#FFFFFF',
+          text: '#FFFFFF',
+          glow: 'rgba(245, 158, 11, 0.3)',
+        };
+      case 'info':
+        return {
+          background: ['#3B82F6', '#2563EB'],
+          border: '#3B82F6',
+          icon: '#FFFFFF',
+          text: '#FFFFFF',
+          glow: 'rgba(59, 130, 246, 0.3)',
+        };
+      default:
+        return {
+          background: [colors.surface, colors.card],
+          border: colors.border,
+          icon: colors.text,
+          text: colors.text,
+          glow: 'rgba(0, 0, 0, 0.1)',
+        };
+    }
+  };
+
+  const getIcon = () => {
+    if (icon) return icon;
+
+    switch (type) {
+      case 'success':
+        return <Ionicons name="checkmark-circle" size={24} color={toast.icon} />;
+      case 'error':
+        return <Ionicons name="close-circle" size={24} color={toast.icon} />;
+      case 'warning':
+        return <Ionicons name="exclamation-circle" size={24} color={toast.icon} />;
+      case 'info':
+        return <Ionicons name="info-circle" size={24} color={toast.icon} />;
+      default:
+        return <Ionicons name="notifications" size={24} color={toast.icon} />;
+    }
+  };
+
+  const toast = getToast();
+
   useEffect(() => {
+    if (Platform.OS === 'ios') {
+      if (type === 'success' || type === 'info') {
+        hapticFeedback.light();
+      } else {
+        hapticFeedback.medium();
+      }
+    }
+
+    Animated.parallel([
+      Animated.spring(slideAnim, {
+        toValue: 1,
+        ...ADVANCED_ANIMATIONS.spring,
+        tension: 220,
+        friction: 20,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        ...ADVANCED_ANIMATIONS.smooth,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        ...ADVANCED_ANIMATIONS.spring,
+        tension: 240,
+        friction: 22,
+      }),
+    ]).start();
+
+    // Auto dismiss
     if (duration > 0) {
       const timer = setTimeout(() => {
-        onDismiss?.();
-        onRemove(id);
+        handleDismiss();
       }, duration);
       return () => clearTimeout(timer);
     }
   }, []);
 
-  const getBackgroundColor = () => {
-    switch (type) {
-      case 'success': return '#10B981';
-      case 'error': return '#EF4444';
-      case 'warning': return '#F59E0B';
-      case 'info': return '#3B82F6';
-      default: return '#1F2937';
+  const handleDismiss = () => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 260,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 0.8,
+        duration: 260,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onDismiss?.();
+      onRemove(id);
+    });
+  };
+
+  const getPositionStyle = () => {
+    const baseOffset = spacing.lg + (index * (70 + spacing.sm));
+
+    switch (position) {
+      case 'top':
+        return {
+          top: Platform.OS === 'ios' ? 60 + baseOffset : 30 + baseOffset,
+          transform: [
+            {
+              translateY: slideAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [-100, 0],
+              }),
+            },
+            { scale: scaleAnim },
+          ],
+        };
+      case 'center':
+        return {
+          top: (screenHeight - 100) / 2,
+          transform: [
+            {
+              translateX: slideAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [screenWidth, 0],
+              }),
+            },
+            { scale: scaleAnim },
+          ],
+        };
+      case 'bottom':
+        return {
+          bottom: Platform.OS === 'ios' ? 100 + baseOffset : 80 + baseOffset,
+          transform: [
+            {
+              translateY: slideAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [100, 0],
+              }),
+            },
+            { scale: scaleAnim },
+          ],
+        };
+      default:
+        return {};
     }
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      position: 'absolute',
-      left: 16,
-      right: 16,
-      top: position === 'top' ? 60 + (index * 70) : undefined,
-      bottom: position === 'bottom' ? 100 + (index * 70) : undefined,
-      alignSelf: position === 'center' ? 'center' : undefined,
-      backgroundColor: getBackgroundColor(),
-      borderRadius: 12,
-      padding: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      zIndex: 9999,
-      elevation: 5,
-    },
-    title: {
-      color: '#FFF',
-      fontWeight: 'bold',
-      fontSize: 16,
-    },
-    message: {
-      color: '#FFF',
-      fontSize: 14,
-    },
-    textContainer: {
-      flex: 1,
-      marginLeft: 12,
-    },
-  });
-
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={() => {
-        onPress?.();
-        if (!onPress) {
-          onDismiss?.();
-          onRemove(id);
-        }
-      }}
-      activeOpacity={0.9}
-    >
-      <View style={styles.textContainer}>
-        <Text style={styles.title}>{title}</Text>
-        {message && <Text style={styles.message}>{message}</Text>}
-      </View>
-    </TouchableOpacity>
+    <>
+      {backdrop && (
+        <Animated.View
+          style={[
+            styles.backdrop,
+            {
+              opacity: opacityAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 0.3],
+              }),
+            },
+          ]}
+        />
+      )}
+
+      <Animated.View
+        style={[
+          styles.container,
+          getPositionStyle(),
+          {
+            opacity: opacityAnim,
+          },
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.95}
+          onPress={() => {
+            onPress?.();
+            if (!onPress) handleDismiss();
+          }}
+          style={styles.touchable}
+        >
+          {/* Glass morphism effect */}
+          <BlurView
+            style={styles.blurContainer}
+            blurType="light"
+            blurAmount={10}
+            reducedTransparencyFallbackColor={colors.surface}
+          />
+
+          {/* Gradient overlay */}
+          <View style={[styles.gradientOverlay, { backgroundColor: toast.background[0] }]} />
+
+          {/* Glow effect */}
+          <View
+            style={[
+              styles.glowEffect,
+              {
+
+                borderColor: toast.border,
+              },
+            ]}
+          />
+
+          {/* Content */}
+          <View style={styles.content}>
+            <View style={styles.iconContainer}>
+              <View>
+                {getIcon()}
+              </View>
+            </View>
+
+            <View style={styles.textContainer}>
+              <Text
+                style={[
+                  styles.title,
+                  { color: toast.text },
+                ]}
+                numberOfLines={2}
+              >
+                {title}
+              </Text>
+              {message && (
+                <Text
+                  style={[
+                    styles.message,
+                    { color: toast.text, opacity: 0.9 },
+                  ]}
+                  numberOfLines={3}
+                >
+                  {message}
+                </Text>
+              )}
+            </View>
+
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={handleDismiss}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="close"
+                size={18}
+                color={toast.text}
+                style={{ opacity: 0.8 }}
+              />
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    </>
   );
 };
 
+const styles = StyleSheet.create({
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 9998,
+  },
+  container: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    zIndex: 9999,
+  },
+  touchable: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    minHeight: 70,
+  },
+  blurContainer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  gradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.95,
+  },
+  glowEffect: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 16,
+    borderWidth: 1,
+    elevation: 12,
+    shadowColor: 'rgba(15, 23, 42, 0.45)',
+    shadowOpacity: Platform.OS === 'ios' ? 0.25 : 0.15,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 12 },
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    minHeight: 70,
+  },
+  iconContainer: {
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  textContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 20,
+    marginBottom: 2,
+  },
+  message: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: '400',
+  },
+  closeButton: {
+    padding: 8,
+    marginLeft: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+
 export default ToastItem;
+
+
