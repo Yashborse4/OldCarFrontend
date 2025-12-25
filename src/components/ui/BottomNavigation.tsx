@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Gradient } from './Gradient';
+import { useTheme } from '../../theme';
 
 interface NavigationItem {
   id: string;
@@ -33,12 +34,8 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   onPress,
 }) => {
   const insets = useSafeAreaInsets();
-  const colors = {
-    primary: '#FFD700',
-    textSecondary: '#6B7280',
-    error: '#F56565',
-    surface: '#FFFFFF',
-  };
+  const { theme, isDark } = useTheme();
+  const colors = theme.colors;
   const animationRefs = useRef<{ [key: string]: Animated.Value }>({});
 
   // Initialize animations for each item

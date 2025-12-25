@@ -8,7 +8,7 @@ import {
   Animated,
   Image,
 } from 'react-native';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface TypingIndicatorProps {
   isVisible: boolean;
@@ -174,7 +174,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({
           <Image source={{ uri: participantAvatar }} style={styles.avatar} />
         ) : (
           <View style={styles.avatarPlaceholder}>
-            <MaterialIcons
+            <Ionicons
               name={participantType === 'dealer' ? 'storefront' : 'person'}
               size={16}
               color="#FFFFFF"

@@ -11,7 +11,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { launchImageLibrary, launchCamera, ImagePickerResponse, MediaType, PhotoQuality } from 'react-native-image-picker';
 import Geolocation from '@react-native-community/geolocation';
@@ -194,7 +194,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <View style={[styles.attachmentMenu, { backgroundColor: theme.colors.surface }]}>
           <TouchableOpacity style={styles.attachmentOption} onPress={takePhoto}>
             <View style={[styles.attachmentIconContainer, { backgroundColor: '#FF6B6B' }]}>
-            <MaterialIcons name="camera-alt" size={24} color="#FFFFFF" />
+            <Ionicons name="camera-alt" size={24} color="#FFFFFF" />
             </View>
             <Text style={[styles.attachmentOptionText, { color: theme.colors.text }]}>
               Take Photo
@@ -203,7 +203,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
           <TouchableOpacity style={styles.attachmentOption} onPress={pickImageFromLibrary}>
             <View style={[styles.attachmentIconContainer, { backgroundColor: '#4ECDC4' }]}>
-              <MaterialIcons name="image" size={24} color="#FFFFFF" />
+              <Ionicons name="image" size={24} color="#FFFFFF" />
             </View>
             <Text style={[styles.attachmentOptionText, { color: theme.colors.text }]}>
               Gallery
@@ -212,7 +212,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
           <TouchableOpacity style={styles.attachmentOption} onPress={shareLocation}>
             <View style={[styles.attachmentIconContainer, { backgroundColor: '#45B7D1' }]}>
-              <MaterialIcons name="location-on" size={24} color="#FFFFFF" />
+              <Ionicons name="location" size={24} color="#FFFFFF" />
             </View>
             <Text style={[styles.attachmentOptionText, { color: theme.colors.text }]}>
               Location
@@ -228,7 +228,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
               }}
             >
               <View style={[styles.attachmentIconContainer, { backgroundColor: theme.colors.primary }]}>
-                <MaterialIcons name="directions-car" size={24} color="#FFFFFF" />
+                <Ionicons name="car" size={24} color="#FFFFFF" />
               </View>
               <Text style={[styles.attachmentOptionText, { color: theme.colors.text }]}>
                 Share Car

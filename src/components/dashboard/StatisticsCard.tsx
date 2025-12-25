@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 
-import AntDesign from '@react-native-vector-icons/ant-design';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { scaleSize, getResponsiveSpacing, getResponsiveBorderRadius, getResponsiveTypography } from '../../utils/responsiveEnhanced';
 import { useTheme } from '../../theme';
 
@@ -17,7 +16,7 @@ export interface StatisticData {
     period?: string;
   };
   icon: string;
-  iconType?: 'AntDesign' | 'MaterialIcons';
+  iconType?: 'AntDesign' | 'Ionicons';
   gradient: string[];
   backgroundColor?: string;
 }
@@ -44,11 +43,11 @@ export const StatisticsCard: React.FC<StatisticsCardProps> = ({
   const cardWidth = (width - (padding * 2) - gap) / 2;
 
   const renderIcon = () => {
-    const IconComponent = data.iconType === 'MaterialIcons' ? MaterialIcons : AntDesign;
+    const IconComponent = data.iconType === 'Ionicons';
     const iconColor = variant === 'default' ? colors.primary : 'rgba(255, 255, 255, 0.9)';
 
     return (
-      <IconComponent
+      <Ionicons
         name={data.icon as any}
         size={scaleSize(24)}
         color={iconColor}
@@ -64,7 +63,7 @@ export const StatisticsCard: React.FC<StatisticsCardProps> = ({
 
     return (
       <View style={styles.trendContainer}>
-        <AntDesign name={trendIcon} size={scaleSize(12)} color={trendColor} />
+        <Ionicons name={trendIcon} size={scaleSize(12)} color={trendColor} />
         <Text style={[styles.trendText, { color: trendColor }]}>
           {Math.abs(data.trend.value)}%
         </Text>

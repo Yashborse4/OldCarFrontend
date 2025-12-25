@@ -10,8 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 
-import AntDesign from '@react-native-vector-icons/ant-design';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width } = Dimensions.get('window');
 
@@ -116,7 +115,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
               ]}
               onPress={() => updateFilter('status', option.key as any)}
             >
-              <AntDesign
+              <Ionicons
                 name={option.icon as any}
                 size={16}
                 color={isActive ? '#FFFFFF' : colors.text}
@@ -138,7 +137,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
 
   const renderSearchBar = () => (
     <View style={[styles.searchContainer, { backgroundColor: colors.surface }]}>
-      <AntDesign name="search" size={20} color={colors.textSecondary} />
+      <Ionicons name="search" size={20} color={colors.textSecondary} />
       <TextInput
         style={[styles.searchInput, { color: colors.text }]}
         placeholder="Search cars by name, model, or brand..."
@@ -148,7 +147,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
       />
       {filters.search.length > 0 && (
         <TouchableOpacity onPress={() => updateFilter('search', '')}>
-          <AntDesign name="close" size={18} color={colors.textSecondary} />
+          <Ionicons name="close" size={18} color={colors.textSecondary} />
         </TouchableOpacity>
       )}
     </View>
@@ -164,7 +163,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
         ]}
         onPress={() => setShowAdvancedFilters(true)}
       >
-        <MaterialIcons name="tune" size={18} color={colors.text} />
+        <Ionicons name="options" size={18} color={colors.text} />
         <Text style={[styles.quickActionText, { color: colors.text }]}>
           More Filters
         </Text>
@@ -178,11 +177,11 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
         ]}
         onPress={() => setShowSortModal(true)}
       >
-        <MaterialIcons name="sort" size={18} color={colors.text} />
+        <Ionicons name="sort" size={18} color={colors.text} />
         <Text style={[styles.quickActionText, { color: colors.text }]}>
           Sort: {SORT_OPTIONS.find(opt => opt.key === filters.sortBy)?.label}
         </Text>
-        <AntDesign
+        <Ionicons
           name={filters.sortOrder === 'asc' ? 'arrow-up' : 'arrow-down'}
           size={14}
           color={colors.text}
@@ -197,7 +196,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
         ]}
         onPress={onResetFilters}
       >
-        <MaterialIcons name="clear" size={18} color="#FFFFFF" />
+        <Ionicons name="close-circle" size={18} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
   );
@@ -230,7 +229,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
               Advanced Filters
             </Text>
             <TouchableOpacity onPress={() => setShowAdvancedFilters(false)}>
-              <AntDesign name="close" size={24} color={colors.text} />
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -408,7 +407,7 @@ export const FilterSystem: React.FC<FilterSystemProps> = ({
                     updateFilter('sortOrder', filters.sortOrder === 'asc' ? 'desc' : 'asc');
                   }}
                 >
-                  <AntDesign
+                  <Ionicons
                     name={filters.sortOrder === 'asc' ? 'up' : 'down'}
                     size={16}
                     color={colors.primary}

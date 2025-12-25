@@ -12,8 +12,7 @@ import {
   Switch,
 } from 'react-native';
 
-import AntDesign from '@react-native-vector-icons/ant-design';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width } = Dimensions.get('window');
 
@@ -176,7 +175,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
 
           {/* Status Badge */}
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-            <AntDesign
+            <Ionicons
               name={getStatusIcon(item.status) as any}
               size={10}
               color="#FFFFFF"
@@ -187,14 +186,14 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
           {/* Featured Badge */}
           {item.featured && (
             <View style={[styles.featuredBadge, { backgroundColor: colors.primary }]}>
-              <AntDesign name="star" size={10} color="#000" />
+              <Ionicons name="star" size={10} color="#000" />
             </View>
           )}
 
           {/* Verified Badge */}
           {item.verified && (
             <View style={[styles.verifiedBadge, { backgroundColor: colors.success }]}>
-              <AntDesign name="check-circle" size={10} color="#FFFFFF" />
+              <Ionicons name="checkmark-circle" size={10} color="#FFFFFF" />
             </View>
           )}
 
@@ -204,7 +203,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
               style={[styles.quickActionButton, { backgroundColor: 'rgba(0,0,0,0.7)' }]}
               onPress={() => onEditCar(item)}
             >
-              <AntDesign name="edit" size={14} color="#FFFFFF" />
+              <Ionicons name="create" size={14} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </View>
@@ -239,19 +238,19 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
 
           <View style={styles.statsRow}>
             <View style={styles.stat}>
-              <AntDesign name="eye" size={12} color={colors.textSecondary} />
+              <Ionicons name="eye" size={12} color={colors.textSecondary} />
               <Text style={[styles.statText, { color: colors.textSecondary }]}>
                 {item.views}
               </Text>
             </View>
             <View style={styles.stat}>
-              <AntDesign name="heart" size={12} color={colors.textSecondary} />
+              <Ionicons name="heart" size={12} color={colors.textSecondary} />
               <Text style={[styles.statText, { color: colors.textSecondary }]}>
                 {item.likes}
               </Text>
             </View>
             <View style={styles.stat}>
-              <AntDesign name="message" size={12} color={colors.textSecondary} />
+              <Ionicons name="message" size={12} color={colors.textSecondary} />
               <Text style={[styles.statText, { color: colors.textSecondary }]}>
                 {item.inquiries}
               </Text>
@@ -293,10 +292,10 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
               </Text>
               <View style={styles.listBadges}>
                 {item.featured && (
-                  <AntDesign name="star" size={12} color={colors.primary} />
+                  <Ionicons name="star" size={12} color={colors.primary} />
                 )}
                 {item.verified && (
-                  <AntDesign name="check-circle" size={12} color={colors.success} />
+                  <Ionicons name="checkmark-circle" size={12} color={colors.success} />
                 )}
               </View>
             </View>
@@ -324,13 +323,13 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
 
             <View style={styles.listStats}>
               <View style={styles.listStat}>
-                <AntDesign name="eye" size={10} color={colors.textSecondary} />
+                <Ionicons name="eye" size={10} color={colors.textSecondary} />
                 <Text style={[styles.listStatText, { color: colors.textSecondary }]}>
                   {item.views}
                 </Text>
               </View>
               <View style={styles.listStat}>
-                <AntDesign name="message" size={10} color={colors.textSecondary} />
+                <Ionicons name="message" size={10} color={colors.textSecondary} />
                 <Text style={[styles.listStatText, { color: colors.textSecondary }]}>
                   {item.inquiries}
                 </Text>
@@ -343,7 +342,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
           style={styles.listActionButton}
           onPress={() => onEditCar(item)}
         >
-          <AntDesign name="edit" size={16} color={colors.text} />
+          <Ionicons name="create" size={16} color={colors.text} />
         </TouchableOpacity>
       </TouchableOpacity>
     </View>
@@ -365,7 +364,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
           ]}
           onPress={() => onViewModeChange('grid')}
         >
-          <MaterialIcons
+          <Ionicons
             name="grid-view"
             size={16}
             color={viewMode === 'grid' ? '#000' : colors.text}
@@ -381,7 +380,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
           ]}
           onPress={() => onViewModeChange('list')}
         >
-          <MaterialIcons
+          <Ionicons
             name="view-list"
             size={16}
             color={viewMode === 'list' ? '#000' : colors.text}
@@ -417,7 +416,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
                   {selectedCar.title}
                 </Text>
                 <TouchableOpacity onPress={() => setShowActionsModal(false)}>
-                  <AntDesign name="close" size={20} color={colors.text} />
+                  <Ionicons name="close" size={20} color={colors.text} />
                 </TouchableOpacity>
               </View>
 
@@ -429,14 +428,14 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
                     setShowActionsModal(false);
                   }}
                 >
-                  <AntDesign name="edit" size={20} color={colors.text} />
+                  <Ionicons name="create" size={20} color={colors.text} />
                   <Text style={[styles.modalActionText, { color: colors.text }]}>
                     Edit Car
                   </Text>
                 </TouchableOpacity>
 
                 <View style={[styles.modalAction, { borderBottomColor: colors.border }]}>
-                  <AntDesign name="star" size={20} color={colors.primary} />
+                  <Ionicons name="star" size={20} color={colors.primary} />
                   <Text style={[styles.modalActionText, { color: colors.text }]}>
                     Featured
                   </Text>
@@ -457,7 +456,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
                     setShowActionsModal(false);
                   }}
                 >
-                  <AntDesign
+                  <Ionicons
                     name={getStatusIcon(selectedCar.status) as any}
                     size={20}
                     color={getStatusColor(selectedCar.status)}
@@ -471,7 +470,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
                   style={[styles.modalAction, { borderBottomWidth: 0 }]}
                   onPress={handleDelete}
                 >
-                  <AntDesign name="delete" size={20} color={colors.error} />
+                  <Ionicons name="trash" size={20} color={colors.error} />
                   <Text style={[styles.modalActionText, { color: colors.error }]}>
                     Delete Car
                   </Text>
@@ -510,7 +509,7 @@ export const CarListingsGrid: React.FC<CarListingsGridProps> = ({
         refreshing={refreshing}
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
-            <AntDesign name="car" size={48} color={colors.textSecondary} />
+            <Ionicons name="car" size={48} color={colors.textSecondary} />
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               No cars listed yet
             </Text>
