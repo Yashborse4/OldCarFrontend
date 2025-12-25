@@ -22,9 +22,6 @@ interface AuthContextType {
     username: string;
     email: string;
     password: string;
-    firstName?: string;
-    lastName?: string;
-    phoneNumber?: string;
     role?: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
@@ -130,20 +127,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     username: string;
     email: string;
     password: string;
-    firstName?: string;
-    lastName?: string;
-    phoneNumber?: string;
     role?: string;
   }) => {
     try {
       setIsLoading(true);
-      await apiClient.register(userData);
+      console.log('🔄 Attempting registration with data:', {
+        username: userData.username,
+        email: userData.email,
+        role: userData.role,
+      });
 
-      // Toast notification removed
+      const authData = await apiClient.register(userData);
+
+      console.log('✅ Registration successful for user:', authData.username);
+
+      setUser({
+        userId: authData.userId,
+        username: authData.username,
+        email: authData.email,
+        role: authData.role,
+        location: authData.location,
+      });
+      setIsAuthenticated(true);
     } catch (error) {
-      console.error('Registration failed:', error);
+      console.error('❌ Registration failed:', error);
+
       if (error instanceof ApiError) {
         let errorMessage = (error as any).message;
+
+        console.error('API Error Details:', {
+          message: errorMessage,
+          status: (error as any).status,
+          errorCode: (error as any).errorCode,
+          details: (error as any).details,
+          fieldErrors: (error as any).fieldErrors,
+        });
 
         // Show field-specific errors if available
         if ((error as any).fieldErrors) {
@@ -154,6 +172,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Toast notification removed
         console.error('Registration Failed:', errorMessage);
       } else {
+        console.error('Unknown error type:', error);
         // Toast notification removed
       }
       throw error;
