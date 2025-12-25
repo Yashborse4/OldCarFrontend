@@ -1,6 +1,8 @@
 # Car Marketplace - React Native App
 
-A comprehensive car marketplace mobile application built with React Native, featuring car buying/selling, dealer networks, real-time chat, and vehicle analytics.
+A comprehensive car marketplace mobile application built with React Native.
+
+> 🔌 **Connection Status**: [View Connectivity Status](../CONNECTIVITY_STATUS.md)
 
 ## 🚗 Features
 
@@ -131,7 +133,7 @@ src/
 Create a `.env` file in the root directory:
 
 ```env
-API_BASE_URL=your_backend_api_url
+API_BASE_URL=http://localhost:9000
 WEBSOCKET_URL=your_websocket_url
 ```
 
