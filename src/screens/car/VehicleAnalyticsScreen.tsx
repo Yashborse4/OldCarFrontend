@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -132,7 +132,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
     type Stat = {
       title: string;
       value: string;
-      icon: React.ComponentProps<typeof MaterialIcons>['name'];
+      icon: React.ComponentProps<typeof Ionicons>['name'];
       color: string;
       change: string;
     };
@@ -141,7 +141,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
       {
         title: 'Total Views',
         value: analyticsData.totalViews.toLocaleString(),
-        icon: 'visibility',
+        icon: 'eye',
         color: '#4CAF50',
         change: '+12%',
       },
@@ -162,7 +162,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
       {
         title: 'Avg. Days on Market',
         value: analyticsData.avgDaysOnMarket.toString(),
-        icon: 'schedule',
+        icon: 'time',
         color: '#9C27B0',
         change: '-2 days',
       },
@@ -174,7 +174,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
           <Card key={index} style={styles.statCard} variant="elevated">
             <View style={styles.statHeader}>
               <View style={[styles.statIcon, { backgroundColor: `${stat.color}20` }]}>
-                <MaterialIcons name={stat.icon} size={20} color={stat.color} />
+                <Ionicons name={stat.icon} size={20} color={stat.color} />
               </View>
               <Text style={[styles.statChange, { color: stat.color }]}>
                 {stat.change}
@@ -241,15 +241,15 @@ const VehicleAnalyticsScreen: React.FC = () => {
 
                 <View style={styles.performerStats}>
                   <View style={styles.performerStat}>
-                    <MaterialIcons name="visibility" size={16} color="#fff" />
+                    <Ionicons name="eye" size={16} color="#fff" />
                     <Text style={styles.performerStatText}>{item.views}</Text>
                   </View>
                   <View style={styles.performerStat}>
-                    <MaterialIcons name="message" size={16} color="#fff" />
+                    <Ionicons name="message" size={16} color="#fff" />
                     <Text style={styles.performerStatText}>{item.inquiries}</Text>
                   </View>
                   <View style={styles.performerStat}>
-                    <MaterialIcons name="share" size={16} color="#fff" />
+                    <Ionicons name="share" size={16} color="#fff" />
                     <Text style={styles.performerStatText}>{item.shares}</Text>
                   </View>
                 </View>
@@ -299,7 +299,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
     const getActivityIcon = (type: string) => {
       switch (type) {
         case 'view':
-          return 'visibility';
+          return 'eye';
         case 'inquiry':
           return 'message';
         case 'share':
@@ -317,7 +317,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
           {analyticsData.recentActivity.map((activity, index) => (
             <View key={index} style={styles.activityItem}>
               <View style={styles.activityIcon}>
-                <MaterialIcons name={getActivityIcon(activity.type)} size={16} color={colors.primary} />
+                <Ionicons name={getActivityIcon(activity.type)} size={16} color={colors.primary} />
               </View>
               <View style={styles.activityContent}>
                 <Text style={styles.activityText}>
@@ -412,7 +412,7 @@ const VehicleAnalyticsScreen: React.FC = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Vehicle Analytics</Text>
         <View style={styles.headerRight} />

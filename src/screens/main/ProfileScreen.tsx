@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity, StatusBar, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { useTheme } from '../../theme/ThemeContext';
@@ -36,7 +36,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Profile</Text>
         <View style={{ width: 40 }} />
@@ -46,7 +46,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
       <Card style={styles.profileCard}>
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            <MaterialIcons name="account-circle" size={80} color={colors.primary} />
+            <Ionicons name="person-circle" size={80} color={colors.primary} />
           </View>
           <Text style={[styles.userName, { color: colors.text }]}>John Doe</Text>
           <Text style={[styles.userEmail, { color: colors.textSecondary }]}>john.doe@example.com</Text>
@@ -60,7 +60,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
         <Card style={styles.settingCard}>
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <MaterialIcons
+              <Ionicons
                 name={isDark ? "dark-mode" : "light-mode"}
                 size={24}
                 color={colors.primary}
@@ -82,40 +82,40 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
         <Card style={styles.settingCard} onPress={() => handleComingSoon('My Listings')}>
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <MaterialIcons name="list-alt" size={24} color={colors.primary} />
+              <Ionicons name="list" size={24} color={colors.primary} />
               <Text style={[styles.settingLabel, { color: colors.text }]}>My Listings</Text>
             </View>
-            <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+            <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
           </View>
         </Card>
 
         <Card style={styles.settingCard} onPress={() => handleComingSoon('Saved Cars')}>
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <MaterialIcons name="favorite-border" size={24} color={colors.primary} />
+              <Ionicons name="heart-outline" size={24} color={colors.primary} />
               <Text style={[styles.settingLabel, { color: colors.text }]}>Saved Cars</Text>
             </View>
-            <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+            <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
           </View>
         </Card>
 
         <Card style={styles.settingCard} onPress={() => handleComingSoon('Notifications')}>
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <MaterialIcons name="notifications-none" size={24} color={colors.primary} />
+              <Ionicons name="notifications-outline" size={24} color={colors.primary} />
               <Text style={[styles.settingLabel, { color: colors.text }]}>Notifications</Text>
             </View>
-            <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+            <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
           </View>
         </Card>
 
         <Card style={styles.settingCard} onPress={() => navigation.navigate('Settings')}>
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <MaterialIcons name="settings" size={24} color={colors.primary} />
+              <Ionicons name="settings" size={24} color={colors.primary} />
               <Text style={[styles.settingLabel, { color: colors.text }]}>Settings</Text>
             </View>
-            <MaterialIcons name="keyboard-arrow-right" size={24} color={colors.textSecondary} />
+            <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
           </View>
         </Card>
 

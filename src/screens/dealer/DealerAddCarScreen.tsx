@@ -17,8 +17,7 @@ import {
   FlatList,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { AntDesign } from '@react-native-vector-icons/ant-design';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 const { width, height } = Dimensions.get('window');
@@ -244,7 +243,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           ]}
           onPress={() => setActiveStep(index)}
         >
-          <MaterialIcons
+          <Ionicons
             name={step.icon as any}
             size={16}
             color={index <= activeStep ? '#111827' : colors.textSecondary}
@@ -265,7 +264,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={[styles.dropdownText, { color: formData.make ? colors.text : colors.textSecondary }]}>
               {formData.make || 'Select Make'}
             </Text>
-            <MaterialIcons name="keyboard-arrow-down" size={20} color={colors.textSecondary} />
+            <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
           </View>
         </View>
 
@@ -336,7 +335,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.checkbox}
           onPress={() => handleInputChange('negotiable', !formData.negotiable)}
         >
-          <MaterialIcons
+          <Ionicons
             name={formData.negotiable ? 'check-box' : 'check-box-outline-blank'}
             size={24}
             color={colors.primary}
@@ -672,7 +671,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.checkbox}
           onPress={() => handleInputChange('accidentHistory', !formData.accidentHistory)}
         >
-          <MaterialIcons
+          <Ionicons
             name={formData.accidentHistory ? 'check-box' : 'check-box-outline-blank'}
             size={24}
             color={colors.primary}
@@ -684,7 +683,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.checkbox}
           onPress={() => handleInputChange('floodHistory', !formData.floodHistory)}
         >
-          <MaterialIcons
+          <Ionicons
             name={formData.floodHistory ? 'check-box' : 'check-box-outline-blank'}
             size={24}
             color={colors.primary}
@@ -761,7 +760,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.checkbox}
           onPress={() => handleInputChange('manufacturerWarranty', !formData.manufacturerWarranty)}
         >
-          <MaterialIcons
+          <Ionicons
             name={formData.manufacturerWarranty ? 'check-box' : 'check-box-outline-blank'}
             size={24}
             color={colors.primary}
@@ -773,7 +772,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.checkbox}
           onPress={() => handleInputChange('extendedWarranty', !formData.extendedWarranty)}
         >
-          <MaterialIcons
+          <Ionicons
             name={formData.extendedWarranty ? 'check-box' : 'check-box-outline-blank'}
             size={24}
             color={colors.primary}
@@ -785,7 +784,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.checkbox}
           onPress={() => handleInputChange('dealerWarranty', !formData.dealerWarranty)}
         >
-          <MaterialIcons
+          <Ionicons
             name={formData.dealerWarranty ? 'check-box' : 'check-box-outline-blank'}
             size={24}
             color={colors.primary}
@@ -797,7 +796,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.checkbox}
           onPress={() => handleInputChange('rtoCleared', !formData.rtoCleared)}
         >
-          <MaterialIcons
+          <Ionicons
             name={formData.rtoCleared ? 'check-box' : 'check-box-outline-blank'}
             size={24}
             color={colors.primary}
@@ -809,7 +808,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.checkbox}
           onPress={() => handleInputChange('inspectionReport', !formData.inspectionReport)}
         >
-          <MaterialIcons
+          <Ionicons
             name={formData.inspectionReport ? 'check-box' : 'check-box-outline-blank'}
             size={24}
             color={colors.primary}
@@ -889,7 +888,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           style={[styles.imageUpload, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}
           onPress={() => setShowImagePicker(true)}
         >
-          <MaterialIcons name="add-a-photo" size={32} color={colors.primary} />
+          <Ionicons name="add-a-photo" size={32} color={colors.primary} />
           <Text style={[styles.imageUploadText, { color: colors.text }]}>Add Images</Text>
           <Text style={[styles.imageUploadSubtext, { color: colors.textSecondary }]}>
             Upload high-quality images (Max 10)
@@ -948,7 +947,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <AntDesign name="left" size={24} color={colors.text} />
+          <Ionicons name="left" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Add New Car</Text>
         <Text style={[styles.stepCounter, { color: colors.textSecondary }]}>

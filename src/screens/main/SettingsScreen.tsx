@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { View, Text, StyleSheet, Switch, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; 
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useTheme } from '../../theme/ThemeContext';
@@ -30,19 +30,19 @@ const SettingsScreen = ({ navigation }: { navigation?: any }) => {
           <Card style={styles.settingCard}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <MaterialIcons 
-                  name={isDark ? "dark-mode" : "light-mode"} 
-                  size={24} 
-                  color={theme.colors.primary} 
+                <Ionicons
+                  name={isDark ? "dark-mode" : "light-mode"}
+                  size={24}
+                  color={theme.colors.primary}
                 />
                 <Text style={styles.settingLabel}>
                   {isDark ? "Dark Mode" : "Light Mode"}
                 </Text>
               </View>
-              <Switch 
-                value={isDark} 
-                onValueChange={toggle} 
-                trackColor={{ false: theme.colors.border, true: theme.colors.primary }} 
+              <Switch
+                value={isDark}
+                onValueChange={toggle}
+                trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
                 thumbColor="#FFFFFF"
               />
             </View>
@@ -54,30 +54,30 @@ const SettingsScreen = ({ navigation }: { navigation?: any }) => {
           <Card style={styles.settingCard} onPress={() => handleComingSoon('Edit Profile')}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <MaterialIcons name="person" size={24} color={theme.colors.primary} />
+                <Ionicons name="person" size={24} color={theme.colors.primary} />
                 <Text style={styles.settingLabel}>Edit Profile</Text>
               </View>
-              <MaterialIcons name="keyboard-arrow-right" size={24} color={theme.colors.textSecondary} />
+              <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
             </View>
           </Card>
 
           <Card style={styles.settingCard} onPress={() => handleComingSoon('Privacy Settings')}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <MaterialIcons name="privacy-tip" size={24} color={theme.colors.primary} />
+                <Ionicons name="shield-checkmark" size={24} color={theme.colors.primary} />
                 <Text style={styles.settingLabel}>Privacy Settings</Text>
               </View>
-              <MaterialIcons name="keyboard-arrow-right" size={24} color={theme.colors.textSecondary} />
+              <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
             </View>
           </Card>
 
           <Card style={styles.settingCard} onPress={() => handleComingSoon('Notifications')}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <MaterialIcons name="notifications" size={24} color={theme.colors.primary} />
+                <Ionicons name="notifications" size={24} color={theme.colors.primary} />
                 <Text style={styles.settingLabel}>Notifications</Text>
               </View>
-              <MaterialIcons name="keyboard-arrow-right" size={24} color={theme.colors.textSecondary} />
+              <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
             </View>
           </Card>
         </View>
@@ -87,20 +87,20 @@ const SettingsScreen = ({ navigation }: { navigation?: any }) => {
           <Card style={styles.settingCard} onPress={() => handleComingSoon('Help Center')}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <MaterialIcons name="help" size={24} color={theme.colors.primary} />
+                <Ionicons name="help-circle" size={24} color={theme.colors.primary} />
                 <Text style={styles.settingLabel}>Help Center</Text>
               </View>
-              <MaterialIcons name="keyboard-arrow-right" size={24} color={theme.colors.textSecondary} />
+              <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
             </View>
           </Card>
 
           <Card style={styles.settingCard} onPress={() => handleComingSoon('Contact Us')}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <MaterialIcons name="contact-support" size={24} color={theme.colors.primary} />
+                <Ionicons name="chatbubbles" size={24} color={theme.colors.primary} />
                 <Text style={styles.settingLabel}>Contact Us</Text>
               </View>
-              <MaterialIcons name="keyboard-arrow-right" size={24} color={theme.colors.textSecondary} />
+              <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
             </View>
           </Card>
         </View>

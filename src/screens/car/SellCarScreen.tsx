@@ -12,9 +12,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { AntDesign } from '@react-native-vector-icons/ant-design';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import MaterialIcons from '@react-native-vector-icons/material-icons';
 
 const SellCarScreen = ({ navigation }: { navigation: any }) => {
   const isDark = false; // Hardcoded to false (light theme)
@@ -65,7 +64,7 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Sell Your Car</Text>
         <View style={{ width: 40 }} />
@@ -262,7 +261,7 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
                 <TouchableOpacity
                   style={[styles.addPhotoButton, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}
                 >
-                  <AntDesign name="plus" size={24} color={colors.primary} />
+                  <Ionicons name="plus" size={24} color={colors.primary} />
                   <Text style={[styles.addPhotoText, { color: colors.text }]}>Add Photos</Text>
                 </TouchableOpacity>
               </View>

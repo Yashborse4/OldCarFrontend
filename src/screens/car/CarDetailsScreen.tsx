@@ -12,17 +12,20 @@ import {
   ActivityIndicator,
   Animated,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useNotifications } from '../../components/ui/ToastManager';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { BlurView } from '@react-native-community/blur';
 import { borderRadius, spacing, typography } from '../../config';
 
 
 const { width, height } = Dimensions.get('window');
+
+const RECENTLY_VIEWED_KEY = '@carworld_recently_viewed';
 
 interface Props {
   navigation: any;
@@ -176,7 +179,30 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     extrapolate: 'clamp',
   });
 
-  // Styles defined inside component to access 
+  useEffect(() => {
+    const storeRecentlyViewed = async () => {
+      try {
+        if (!carId) {
+          return;
+        }
+        const raw = await AsyncStorage.getItem(RECENTLY_VIEWED_KEY);
+        const id = String(carId);
+        let ids: string[] = [];
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            ids = parsed.map(x => String(x));
+          }
+        }
+        const next = [id, ...ids.filter(x => x !== id)].slice(0, 10);
+        await AsyncStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(next));
+      } catch (error) {
+        console.error('Failed to store recently viewed car:', error);
+      }
+    };
+    storeRecentlyViewed();
+  }, [carId]);
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -529,14 +555,14 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         />
         <View style={styles.headerContent}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
           <Animated.Text style={[styles.headerTitle, { opacity: headerOpacity }]}>
             {car.title}
           </Animated.Text>
           <Animated.View style={{ transform: [{ scale: favoriteScale }] }}>
             <TouchableOpacity onPress={handleFavoriteToggle} style={styles.favoriteButton}>
-              <MaterialIcons
+              <Ionicons
                 name={isFavorite ? 'favorite' : 'favorite-border'}
                 size={24}
                 color={isFavorite ? colors.error : '#FFFFFF'}
@@ -623,7 +649,7 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
                 style={styles.quickInfoItem}
               >
                 <View style={styles.quickInfoCard}>
-                  <MaterialIcons
+                  <Ionicons
                     name={item.icon as any}
                     size={24}
                     color={colors.primary}
@@ -692,18 +718,18 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.sellerSection}>
               <Card variant="elevated" padding="none" style={styles.sellerCard}>
                 <View style={styles.sellerAvatar}>
-                  <MaterialIcons name="store" size={30} color="#FFFFFF" />
+                  <Ionicons name="storefront" size={30} color="#FFFFFF" />
                 </View>
                 <View style={styles.sellerInfo}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={styles.sellerName}>{car.seller.name}</Text>
                     {car.seller.verified && (
-                      <MaterialIcons name="verified" size={18} color={colors.primary} style={{ marginLeft: 4 }} />
+                      <Ionicons name="checkmark-circle" size={18} color={colors.primary} style={{ marginLeft: 4 }} />
                     )}
                   </View>
                   <View style={styles.sellerStats}>
                     <View style={styles.ratingContainer}>
-                      <MaterialIcons name="star" size={16} color={colors.primary} />
+                      <Ionicons name="star" size={16} color={colors.primary} />
                       <Text style={styles.ratingText}>
                         {car.seller.rating} ({car.seller.reviews} reviews)
                       </Text>

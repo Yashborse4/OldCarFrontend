@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 
@@ -314,11 +314,11 @@ const ChatScreen: React.FC = () => {
   const getStatusIcon = (status: ChatMessage['status']) => {
     switch (status) {
       case 'sent':
-        return <MaterialIcons name="done" size={12} color="#666" />;
+        return <Ionicons name="done" size={12} color="#666" />;
       case 'delivered':
-        return <MaterialIcons name="done-all" size={12} color="#666" />;
+        return <Ionicons name="done-all" size={12} color="#666" />;
       case 'read':
-        return <MaterialIcons name="done-all" size={12} color="#4ECDC4" />;
+        return <Ionicons name="done-all" size={12} color="#4ECDC4" />;
       default:
         return null;
     }
@@ -353,7 +353,7 @@ const ChatScreen: React.FC = () => {
                   <Image source={{ uri: item.attachments[0].image }} style={styles.vehicleImage} />
                 ) : (
                   <View style={styles.placeholderVehicleImage}>
-                    <MaterialIcons name="directions-car" size={30} color="#ccc" />
+                    <Ionicons name="car" size={30} color="#ccc" />
                   </View>
                 )}
               </View>
@@ -365,14 +365,14 @@ const ChatScreen: React.FC = () => {
                   ${item.attachments[0].price.toLocaleString()}
                 </Text>
               </View>
-              <MaterialIcons name="chevron-right" size={20} color="#666" />
+              <Ionicons name="chevron-forward" size={20} color="#666" />
             </TouchableOpacity>
           )}
           
           {item.type === 'quote' && item.attachments?.[0] && (
             <View style={styles.quoteAttachment}>
               <View style={styles.quoteHeader}>
-                <MaterialIcons name="local-offer" size={20} color="#4ECDC4" />
+                <Ionicons name="local-offer" size={20} color="#4ECDC4" />
                 <Text style={styles.quoteTitle}>Dealer Quote</Text>
               </View>
               <Text style={styles.quotePrice}>
@@ -417,7 +417,7 @@ const ChatScreen: React.FC = () => {
           <Image source={{ uri: item.images[0] }} style={styles.vehicleSelectImage} />
         ) : (
           <View style={styles.placeholderSelectImage}>
-            <MaterialIcons name="directions-car" size={30} color="#ccc" />
+            <Ionicons name="car" size={30} color="#ccc" />
           </View>
         )}
       </View>
@@ -441,7 +441,7 @@ const ChatScreen: React.FC = () => {
       <Card style={styles.headerCard}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           
           <View style={styles.headerInfo}>
@@ -450,7 +450,7 @@ const ChatScreen: React.FC = () => {
           </View>
           
           <TouchableOpacity style={styles.headerButton}>
-            <MaterialIcons name="phone" size={24} color={colors.primary} />
+            <Ionicons name="call" size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
       </Card>
@@ -476,7 +476,7 @@ const ChatScreen: React.FC = () => {
               style={styles.attachButton}
               onPress={() => setShowAttachmentModal(true)}
             >
-              <MaterialIcons name="add" size={24} color={colors.textSecondary} />
+              <Ionicons name="add" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
             
             <TextInput
@@ -493,7 +493,7 @@ const ChatScreen: React.FC = () => {
               style={[styles.sendButton, messageText.trim() ? styles.sendButtonActive : null]}
               onPress={() => sendMessage('text')}
             >
-              <MaterialIcons 
+              <Ionicons 
                 name="send" 
                 size={20} 
                 color={messageText.trim() ? colors.surface : colors.textSecondary} 
@@ -519,7 +519,7 @@ const ChatScreen: React.FC = () => {
                 setShowVehicleModal(true);
               }}
             >
-              <MaterialIcons name="directions-car" size={24} color="#4ECDC4" />
+              <Ionicons name="car" size={24} color="#4ECDC4" />
               <Text style={styles.attachmentOptionText}>Share Vehicle</Text>
             </TouchableOpacity>
             
@@ -531,7 +531,7 @@ const ChatScreen: React.FC = () => {
                 Alert.alert('Image', 'Image sharing will be implemented with camera/gallery access');
               }}
             >
-              <MaterialIcons name="image" size={24} color="#4ECDC4" />
+              <Ionicons name="image" size={24} color="#4ECDC4" />
               <Text style={styles.attachmentOptionText}>Share Image</Text>
             </TouchableOpacity>
             
@@ -542,7 +542,7 @@ const ChatScreen: React.FC = () => {
                 handleSendQuote();
               }}
             >
-              <MaterialIcons name="local-offer" size={24} color="#4ECDC4" />
+              <Ionicons name="local-offer" size={24} color="#4ECDC4" />
               <Text style={styles.attachmentOptionText}>Send Quote</Text>
             </TouchableOpacity>
             
@@ -568,7 +568,7 @@ const ChatScreen: React.FC = () => {
             <View style={styles.vehicleModalHeader}>
               <Text style={styles.vehicleModalTitle}>Select Vehicle to Share</Text>
               <TouchableOpacity onPress={() => setShowVehicleModal(false)}>
-                <MaterialIcons name="close" size={24} color="#333" />
+                <Ionicons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
             

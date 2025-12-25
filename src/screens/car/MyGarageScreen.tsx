@@ -15,8 +15,7 @@ import {
   TextInput,
   Switch,
 } from 'react-native';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
-import AntDesign from '@react-native-vector-icons/ant-design';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 const { width, height } = Dimensions.get('window');
@@ -742,9 +741,9 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Sort by</Text>
           {[
-            { key: 'date', label: 'Last Updated', icon: 'access-time' },
-            { key: 'price', label: 'Price', icon: 'attach-money' },
-            { key: 'views', label: 'Views', icon: 'visibility' },
+            { key: 'date', label: 'Last Updated', icon: 'time' },
+            { key: 'price', label: 'Price', icon: 'cash' },
+            { key: 'views', label: 'Views', icon: 'eye' },
             { key: 'inquiries', label: 'Inquiries', icon: 'message' },
           ].map((option) => (
             <TouchableOpacity
@@ -755,7 +754,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
               ]}
               onPress={() => setSortBy(option.key as any)}
             >
-              <MaterialIcons
+              <Ionicons
                 name={option.icon as any}
                 size={20}
                 color={sortBy === option.key ? '#111827' : colors.textSecondary}
@@ -769,7 +768,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                 {option.label}
               </Text>
               {sortBy === option.key && (
-                <MaterialIcons name="check" size={20} color="#111827" />
+                <Ionicons name="checkmark" size={20} color="#111827" />
               )}
             </TouchableOpacity>
           ))}
@@ -800,7 +799,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <MaterialIcons name="refresh" size={48} color={colors.primary} />
+          <Ionicons name="refresh" size={48} color={colors.primary} />
           <Text style={{ color: colors.textSecondary, marginTop: 12 }}>Loading your cars...</Text>
         </View>
       </SafeAreaView>
@@ -820,7 +819,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <AntDesign name="arrow-left" size={24} color={colors.text} />
+          <Ionicons name="arrow-left" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Garage</Text>
         <View style={styles.headerActions}>
@@ -828,7 +827,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.headerButton}
             onPress={() => navigation.navigate('SellCar')}
           >
-            <AntDesign name="plus" size={20} color={colors.text} />
+            <Ionicons name="plus" size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
       </View>
@@ -869,7 +868,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
         {/* Filters */}
         <View style={styles.filtersContainer}>
           <View style={styles.searchContainer}>
-            <AntDesign name="search" size={16} color={colors.textSecondary} />
+            <Ionicons name="search" size={16} color={colors.textSecondary} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search your cars..."
@@ -910,7 +909,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
 
             <TouchableOpacity style={styles.sortButton} onPress={() => setShowSortModal(true)}>
               <Text style={styles.sortButtonText}>Sort</Text>
-              <AntDesign name="filter" size={12} color={colors.textSecondary} />
+              <Ionicons name="filter" size={12} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -918,8 +917,8 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
         {/* Cars List */}
         {filteredCars.length === 0 ? (
           <View style={styles.emptyState}>
-            <MaterialIcons
-              name="directions-car"
+            <Ionicons
+              name="car"
               size={64}
               color={colors.textSecondary}
               style={styles.emptyIcon}
@@ -938,7 +937,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                 style={styles.addCarButton}
                 onPress={() => navigation.navigate('SellCar')}
               >
-                <AntDesign name="plus" size={16} color="#111827" />
+                <Ionicons name="plus" size={16} color="#111827" />
                 <Text style={styles.addCarButtonText}>Add Your First Car</Text>
               </TouchableOpacity>
             )}
@@ -954,7 +953,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                   <Image source={{ uri: car.images[0] }} style={styles.carImage} />
 
                   <View style={[styles.statusBadge, { backgroundColor: getStatusColor(car.status) + '20' }]}>
-                    <MaterialIcons
+                    <Ionicons
                       name={getStatusIcon(car.status) as any}
                       size={12}
                       color={getStatusColor(car.status)}
@@ -1004,7 +1003,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                       style={[styles.actionButton, styles.ActionButton]}
                       onPress={() => handleCarAction(car, 'manage')}
                     >
-                      <MaterialIcons name="settings" size={14} color="#111827" />
+                      <Ionicons name="settings" size={14} color="#111827" />
                       <Text style={[styles.actionButtonText, styles.ActionText]}>
                         Manage
                       </Text>
@@ -1014,7 +1013,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                       style={[styles.actionButton, styles.secondaryActionButton]}
                       onPress={() => handleCarAction(car, 'edit')}
                     >
-                      <MaterialIcons name="edit" size={14} color={colors.textSecondary} />
+                      <Ionicons name="create" size={14} color={colors.textSecondary} />
                       <Text style={[styles.actionButtonText, styles.secondaryActionText]}>
                         Edit
                       </Text>
@@ -1024,7 +1023,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
                       style={[styles.actionButton, styles.secondaryActionButton]}
                       onPress={() => handleCarAction(car, 'view')}
                     >
-                      <MaterialIcons name="visibility" size={14} color={colors.textSecondary} />
+                      <Ionicons name="eye" size={14} color={colors.textSecondary} />
                       <Text style={[styles.actionButtonText, styles.secondaryActionText]}>
                         View
                       </Text>

@@ -16,8 +16,7 @@ import {
   Share,
   Linking,
 } from 'react-native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
-import { AntDesign } from '@react-native-vector-icons/ant-design';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../../theme/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
@@ -263,7 +262,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       id: 'price',
       title: 'Change Price',
       description: 'Update your car\'s selling price',
-      icon: 'attach-money',
+      icon: 'cash',
       color: colors.success,
       onPress: () => setShowPriceModal(true),
     },
@@ -674,7 +673,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
               onPress={() => handleStatusChange(status.key as Car['status'])}
               disabled={loading}
             >
-              <MaterialIcons
+              <Ionicons
                 name={status.icon as any}
                 size={20}
                 color={getStatusColor(status.key as Car['status'])}
@@ -686,7 +685,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
                 </Text>
               </View>
               {car.status === status.key && (
-                <MaterialIcons name="check" size={20} color={colors.primary} />
+                <Ionicons name="checkmark" size={20} color={colors.primary} />
               )}
             </TouchableOpacity>
           ))}
@@ -822,7 +821,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
             'Extended visibility period',
           ].map((feature, index) => (
             <View key={index} style={styles.promoteFeature}>
-              <MaterialIcons name="check-circle" size={16} color={colors.success} />
+              <Ionicons name="checkmark-circle" size={16} color={colors.success} />
               <Text style={styles.promoteFeatureText}>{feature}</Text>
             </View>
           ))}
@@ -868,11 +867,11 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <AntDesign name="arrow-left" size={24} color={colors.text} />
+          <Ionicons name="arrow-left" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Manage Car</Text>
         <TouchableOpacity onPress={() => navigation.navigate('VehicleDetail', { carId: car.id })}>
-          <MaterialIcons name="visibility" size={24} color={colors.text} />
+          <Ionicons name="eye" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -882,7 +881,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
           <Image source={{ uri: car.images[0] }} style={styles.carImage} />
 
           <View style={[styles.statusOverlay, { backgroundColor: getStatusColor(car.status) + '20' }]}>
-            <MaterialIcons
+            <Ionicons
               name={getStatusIcon(car.status) as any}
               size={16}
               color={getStatusColor(car.status)}
@@ -906,19 +905,19 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
 
           <View style={styles.carDetails}>
             <View style={styles.carDetailItem}>
-              <MaterialIcons name="event" size={16} color={colors.textSecondary} />
+              <Ionicons name="calendar" size={16} color={colors.textSecondary} />
               <Text style={styles.carDetailText}>{car.year}</Text>
             </View>
             <View style={styles.carDetailItem}>
-              <MaterialIcons name="speed" size={16} color={colors.textSecondary} />
+              <Ionicons name="speedometer" size={16} color={colors.textSecondary} />
               <Text style={styles.carDetailText}>{car.mileage}</Text>
             </View>
             <View style={styles.carDetailItem}>
-              <MaterialIcons name="local-gas-station" size={16} color={colors.textSecondary} />
+              <Ionicons name="gas-station" size={16} color={colors.textSecondary} />
               <Text style={styles.carDetailText}>{car.fuelType}</Text>
             </View>
             <View style={styles.carDetailItem}>
-              <MaterialIcons name="location-on" size={16} color={colors.textSecondary} />
+              <Ionicons name="location" size={16} color={colors.textSecondary} />
               <Text style={styles.carDetailText}>{car.location}</Text>
             </View>
           </View>
@@ -954,7 +953,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
                 disabled={action.disabled || loading}
               >
                 <View style={[styles.actionIconContainer, { backgroundColor: action.color + '20' }]}>
-                  <MaterialIcons
+                  <Ionicons
                     name={action.icon as any}
                     size={20}
                     color={action.color}
@@ -971,8 +970,8 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
                     }
                   </Text>
                 </View>
-                <MaterialIcons
-                  name="chevron-right"
+                <Ionicons
+                  name="chevron-forward"
                   size={20}
                   color={colors.textSecondary}
                   style={styles.actionChevron}

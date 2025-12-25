@@ -13,7 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
@@ -140,7 +140,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
         style={styles.backButton}
         onPress={() => navigation.goBack()}
       >
-        <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+        <Ionicons name="arrow-back" size={24} color={colors.text} />
       </TouchableOpacity>
 
       <View style={styles.headerContent}>
@@ -155,7 +155,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
           style={styles.filterButton}
           onPress={() => setShowFilters(true)}
         >
-          <MaterialIcons name="filter-list" size={24} color={colors.primary} />
+          <Ionicons name="filter-list" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
     </View>
@@ -201,7 +201,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
       <SafeAreaView style={styles.filterModal}>
         <View style={styles.filterHeader}>
           <TouchableOpacity onPress={() => setShowFilters(false)}>
-            <MaterialIcons name="close" size={24} color={colors.text} />
+            <Ionicons name="close" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.filterTitle}>Filters</Text>
           <TouchableOpacity onPress={clearFilters}>
@@ -332,7 +332,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <MaterialIcons name="search-off" size={80} color={colors.textSecondary} />
+      <Ionicons name="search-off" size={80} color={colors.textSecondary} />
       <Text style={styles.emptyStateTitle}>No vehicles found</Text>
       <Text style={styles.emptyStateText}>
         Try adjusting your search filters or search terms

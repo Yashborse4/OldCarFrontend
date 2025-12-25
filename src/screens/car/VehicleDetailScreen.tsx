@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 
@@ -27,8 +27,8 @@ interface Props {
 
 const VEHICLE_DATA = {
   title: 'Tesla Model S Plaid',
-  price: '₹75,00,000',
-  originalPrice: '₹85,00,000',
+  price: '?75,00,000',
+  originalPrice: '?85,00,000',
   location: 'Mumbai, India',
   dealer: 'Premium Auto Cars',
   phone: '+91 9876543210',
@@ -92,7 +92,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const renderSpecItem = ({ item }: { item: typeof VEHICLE_DATA.specs[0] }) => (
     <View style={styles.specItem}>
-      <MaterialIcons name={item.icon as any} size={24} color={colors.primary} />
+      <Ionicons name={item.icon as any} size={24} color={colors.primary} />
       <Text style={styles.specLabel}>{item.label}</Text>
       <Text style={styles.specValue}>{item.value}</Text>
     </View>
@@ -105,10 +105,10 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.shareButton} onPress={handleBookmark}>
-          <MaterialIcons 
+          <Ionicons 
             name={isBookmarked ? "favorite" : "favorite-border"} 
             size={24} 
             color={isBookmarked ? '#FF6B6B' : colors.textSecondary}
@@ -153,11 +153,11 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
               <Text style={styles.originalPrice}>{VEHICLE_DATA.originalPrice}</Text>
             </View>
             <View style={styles.locationRow}>
-              <MaterialIcons name="location-on" size={16} color={colors.textSecondary} />
+              <Ionicons name="location" size={16} color={colors.textSecondary} />
               <Text style={styles.location}>{VEHICLE_DATA.location}</Text>
             </View>
             <View style={styles.dealerRow}>
-              <MaterialIcons name="store" size={16} color={colors.textSecondary} />
+              <Ionicons name="storefront" size={16} color={colors.textSecondary} />
               <Text style={styles.dealer}>{VEHICLE_DATA.dealer}</Text>
             </View>
           </Card>
@@ -168,7 +168,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.specsGrid}>
               {VEHICLE_DATA.specs.map((spec, index) => (
                 <View key={index} style={styles.specItem}>
-                  <MaterialIcons name={spec.icon as any} size={20} color={colors.primary} />
+                  <Ionicons name={spec.icon as any} size={20} color={colors.primary} />
                   <Text style={styles.specLabel}>{spec.label}</Text>
                   <Text style={styles.specValue}>{spec.value}</Text>
                 </View>
@@ -188,7 +188,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.featuresGrid}>
               {VEHICLE_DATA.features.map((feature, index) => (
                 <View key={index} style={styles.featureItem}>
-                  <MaterialIcons name="check-circle" size={16} color={colors.primary} />
+                  <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
                   <Text style={styles.featureText}>{feature}</Text>
                 </View>
               ))}

@@ -11,7 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { GroupDetailsRouteProp } from '../../navigation/types';
 // import { Input } from '../../components/ui/Input'; // Update this path based on your project structure
@@ -87,7 +87,7 @@ const CreateGroupScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <MaterialIcons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Create Group</Text>
         <View style={styles.placeholder} />
@@ -129,7 +129,7 @@ const CreateGroupScreen: React.FC = () => {
           <View style={styles.privacyOption}>
             <View style={styles.privacyInfo}>
               <View style={styles.privacyHeader}>
-                <MaterialIcons
+                <Ionicons
                   name={isPrivate ? 'lock' : 'public'}
                   size={20}
                   color={isPrivate ? '#FF6B6B' : '#4ECDC4'}
@@ -158,23 +158,23 @@ const CreateGroupScreen: React.FC = () => {
           
           <View style={styles.featureList}>
             <View style={styles.featureItem}>
-              <MaterialIcons name="share" size={20} color="#4ECDC4" />
+              <Ionicons name="share" size={20} color="#4ECDC4" />
               <Text style={styles.featureText}>Co-list vehicles with members</Text>
             </View>
             <View style={styles.featureItem}>
-              <MaterialIcons name="chat" size={20} color="#4ECDC4" />
+              <Ionicons name="chat" size={20} color="#4ECDC4" />
               <Text style={styles.featureText}>Private messaging with dealers</Text>
             </View>
             <View style={styles.featureItem}>
-              <MaterialIcons name="notifications" size={20} color="#4ECDC4" />
+              <Ionicons name="notifications" size={20} color="#4ECDC4" />
               <Text style={styles.featureText}>Real-time notifications</Text>
             </View>
             <View style={styles.featureItem}>
-              <MaterialIcons name="analytics" size={20} color="#4ECDC4" />
+              <Ionicons name="analytics" size={20} color="#4ECDC4" />
               <Text style={styles.featureText}>Performance analytics</Text>
             </View>
             <View style={styles.featureItem}>
-              <MaterialIcons name="group" size={20} color="#4ECDC4" />
+              <Ionicons name="people" size={20} color="#4ECDC4" />
               <Text style={styles.featureText}>Member management tools</Text>
             </View>
           </View>

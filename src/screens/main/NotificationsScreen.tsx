@@ -13,13 +13,13 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Button } from '../../components/ui/Button';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeContext';
 
 
-type IconProps = React.ComponentProps<typeof MaterialIcons>['name'];
+type IconProps = React.ComponentProps<typeof Ionicons>['name'];
 
 interface Notification {
   id: string;
@@ -146,14 +146,6 @@ const NotificationsScreen: React.FC = () => {
     },
   ];
 
-  useEffect(() => {
-    loadNotifications();
-  }, [loadNotifications]);
-
-  useEffect(() => {
-    filterNotifications();
-  }, [filterNotifications]);
-
   const loadNotifications = useCallback(async () => {
     try {
       setLoading(true);
@@ -167,11 +159,6 @@ const NotificationsScreen: React.FC = () => {
       setLoading(false);
     }
   }, []);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    loadNotifications().finally(() => setRefreshing(false));
-  }, [loadNotifications]);
 
   const filterNotifications = useCallback(() => {
     let filtered = notifications;
@@ -189,6 +176,19 @@ const NotificationsScreen: React.FC = () => {
 
     setFilteredNotifications(filtered);
   }, [notifications, selectedFilter]);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    filterNotifications();
+  }, [filterNotifications]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadNotifications().finally(() => setRefreshing(false));
+  }, [loadNotifications]);
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -294,7 +294,7 @@ const NotificationsScreen: React.FC = () => {
         activeOpacity={0.8}
       >
         <View style={[styles.notificationIcon, { backgroundColor: `${icon.color}20` }]}>
-          <MaterialIcons name={icon.name} size={20} color={icon.color} />
+          <Ionicons name={icon.name} size={20} color={icon.color} />
         </View>
 
         <View style={styles.notificationContent}>
@@ -312,7 +312,7 @@ const NotificationsScreen: React.FC = () => {
 
           {item.actionable && (
             <View style={styles.actionIndicator}>
-              <MaterialIcons name="chevron-right" size={16} color={colors.primary} />
+              <Ionicons name="chevron-forward" size={16} color={colors.primary} />
             </View>
           )}
         </View>
@@ -352,7 +352,7 @@ const NotificationsScreen: React.FC = () => {
           <View style={styles.settingsHeader}>
             <Text style={styles.settingsTitle}>Notification Settings</Text>
             <TouchableOpacity onPress={() => setShowSettings(false)}>
-              <MaterialIcons name="close" size={24} color={colors.text} />
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -398,7 +398,7 @@ const NotificationsScreen: React.FC = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Notifications</Text>
@@ -408,7 +408,7 @@ const NotificationsScreen: React.FC = () => {
             style={styles.headerButton}
             onPress={() => setShowSettings(true)}
           >
-            <MaterialIcons name="settings" size={24} color={colors.text} />
+            <Ionicons name="settings" size={24} color={colors.text} />
           </TouchableOpacity>
 
           {unreadCount > 0 && (
@@ -438,7 +438,7 @@ const NotificationsScreen: React.FC = () => {
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <MaterialIcons name="notifications-none" size={80} color="#ddd" />
+            <Ionicons name="notifications-outline" size={80} color="#ddd" />
             <Text style={styles.emptyStateTitle}>No Notifications</Text>
             <Text style={styles.emptyStateText}>
               {selectedFilter === 'all'

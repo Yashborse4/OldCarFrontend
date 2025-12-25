@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { colors } from '../../design-system';
@@ -72,13 +72,13 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
   const getVerificationIcon = () => {
     switch (profile.verificationStatus) {
       case 'verified':
-        return <MaterialIcons name="verified" size={20} color={colors.success} />;
+        return <Ionicons name="checkmark-circle" size={20} color={colors.success} />;
       case 'pending':
-        return <MaterialIcons name="schedule" size={20} color={colors.warning} />;
+        return <Ionicons name="time" size={20} color={colors.warning} />;
       case 'rejected':
-        return <MaterialIcons name="error" size={20} color={colors.error} />;
+        return <Ionicons name="alert-circle" size={20} color={colors.error} />;
       default:
-        return <MaterialIcons name="help" size={20} color={colors.textSecondary} />;
+        return <Ionicons name="help-circle" size={20} color={colors.textSecondary} />;
     }
   };
 
@@ -112,14 +112,14 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
       <Card style={styles.headerCard}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Dealer Profile</Text>
           <TouchableOpacity
             onPress={() => editMode ? handleSave() : setEditMode(true)}
             disabled={loading}
           >
-            <MaterialIcons
+            <Ionicons
               name={editMode ? 'check' : 'edit'}
               size={24}
               color={loading ? colors.textSecondary : colors.primary }

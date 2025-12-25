@@ -11,8 +11,7 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
-import AntDesign from '@react-native-vector-icons/ant-design';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 // Import our custom components
@@ -307,7 +306,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
         style={[styles.profileButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : colors.surface }]}
         onPress={() => navigation.navigate('Profile')}
       >
-        <AntDesign name="user" size={scaleSize(20)} color={colors.primary} />
+        <Ionicons name="user" size={scaleSize(20)} color={colors.primary} />
       </TouchableOpacity>
     </View>
   );
@@ -391,7 +390,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
               ]}
               onPress={() => setViewMode('grid')}
             >
-              <MaterialIcons 
+              <Ionicons 
                 name="grid-view" 
                 size={scaleSize(20)} 
                 color={viewMode === 'grid' ? '#FFFFFF' : colors.textSecondary} 
@@ -404,7 +403,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
               ]}
               onPress={() => setViewMode('list')}
             >
-              <MaterialIcons 
+              <Ionicons 
                 name="view-list" 
                 size={scaleSize(20)} 
                 color={viewMode === 'list' ? '#FFFFFF' : colors.textSecondary} 
@@ -435,7 +434,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
         style={[styles.fab, { backgroundColor: colors.primary }]}
         onPress={() => navigation.navigate('AddCar')}
       >
-        <AntDesign name="plus" size={scaleSize(24)} color="#FFFFFF" />
+        <Ionicons name="plus" size={scaleSize(24)} color="#FFFFFF" />
       </TouchableOpacity>
     </SafeAreaView>
   );

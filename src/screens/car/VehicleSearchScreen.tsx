@@ -15,7 +15,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { VehicleSearchNavigationProp, Vehicle } from '../../navigation/types';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -217,7 +217,7 @@ const VehicleSearchScreen: React.FC = () => {
       id: 'under50k',
       label: 'Under $50K',
       filter: { priceMax: '50000' },
-      icon: 'attach-money',
+      icon: 'cash',
     },
     {
       id: 'lowmiles',
@@ -415,7 +415,7 @@ const VehicleSearchScreen: React.FC = () => {
           <Image source={{ uri: item.images[0] }} style={styles.vehicleImage} />
         ) : (
           <View style={styles.placeholderImage}>
-            <MaterialIcons name="directions-car" size={40} color="#ccc" />
+            <Ionicons name="car" size={40} color="#ccc" />
           </View>
         )}
         {item.isCoListed && (
@@ -438,11 +438,11 @@ const VehicleSearchScreen: React.FC = () => {
 
         <View style={styles.vehicleStats}>
           <View style={styles.statItem}>
-            <MaterialIcons name="visibility" size={16} color="#666" />
+            <Ionicons name="eye" size={16} color="#666" />
             <Text style={styles.statText}>{item.views}</Text>
           </View>
           <View style={styles.statItem}>
-            <MaterialIcons name="message" size={16} color="#666" />
+            <Ionicons name="message" size={16} color="#666" />
             <Text style={styles.statText}>{item.inquiries}</Text>
           </View>
         </View>
@@ -453,14 +453,14 @@ const VehicleSearchScreen: React.FC = () => {
           style={styles.contactButton}
           onPress={() => handleContactDealer(item)}
         >
-          <MaterialIcons name="chat" size={20} color="#4ECDC4" />
+          <Ionicons name="chat" size={20} color="#4ECDC4" />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.coListButton}
           onPress={() => navigation.navigate('CoListVehicle', { vehicleId: item.id })}
         >
-          <MaterialIcons name="share" size={20} color="#4ECDC4" />
+          <Ionicons name="share" size={20} color="#4ECDC4" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -489,14 +489,14 @@ const VehicleSearchScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <MaterialIcons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Vehicle Search</Text>
         <TouchableOpacity
           style={styles.filterButton}
           onPress={() => setShowFiltersModal(true)}
         >
-          <MaterialIcons name="filter-list" size={24} color="#333" />
+          <Ionicons name="filter-list" size={24} color="#333" />
         </TouchableOpacity>
       </View>
 
@@ -523,7 +523,7 @@ const VehicleSearchScreen: React.FC = () => {
                     filters.sortBy === 'mileage-low' ? 'Mileage (Low to High)' :
                       'Mileage (High to Low)'}
           </Text>
-          <MaterialIcons name="arrow-drop-down" size={20} color="#666" />
+          <Ionicons name="arrow-drop-down" size={20} color="#666" />
         </TouchableOpacity>
       </View>
 
@@ -535,7 +535,7 @@ const VehicleSearchScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <MaterialIcons name="search-off" size={60} color="#ddd" />
+            <Ionicons name="search-off" size={60} color="#ddd" />
             <Text style={styles.emptyStateText}>
               No vehicles match your search criteria
             </Text>
@@ -640,7 +640,7 @@ const VehicleSearchScreen: React.FC = () => {
             <View style={styles.sortHeader}>
               <Text style={styles.sortTitle}>Sort By</Text>
               <TouchableOpacity onPress={() => setShowSortModal(false)}>
-                <MaterialIcons name="close" size={24} color="#333" />
+                <Ionicons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
 
@@ -664,7 +664,7 @@ const VehicleSearchScreen: React.FC = () => {
                     {option.label}
                   </Text>
                   {filters.sortBy === option.value && (
-                    <MaterialIcons name="check" size={20} color="#4ECDC4" />
+                    <Ionicons name="checkmark" size={20} color="#4ECDC4" />
                   )}
                 </TouchableOpacity>
               ))}

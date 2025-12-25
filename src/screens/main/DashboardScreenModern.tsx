@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,12 +14,17 @@ import {
   Platform,
   Image,
   FlatList,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import { BottomNavigation } from '../../components/ui/BottomNavigation';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Gradient } from '../../components/ui/Gradient';
 import { useTheme } from '../../theme';
+import { useAuth } from '../../context/AuthContext';
+import { useChat } from '../../context/ChatContext';
 import {
   scaleSize,
   getResponsiveSpacing,
@@ -37,7 +42,7 @@ interface Props {
 const QUICK_ACTIONS = [
   {
     id: 'sell',
-    icon: 'sell',
+    icon: 'pricetag',
     label: 'Sell Car',
     route: 'SellCar',
     color: '#10B981',
@@ -45,7 +50,7 @@ const QUICK_ACTIONS = [
   },
   {
     id: 'buy',
-    icon: 'directions-car',
+    icon: 'car',
     label: 'Buy Used',
     route: 'SearchResults',
     color: '#3B82F6',
@@ -53,7 +58,7 @@ const QUICK_ACTIONS = [
   },
   {
     id: 'value',
-    icon: 'assessment',
+    icon: 'stats-chart',
     label: 'Valuation',
     route: null,
     color: '#8B5CF6',
@@ -61,7 +66,7 @@ const QUICK_ACTIONS = [
   },
   {
     id: 'finance',
-    icon: 'account-balance',
+    icon: 'wallet',
     label: 'Finance',
     route: null,
     color: '#F59E0B',
@@ -120,49 +125,111 @@ const CAR_LISTINGS = [
   },
 ];
 
-// Bottom navigation items
 const BOTTOM_NAV_ITEMS = [
-  { id: 'home', icon: 'home', label: 'Home', route: 'Dashboard' },
-  { id: 'sell', icon: 'sell', label: 'Sell', route: 'SellCar' },
-  { id: 'search', icon: 'search', label: 'Search', route: 'SearchResults' },
-  { id: 'chat', icon: 'chat', label: 'Chat', route: 'ChatList', badge: 3 },
-  { id: 'profile', icon: 'person', label: 'Profile', route: 'Profile' },
+  { id: 'home', icon: 'home', label: 'Home', route: 'home' },
+  { id: 'sell', icon: 'pricetag', label: 'Sell', route: 'sell' },
+  { id: 'chat', icon: 'chatbubble-ellipses', label: 'Chat', route: 'chat' },
+  { id: 'profile', icon: 'person', label: 'Profile', route: 'profile' },
 ];
+
+const RECENTLY_VIEWED_KEY = '@carworld_recently_viewed';
 
 const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
   const { theme, isDark } = useTheme();
   const { colors } = theme;
   const { width: windowWidth } = useWindowDimensions();
+  const { isAuthenticated } = useAuth();
+  const { getUnreadCount } = useChat();
   const [selectedCity, setSelectedCity] = useState('Mumbai');
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
-  const [scrollY] = useState(new Animated.Value(0));
-  const [currentRoute, setCurrentRoute] = useState('Dashboard');
+  const [currentRoute, setCurrentRoute] = useState('home');
+  const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const scrollY = useRef(new Animated.Value(0)).current; // Properly dispose of animated value
+  const flatListRef = useRef<FlatList>(null);
 
-  // Enhanced refresh with haptic feedback
-  const onRefresh = useCallback(() => {
+  // Enhanced refresh with error handling
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    const refreshData = async () => {
-      try {
-        // Simulate API call
-        await new Promise<void>(resolve => setTimeout(() => resolve(), 1000));
-      } catch (error) {
-        console.error('Refresh error:', error);
-      } finally {
-        setRefreshing(false);
-      }
-    };
-    refreshData();
+    try {
+      // Simulate API call
+      await new Promise<void>(resolve => setTimeout(() => resolve(), 1000));
+      // Add any actual refresh logic here
+    } catch (error) {
+      console.error('Refresh error:', error);
+      Alert.alert('Error', 'Failed to refresh data');
+    } finally {
+      setRefreshing(false);
+    }
   }, []);
 
   const handleBottomNavPress = useCallback((route: string, item: any) => {
     setCurrentRoute(route);
-    if (route !== 'Dashboard') {
-      navigation.navigate(route);
-    }
-  }, [navigation]);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      
+      const loadRecentlyViewed = async () => {
+        try {
+          const raw = await AsyncStorage.getItem(RECENTLY_VIEWED_KEY);
+          if (!isActive) {
+            return;
+          }
+          if (!raw) {
+            setRecentlyViewedIds([]);
+            setIsLoading(false);
+            return;
+          }
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            setRecentlyViewedIds(parsed.map(x => String(x)));
+          } else {
+            setRecentlyViewedIds([]);
+          }
+        } catch (error) {
+          if (__DEV__) {
+            console.error('Failed to load recently viewed cars:', error);
+          }
+          setRecentlyViewedIds([]);
+        } finally {
+          if (isActive) {
+            setIsLoading(false);
+          }
+        }
+      };
+      
+      loadRecentlyViewed();
+      
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
 
   // Memoized styles for performance
+  const recentlyViewedCars = useMemo(
+    () => CAR_LISTINGS.filter(item => recentlyViewedIds.includes(String(item.id))),
+    [recentlyViewedIds]
+  );
+
+  const unreadCount = getUnreadCount();
+
+  const bottomNavItems = useMemo(
+    () =>
+      BOTTOM_NAV_ITEMS.map(item =>
+        item.id === 'chat'
+          ? {
+              ...item,
+              badge: unreadCount > 0 ? unreadCount : undefined,
+            }
+          : item
+      ),
+    [unreadCount]
+  );
+
   const styles = useMemo(() => StyleSheet.create({
     safeArea: {
       flex: 1,
@@ -368,19 +435,74 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
       fontWeight: '700',
       color: colors.primary,
     },
+    sellToolsRow: {
+      flexDirection: 'row',
+      paddingHorizontal: getResponsiveSpacing('lg'),
+      gap: getResponsiveSpacing('md'),
+    },
+    sellToolCard: {
+      flex: 1,
+      backgroundColor: isDark ? colors.surface : '#FFFFFF',
+      borderRadius: getResponsiveBorderRadius('xl'),
+      padding: getResponsiveSpacing('md'),
+      borderWidth: 1,
+      borderColor: isDark ? colors.border : '#E5E7EB',
+    },
+    sellToolTitle: {
+      fontSize: getResponsiveTypography('sm'),
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: scaleSize(4),
+    },
+    sellToolSubtitle: {
+      fontSize: getResponsiveTypography('xs'),
+      color: colors.textSecondary,
+    },
+    searchChipsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingHorizontal: getResponsiveSpacing('lg'),
+      gap: getResponsiveSpacing('sm'),
+    },
+    searchChip: {
+      paddingHorizontal: getResponsiveSpacing('md'),
+      paddingVertical: scaleSize(6),
+      borderRadius: getResponsiveBorderRadius('full'),
+      backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#F3F4F6',
+    },
+    searchChipText: {
+      fontSize: getResponsiveTypography('xs'),
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+    chatPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: getResponsiveSpacing('md'),
+      paddingVertical: scaleSize(8),
+      borderRadius: getResponsiveBorderRadius('full'),
+      backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#F3F4F6',
+      marginRight: getResponsiveSpacing('sm'),
+    },
+    chatPillText: {
+      marginLeft: scaleSize(6),
+      fontSize: getResponsiveTypography('xs'),
+      color: colors.text,
+      fontWeight: '500',
+    },
   }), [colors, isDark]);
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.greeting}>Good Morning, Alex 👋</Text>
-          <Text style={styles.subGreeting}>Let's find your dream car</Text>
+          <Text style={styles.greeting} accessibilityLabel="Good Morning, Alex">Good Morning, Alex 👋</Text>
+          <Text style={styles.subGreeting} accessibilityLabel="Let's find your dream car">Let's find your dream car</Text>
         </View>
-        <TouchableOpacity style={styles.citySelector}>
-          <MaterialIcons name="location-on" size={scaleSize(16)} color={colors.primary} />
+        <TouchableOpacity style={styles.citySelector} accessibilityRole="button" accessibilityLabel={`Selected city: ${selectedCity}`}>
+          <Ionicons name="location" size={scaleSize(16)} color={colors.primary} />
           <Text style={styles.cityText}>{selectedCity}</Text>
-          <MaterialIcons name="keyboard-arrow-down" size={scaleSize(16)} color={colors.textSecondary} />
+          <Ionicons name="chevron-down" size={scaleSize(16)} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
     </View>
@@ -392,8 +514,10 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
         style={styles.searchWrapper}
         activeOpacity={0.9}
         onPress={() => navigation.navigate('SearchResults')}
+        accessibilityRole="button"
+        accessibilityLabel="Search for cars"
       >
-        <MaterialIcons name="search" size={scaleSize(24)} color={colors.textSecondary} />
+        <Ionicons name="search" size={scaleSize(24)} color={colors.textSecondary} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search cars, brands, or budget..."
@@ -401,13 +525,16 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
           value={searchQuery}
           onChangeText={setSearchQuery}
           editable={false} // Make it act as a button to navigate
+          accessibilityLabel="Search input field"
         />
         <View style={{
           backgroundColor: isDark ? '#3A3A3C' : '#F3F4F6',
           padding: scaleSize(6),
           borderRadius: scaleSize(8)
-        }}>
-          <MaterialIcons name="tune" size={scaleSize(20)} color={colors.text} />
+        }}
+        accessibilityLabel="Search options"
+        >
+          <Ionicons name="options" size={scaleSize(20)} color={colors.text} />
         </View>
       </TouchableOpacity>
     </View>
@@ -421,6 +548,9 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
             key={action.id}
             style={styles.quickActionItem}
             onPress={() => action.route && navigation.navigate(action.route)}
+            disabled={!action.route}
+            accessibilityRole="button"
+            accessibilityLabel={action.label}
           >
             <Gradient
               colors={action.gradient}
@@ -428,7 +558,7 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <MaterialIcons name={action.icon} size={scaleSize(24)} color="#FFFFFF" />
+              <Ionicons name={action.icon} size={scaleSize(24)} color="#FFFFFF" />
             </Gradient>
             <Text style={styles.quickActionLabel}>{action.label}</Text>
           </TouchableOpacity>
@@ -437,71 +567,81 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
     </View>
   );
 
-  const renderCarCard = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={styles.carCard}
-      onPress={() => navigation.navigate('CarDetails', { carId: item.id })}
-      activeOpacity={0.9}
-    >
-      <Image
-        source={{ uri: item.image }}
-        style={styles.carImage}
-        resizeMode="cover"
-      />
-      <Gradient
-        colors={['transparent', 'rgba(0,0,0,0.7)']}
-        style={{
-          position: 'absolute',
-          top: scaleSize(100),
-          left: 0,
-          right: 0,
-          height: scaleSize(60),
-        }}
-      />
-      <View style={{ position: 'absolute', top: scaleSize(12), right: scaleSize(12) }}>
-        <TouchableOpacity
+  const renderCarCard = useCallback(
+    ({ item }: { item: any }) => (
+      <TouchableOpacity
+        style={styles.carCard}
+        onPress={() => navigation.navigate('CarDetails', { carId: item.id })}
+        activeOpacity={0.9}
+        accessibilityRole="button"
+        accessibilityLabel={`View details for ${item.title}`}
+      >
+        <Image
+          source={{ uri: item.image }}
+          style={styles.carImage}
+          resizeMode="cover"
+          onError={(error) => console.warn('Image load error:', error)}
+          accessibilityLabel={`${item.title} image`}
+        />
+        <Gradient
+          colors={['transparent', 'rgba(0,0,0,0.7)']}
           style={{
-            backgroundColor: 'rgba(255,255,255,0.9)',
-            padding: scaleSize(6),
-            borderRadius: scaleSize(20)
+            position: 'absolute',
+            top: scaleSize(100),
+            left: 0,
+            right: 0,
+            height: scaleSize(60),
           }}
-        >
-          <MaterialIcons name="favorite-border" size={scaleSize(20)} color={colors.error} />
-        </TouchableOpacity>
-      </View>
+        />
+        <View style={{ position: 'absolute', top: scaleSize(12), right: scaleSize(12) }}>
+          <TouchableOpacity
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.9)',
+              padding: scaleSize(6),
+              borderRadius: scaleSize(20)
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Add to favorites"
+          >
+            <Ionicons name="heart-outline" size={scaleSize(20)} color={colors.error} />
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.carContent}>
-        <Text style={styles.carTitle} numberOfLines={1}>{item.title}</Text>
-        <Text style={styles.carPrice}>{item.price}</Text>
+        <View style={styles.carContent}>
+          <Text style={styles.carTitle} numberOfLines={1} accessibilityLabel={`Car title: ${item.title}`}>{item.title}</Text>
+          <Text style={styles.carPrice} accessibilityLabel={`Price: ${item.price}`}>{item.price}</Text>
 
-        <View style={styles.carDetailsRow}>
-          <View style={styles.carDetailBadge}>
-            <MaterialIcons name="speed" size={scaleSize(12)} color={colors.textSecondary} />
-            <Text style={styles.carDetailText}>{item.km}</Text>
-          </View>
-          <View style={styles.carDetailBadge}>
-            <MaterialIcons name="local-gas-station" size={scaleSize(12)} color={colors.textSecondary} />
-            <Text style={styles.carDetailText}>{item.fuel}</Text>
-          </View>
-          <View style={styles.carDetailBadge}>
-            <MaterialIcons name="calendar-today" size={scaleSize(12)} color={colors.textSecondary} />
-            <Text style={styles.carDetailText}>{item.year}</Text>
+          <View style={styles.carDetailsRow}>
+            <View style={styles.carDetailBadge} accessibilityRole="text">
+              <Ionicons name="speedometer" size={scaleSize(12)} color={colors.textSecondary} />
+              <Text style={styles.carDetailText} accessibilityLabel={`Kilometers: ${item.km}`}>{item.km}</Text>
+            </View>
+            <View style={styles.carDetailBadge} accessibilityRole="text">
+              <Ionicons name="gas-station" size={scaleSize(12)} color={colors.textSecondary} />
+              <Text style={styles.carDetailText} accessibilityLabel={`Fuel type: ${item.fuel}`}>{item.fuel}</Text>
+            </View>
+            <View style={styles.carDetailBadge} accessibilityRole="text">
+              <Ionicons name="calendar-outline" size={scaleSize(12)} color={colors.textSecondary} />
+              <Text style={styles.carDetailText} accessibilityLabel={`Year: ${item.year}`}>{item.year}</Text>
+            </View>
           </View>
         </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    ),
+    [navigation, styles, colors],
   );
 
   const renderFeaturedCars = () => (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Featured Cars</Text>
-        <TouchableOpacity style={styles.viewAllButton}>
+        <Text style={styles.sectionTitle} accessibilityLabel="Featured Cars">Featured Cars</Text>
+        <TouchableOpacity style={styles.viewAllButton} accessibilityRole="button" accessibilityLabel="View all featured cars">
           <Text style={styles.viewAllText}>View All</Text>
-          <MaterialIcons name="arrow-forward" size={scaleSize(16)} color={colors.primary} />
+          <Ionicons name="arrow-forward" size={scaleSize(16)} color={colors.primary} />
         </TouchableOpacity>
       </View>
       <FlatList
+        ref={flatListRef}
         data={CAR_LISTINGS}
         renderItem={renderCarCard}
         keyExtractor={item => item.id.toString()}
@@ -510,21 +650,22 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
         contentContainerStyle={{ paddingRight: getResponsiveSpacing('lg') }}
         snapToInterval={scaleSize(280) + getResponsiveSpacing('lg')}
         decelerationRate="fast"
+        accessibilityLabel="Featured cars list"
       />
     </View>
   );
 
   const renderPromoBanner = () => (
-    <TouchableOpacity style={styles.bannerContainer} activeOpacity={0.95}>
+    <TouchableOpacity style={styles.bannerContainer} activeOpacity={0.95} accessibilityRole="button" accessibilityLabel="Sell your car in 29 minutes">
       <Gradient
         colors={[colors.primary, colors.secondary || '#FF6B00']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.bannerGradient}
       >
-        <Text style={styles.bannerTitle}>Sell Your Car in 29 Minutes</Text>
-        <Text style={styles.bannerSubtitle}>Get the best price and instant payment. Free home inspection.</Text>
-        <View style={styles.bannerButton}>
+        <Text style={styles.bannerTitle} accessibilityLabel="Sell Your Car in 29 Minutes">Sell Your Car in 29 Minutes</Text>
+        <Text style={styles.bannerSubtitle} accessibilityLabel="Get the best price and instant payment. Free home inspection.">Get the best price and instant payment. Free home inspection.</Text>
+        <View style={styles.bannerButton} accessibilityRole="button" accessibilityLabel="Get estimate">
           <Text style={styles.bannerButtonText}>Get Estimate</Text>
         </View>
 
@@ -539,10 +680,121 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
             opacity: 0.9
           }}
           resizeMode="contain"
+          onError={(error) => console.warn('Banner image load error:', error)}
+          accessibilityLabel="Car illustration"
         />
       </Gradient>
     </TouchableOpacity>
   );
+
+  const renderSellTop = () => (
+    <>
+      {renderPromoBanner()}
+      <View style={styles.sectionContainer}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Sell smarter</Text>
+        </View>
+        <View style={styles.sellToolsRow}>
+          <View style={styles.sellToolCard}>
+            <Text style={styles.sellToolTitle}>Instant valuation</Text>
+            <Text style={styles.sellToolSubtitle}>Get AI-powered price suggestions for your car.</Text>
+          </View>
+          <View style={styles.sellToolCard}>
+            <Text style={styles.sellToolTitle}>Boost visibility</Text>
+            <Text style={styles.sellToolSubtitle}>Highlight your listing to reach more buyers.</Text>
+          </View>
+        </View>
+      </View>
+    </>
+  );
+
+  const renderSearchTop = () => (
+    <View style={styles.sectionContainer}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Quick filters</Text>
+      </View>
+      <View style={styles.searchChipsRow}>
+        <View style={styles.searchChip}>
+          <Text style={styles.searchChipText}>Under ₹20L</Text>
+        </View>
+        <View style={styles.searchChip}>
+          <Text style={styles.searchChipText}>SUVs</Text>
+        </View>
+        <View style={styles.searchChip}>
+          <Text style={styles.searchChipText}>Low mileage</Text>
+        </View>
+        <View style={styles.searchChip}>
+          <Text style={styles.searchChipText}>Certified cars</Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderChatTop = () => (
+    <View style={styles.sectionContainer}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Recent chats</Text>
+        <TouchableOpacity
+          style={styles.viewAllButton}
+          onPress={() => navigation.navigate('ChatList')}
+        >
+          <Text style={styles.viewAllText}>Open inbox</Text>
+          <Ionicons name="arrow-forward" size={scaleSize(16)} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: getResponsiveSpacing('lg') }}
+      >
+        <View style={styles.chatPill}>
+          <Ionicons name="person-circle" size={scaleSize(20)} color={colors.primary} />
+          <Text style={styles.chatPillText}>New buyers near you</Text>
+        </View>
+        <View style={styles.chatPill}>
+          <Ionicons name="flash" size={scaleSize(18)} color={colors.primary} />
+          <Text style={styles.chatPillText}>Hot leads</Text>
+        </View>
+        <View style={styles.chatPill}>
+          <Ionicons name="notifications" size={scaleSize(18)} color={colors.primary} />
+          <Text style={styles.chatPillText}>Unread messages</Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
+
+  const renderProfileTop = () => {
+    const isGuest = !isAuthenticated;
+    return (
+      <View style={styles.sectionContainer}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Your profile</Text>
+        </View>
+        <View style={styles.sellToolsRow}>
+          <View style={styles.sellToolCard}>
+            <Text style={styles.sellToolTitle}>{isGuest ? 'Guest mode' : 'Account'}</Text>
+            <Text style={styles.sellToolSubtitle}>
+              {isGuest
+                ? 'You are browsing without signing in.'
+                : 'Manage your details, preferences, and theme.'}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.sellToolCard}
+            activeOpacity={0.9}
+            onPress={() => navigation.navigate(isGuest ? 'Login' : 'Profile')}
+          >
+            <Text style={styles.sellToolTitle}>{isGuest ? 'Sign in' : 'Open full profile'}</Text>
+            <Text style={styles.sellToolSubtitle}>
+              {isGuest
+                ? 'Login to manage profile, chats, and saved cars.'
+                : 'View listings, saved cars, and more.'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -551,45 +803,63 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
         backgroundColor={colors.background}
       />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-        }
-      >
-        {renderHeader()}
-        {renderSearchBar()}
-        {renderQuickActions()}
-        {renderPromoBanner()}
-        {renderFeaturedCars()}
-
-        {/* Recently Viewed Section */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recently Viewed</Text>
-            <TouchableOpacity style={styles.viewAllButton}>
-              <Text style={styles.viewAllText}>View All</Text>
-              <MaterialIcons name="arrow-forward" size={scaleSize(16)} color={colors.primary} />
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={[...CAR_LISTINGS].reverse()}
-            renderItem={renderCarCard}
-            keyExtractor={item => `recent-${item.id}`}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingRight: getResponsiveSpacing('lg') }}
-            snapToInterval={scaleSize(280) + getResponsiveSpacing('lg')}
-            decelerationRate="fast"
-          />
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
-      </ScrollView>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          }
+          accessibilityLabel="Dashboard content"
+        >
+          {renderHeader()}
+          {currentRoute === 'home' && (
+            <>
+              {renderSearchBar()}
+              {renderSearchTop()}
+              {renderQuickActions()}
+              {renderPromoBanner()}
+            </>
+          )}
+          {currentRoute === 'sell' && renderSellTop()}
+          {currentRoute === 'chat' && renderChatTop()}
+          {currentRoute === 'profile' && renderProfileTop()}
+          {renderFeaturedCars()}
+
+          {recentlyViewedCars.length > 0 && (
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle} accessibilityLabel="Recently viewed cars">Recently Viewed</Text>
+                <TouchableOpacity style={styles.viewAllButton} accessibilityRole="button" accessibilityLabel="View all recently viewed cars">
+                  <Text style={styles.viewAllText}>View All</Text>
+                  <Ionicons name="arrow-forward" size={scaleSize(16)} color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+              <FlatList
+                data={recentlyViewedCars}
+                renderItem={renderCarCard}
+                keyExtractor={item => `recent-${item.id}`}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingRight: getResponsiveSpacing('lg') }}
+                snapToInterval={scaleSize(280) + getResponsiveSpacing('lg')}
+                decelerationRate="fast"
+                accessibilityLabel="Recently viewed cars list"
+              />
+            </View>
+          )}
+        </ScrollView>
+      )}
 
       <BottomNavigation
-        items={BOTTOM_NAV_ITEMS}
+        items={bottomNavItems}
         activeRoute={currentRoute}
         onPress={handleBottomNavPress}
+        accessibilityLabel="Navigation menu"
       />
     </SafeAreaView>
   );

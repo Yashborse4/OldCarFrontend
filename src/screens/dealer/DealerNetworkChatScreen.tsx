@@ -10,7 +10,7 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import AuthContext from '../../context/AuthContext';
 
 interface DealerContact {
@@ -213,7 +213,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
       ]}
       onPress={() => setSelectedTab(tab)}
     >
-      <MaterialIcons
+      <Ionicons
         name={icon as any}
         size={20}
         color={selectedTab === tab ? '#000000' : colors.text}
@@ -241,7 +241,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
           <Image source={{ uri: item.avatar }} style={styles.dealerAvatar} />
         ) : (
           <View style={[styles.dealerAvatarPlaceholder, { backgroundColor: colors.primary }]}>
-            <MaterialIcons name="store" size={24} color="#000000" />
+            <Ionicons name="storefront" size={24} color="#000000" />
           </View>
         )}
         
@@ -249,7 +249,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
         
         {item.isVerified && (
           <View style={[styles.verifiedBadge, { backgroundColor: colors.surface }]}>
-            <MaterialIcons name="verified" size={16} color="#4CAF50" />
+            <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
           </View>
         )}
       </View>
@@ -279,13 +279,13 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
 
         <View style={styles.dealerStats}>
           <View style={styles.statItem}>
-            <MaterialIcons name="star" size={16} color="#FFD700" />
+            <Ionicons name="star" size={16} color="#FFD700" />
             <Text style={[styles.statText, { color: colors.text }]}>
               {item.rating}
             </Text>
           </View>
           <View style={styles.statItem}>
-            <MaterialIcons name="handshake" size={16} color={colors.primary} />
+            <Ionicons name="handshake" size={16} color={colors.primary} />
             <Text style={[styles.statText, { color: colors.text }]}>
               {item.totalDeals} deals
             </Text>
@@ -315,7 +315,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
     >
       <View style={styles.messageHeader}>
         <View style={styles.messageTypeContainer}>
-          <MaterialIcons
+          <Ionicons
             name={
               item.type === 'bulk_inquiry' ? 'shopping-cart' :
               item.type === 'inventory_share' ? 'directions-car' :
@@ -349,7 +349,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
         </Text>
         
         <View style={styles.messageStats}>
-          <MaterialIcons name="reply" size={16} color={colors.textSecondary} />
+          <Ionicons name="reply" size={16} color={colors.textSecondary} />
           <Text style={[styles.responseCount, { color: colors.textSecondary }]}>
             {item.responses} responses
           </Text>
@@ -377,12 +377,12 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
         
         <View style={styles.inventoryActions}>
           <TouchableOpacity style={[styles.inventoryButton, { backgroundColor: colors.primary }]}>
-            <MaterialIcons name="visibility" size={16} color="#000000" />
+            <Ionicons name="eye" size={16} color="#000000" />
             <Text style={[styles.inventoryButtonText, { backgroundColor: '#000000' }]}>View</Text>
           </TouchableOpacity>
           
           <TouchableOpacity style={[styles.inventoryButton, { backgroundColor: '#4CAF50' }]}>
-            <MaterialIcons name="share" size={16} color="#FFFFFF" />
+            <Ionicons name="share" size={16} color="#FFFFFF" />
             <Text style={styles.inventoryButtonText}>Share</Text>
           </TouchableOpacity>
         </View>
@@ -398,7 +398,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
         
         <View style={[styles.searchContainer, { backgroundColor: colors.background,
           borderColor: colors.border }]}>
-          <MaterialIcons name="search" size={20} color={colors.textSecondary} />
+          <Ionicons name="search" size={20} color={colors.textSecondary} />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search dealers, messages, inventory..."
@@ -448,7 +448,7 @@ const DealerNetworkChatScreen: React.FC = ({ navigation }: any) => {
         style={[styles.fab, { backgroundColor: colors.primary }]}
         onPress={() => Alert.alert('Add', 'Add new message or inventory')}
       >
-        <MaterialIcons name="add" size={28} color="#000000" />
+        <Ionicons name="add" size={28} color="#000000" />
       </TouchableOpacity>
     </View>
   );

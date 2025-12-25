@@ -12,7 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 // import { GroupDetailsRouteProp, DealerGroup, Vehicle } from '../../navigation/types'; // Update this path based on your project structure
 
 // Temporary interfaces until proper types are available
@@ -210,7 +210,7 @@ const GroupDetailsScreen: React.FC = () => {
           <Image source={{ uri: item.images[0] }} style={styles.vehicleImage} />
         ) : (
           <View style={styles.placeholderImage}>
-            <MaterialIcons name="directions-car" size={40} color="#ccc" />
+            <Ionicons name="car" size={40} color="#ccc" />
           </View>
         )}
       </View>
@@ -223,15 +223,15 @@ const GroupDetailsScreen: React.FC = () => {
         
         <View style={styles.vehicleStats}>
           <View style={styles.statItem}>
-            <MaterialIcons name="visibility" size={16} color="#666" />
+            <Ionicons name="eye" size={16} color="#666" />
             <Text style={styles.statText}>{item.views}</Text>
           </View>
           <View style={styles.statItem}>
-            <MaterialIcons name="message" size={16} color="#666" />
+            <Ionicons name="message" size={16} color="#666" />
             <Text style={styles.statText}>{item.inquiries}</Text>
           </View>
           <View style={styles.statItem}>
-            <MaterialIcons name="share" size={16} color="#666" />
+            <Ionicons name="share" size={16} color="#666" />
             <Text style={styles.statText}>{item.shares}</Text>
           </View>
         </View>
@@ -262,7 +262,7 @@ const GroupDetailsScreen: React.FC = () => {
       </View>
       
       <TouchableOpacity style={styles.messageButton}>
-        <MaterialIcons name="message" size={20} color="#4ECDC4" />
+        <Ionicons name="message" size={20} color="#4ECDC4" />
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -299,21 +299,21 @@ const GroupDetailsScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>Recent Activity</Text>
         <View style={styles.activityList}>
           <View style={styles.activityItem}>
-            <MaterialIcons name="add" size={20} color="#4ECDC4" />
+            <Ionicons name="add" size={20} color="#4ECDC4" />
             <Text style={styles.activityText}>
               Sarah Johnson co-listed BMW X5 in this group
             </Text>
             <Text style={styles.activityTime}>2h ago</Text>
           </View>
           <View style={styles.activityItem}>
-            <MaterialIcons name="person-add" size={20} color="#4ECDC4" />
+            <Ionicons name="person-add" size={20} color="#4ECDC4" />
             <Text style={styles.activityText}>
               Lisa Garcia joined the group
             </Text>
             <Text style={styles.activityTime}>1d ago</Text>
           </View>
           <View style={styles.activityItem}>
-            <MaterialIcons name="share" size={20} color="#4ECDC4" />
+            <Ionicons name="share" size={20} color="#4ECDC4" />
             <Text style={styles.activityText}>
               Mike Wilson shared Mercedes-Benz S-Class
             </Text>
@@ -338,7 +338,7 @@ const GroupDetailsScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <MaterialIcons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {group.name}
@@ -347,14 +347,14 @@ const GroupDetailsScreen: React.FC = () => {
           style={styles.menuButton}
           onPress={() => setShowMenuModal(true)}
         >
-          <MaterialIcons name="more-vert" size={24} color="#333" />
+          <Ionicons name="ellipsis-vertical" size={24} color="#333" />
         </TouchableOpacity>
       </View>
 
       <View style={styles.groupInfo}>
         <View style={styles.groupHeader}>
           <View style={styles.privacyIndicator}>
-            <MaterialIcons
+            <Ionicons
               name={group.isPrivate ? 'lock' : 'public'}
               size={16}
               color={group.isPrivate ? '#FF6B6B' : '#4ECDC4'}
@@ -368,7 +368,7 @@ const GroupDetailsScreen: React.FC = () => {
         
         {isAdmin && (
           <TouchableOpacity style={styles.inviteButton} onPress={handleInviteMembers}>
-            <MaterialIcons name="person-add" size={20} color="#fff" />
+            <Ionicons name="person-add" size={20} color="#fff" />
             <Text style={styles.inviteButtonText}>Invite Members</Text>
           </TouchableOpacity>
         )}
@@ -436,24 +436,24 @@ const GroupDetailsScreen: React.FC = () => {
         >
           <View style={styles.menuModal}>
             <TouchableOpacity style={styles.menuItem} onPress={handleViewMembers}>
-              <MaterialIcons name="group" size={20} color="#333" />
+              <Ionicons name="people" size={20} color="#333" />
               <Text style={styles.menuItemText}>View All Members</Text>
             </TouchableOpacity>
             
             {isAdmin ? (
               <>
                 <TouchableOpacity style={styles.menuItem} onPress={handleInviteMembers}>
-                  <MaterialIcons name="person-add" size={20} color="#333" />
+                  <Ionicons name="person-add" size={20} color="#333" />
                   <Text style={styles.menuItemText}>Invite Members</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.menuItem} onPress={handleDeleteGroup}>
-                  <MaterialIcons name="delete" size={20} color="#FF6B6B" />
+                  <Ionicons name="trash" size={20} color="#FF6B6B" />
                   <Text style={[styles.menuItemText, { color: '#FF6B6B' }]}>Delete Group</Text>
                 </TouchableOpacity>
               </>
             ) : (
               <TouchableOpacity style={styles.menuItem} onPress={handleLeaveGroup}>
-                <MaterialIcons name="exit-to-app" size={20} color="#FF6B6B" />
+                <Ionicons name="exit-to-app" size={20} color="#FF6B6B" />
                 <Text style={[styles.menuItemText, { color: '#FF6B6B' }]}>Leave Group</Text>
               </TouchableOpacity>
             )}

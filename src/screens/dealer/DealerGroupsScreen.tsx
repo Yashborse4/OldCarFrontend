@@ -9,7 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { DealerGroupsNavigationProp, DealerGroup } from '../../navigation/types';
 
 const DealerGroupsScreen: React.FC = () => {
@@ -108,7 +108,7 @@ const DealerGroupsScreen: React.FC = () => {
         </View>
         <View style={styles.groupMeta}>
           <View style={styles.privacyIndicator}>
-            <MaterialIcons
+            <Ionicons
               name={item.isPrivate ? 'lock' : 'public'}
               size={16}
               color={item.isPrivate ? '#FF6B6B' : '#4ECDC4'}
@@ -122,14 +122,14 @@ const DealerGroupsScreen: React.FC = () => {
       
       <View style={styles.groupFooter}>
         <View style={styles.memberCount}>
-          <MaterialIcons name="group" size={16} color="#666" />
+          <Ionicons name="people" size={16} color="#666" />
           <Text style={styles.memberCountText}>
             {item.members.length} member{item.members.length !== 1 ? 's' : ''}
           </Text>
         </View>
         
         <TouchableOpacity style={styles.moreButton}>
-          <MaterialIcons name="chevron-right" size={20} color="#666" />
+          <Ionicons name="chevron-forward" size={20} color="#666" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -137,7 +137,7 @@ const DealerGroupsScreen: React.FC = () => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <MaterialIcons name="group-add" size={80} color="#ddd" />
+      <Ionicons name="group-add" size={80} color="#ddd" />
       <Text style={styles.emptyStateTitle}>No Groups Yet</Text>
       <Text style={styles.emptyStateText}>
         Create or join dealer groups to start networking and co-listing vehicles
@@ -153,7 +153,7 @@ const DealerGroupsScreen: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Dealer Groups</Text>
         <TouchableOpacity style={styles.createButton} onPress={handleCreateGroup}>
-          <MaterialIcons name="add" size={24} color="#fff" />
+          <Ionicons name="add" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
 

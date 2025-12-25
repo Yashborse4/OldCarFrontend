@@ -14,7 +14,7 @@ import {
   Switch,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 
@@ -223,7 +223,7 @@ const CoListVehicleScreen: React.FC = () => {
       activeOpacity={0.8}
     >
       <View style={styles.optionIcon}>
-        <MaterialIcons
+        <Ionicons
           name={item.type === 'group' ? 'groups' : 'person'}
           size={24}
           color={item.selected ? '#fff' : '#4ECDC4'}
@@ -247,7 +247,7 @@ const CoListVehicleScreen: React.FC = () => {
             </View>
             {item.isPrivate && (
               <View style={styles.privateBadge}>
-                <MaterialIcons name="lock" size={12} color="#FF6B6B" />
+                <Ionicons name="lock-closed" size={12} color="#FF6B6B" />
                 <Text style={styles.privateBadgeText}>Private</Text>
               </View>
             )}
@@ -257,7 +257,7 @@ const CoListVehicleScreen: React.FC = () => {
       
       <View style={[styles.checkbox, item.selected && styles.checkedBox]}>
         {item.selected && (
-          <MaterialIcons name="check" size={16} color="#fff" />
+          <Ionicons name="checkmark" size={16} color="#fff" />
         )}
       </View>
     </TouchableOpacity>
@@ -277,7 +277,7 @@ const CoListVehicleScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <MaterialIcons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Co-list Vehicle</Text>
         <View style={styles.placeholder} />
@@ -290,7 +290,7 @@ const CoListVehicleScreen: React.FC = () => {
               <Image source={{ uri: vehicle.images[0] }} style={styles.vehicleImage} />
             ) : (
               <View style={styles.placeholderImage}>
-                <MaterialIcons name="directions-car" size={40} color="#ccc" />
+                <Ionicons name="car" size={40} color="#ccc" />
               </View>
             )}
           </View>
@@ -341,7 +341,7 @@ const CoListVehicleScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <MaterialIcons name="search-off" size={60} color="#ddd" />
+            <Ionicons name="search-off" size={60} color="#ddd" />
             <Text style={styles.emptyStateText}>
               {searchText ? 'No results found' : 'No groups or dealers available'}
             </Text>
@@ -379,7 +379,7 @@ const CoListVehicleScreen: React.FC = () => {
             <View style={styles.selectedList}>
               {selectedOptions.map((option, index) => (
                 <View key={option.id} style={styles.selectedItem}>
-                  <MaterialIcons
+                  <Ionicons
                     name={option.type === 'group' ? 'groups' : 'person'}
                     size={16}
                     color="#666"

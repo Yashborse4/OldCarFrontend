@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Card } from '../../components/ui/Card';
 
 // Temporary interface until proper types are available
@@ -270,7 +270,7 @@ const MessagesScreen: React.FC = () => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <MaterialIcons name="chat-bubble-outline" size={80} color={colors.textSecondary} />
+      <Ionicons name="chat-bubble-outline" size={80} color={colors.textSecondary} />
       <Text style={styles.emptyStateTitle}>No Messages Yet</Text>
       <Text style={styles.emptyStateText}>
         Start networking with other dealers and your conversations will appear here
@@ -283,7 +283,7 @@ const MessagesScreen: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Messages</Text>
         <TouchableOpacity style={styles.headerButton}>
-          <MaterialIcons name="search" size={24} color={colors.text} />
+          <Ionicons name="search" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
 
