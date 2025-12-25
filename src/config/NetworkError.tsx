@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Modal,
 } from 'react-native';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNetwork } from '../context/NetworkContext';
 
 
@@ -209,7 +209,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
   if (mode === 'banner') {
     return (
       <View style={styles.bannerContainer}>
-        <MaterialIcons
+        <Ionicons
           name="wifi-off"
           size={20}
           color={isDark ? '#FFFFFF' : '#C62828'}
@@ -240,7 +240,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
     return (
       <View style={[styles.inlineContainer, style]}>
         <View style={styles.iconContainer}>
-          <MaterialIcons
+          <Ionicons
             name="wifi-off"
             size={40}
             color={isDark ? '#FF6B6B' : '#D32F2F'}
@@ -257,7 +257,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
             {isRetrying ? (
               <ActivityIndicator size="small" color="#111827" />
             ) : (
-              <MaterialIcons name="refresh" size={20} color="#111827" />
+              <Ionicons name="refresh" size={20} color="#111827" />
             )}
             <Text style={[styles.retryText, isRetrying && styles.retryTextDisabled]}>
               {isRetrying ? 'Checking...' : 'Retry Connection'}
@@ -274,7 +274,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
       <View style={styles.overlayContainer}>
         <View style={styles.overlayContent}>
           <View style={styles.iconContainer}>
-            <MaterialIcons
+            <Ionicons
               name="wifi-off"
               size={48}
               color={isDark ? '#FF6B6B' : '#D32F2F'}
@@ -293,7 +293,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
               {isRetrying ? (
                 <ActivityIndicator size="small" color="#111827" />
               ) : (
-                <MaterialIcons name="refresh" size={20} color="#111827" />
+                <Ionicons name="refresh" size={20} color="#111827" />
               )}
               <Text style={[styles.retryText, isRetrying && styles.retryTextDisabled]}>
                 {isRetrying ? 'Checking Connection...' : 'Retry Connection'}
@@ -331,7 +331,7 @@ export const NetworkStatusIndicator: React.FC<{ visible?: boolean }> = ({ visibl
 
   return (
     <View style={styles.indicator}>
-      <MaterialIcons name="wifi-off" size={12} color="#FFFFFF" />
+      <Ionicons name="wifi-off" size={12} color="#FFFFFF" />
       <Text style={styles.text}>Offline</Text>
     </View>
   );

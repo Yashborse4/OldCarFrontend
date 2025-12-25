@@ -25,7 +25,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   scale,
   SPACING,
@@ -37,7 +37,7 @@ import { withPerformanceTracking } from '../utils/performance';
 import { BaseInput, PasswordInput, SearchInput, InputRef } from '../components/ui/Input';
 import { useNotification } from './Notification';
 import { useTheme } from '../theme/ThemeContext';
-// Icon already imported as MaterialIcons above
+// Icon already imported as Ionicons above
 
 // Form validation utilities
 export interface ValidationRule {
@@ -487,7 +487,7 @@ const FieldComponent: React.FC<FieldProps> = ({
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
-            leftIcon={leftIcon || 'email'}
+            leftIcon={leftIcon || 'mail'}
           />
         );
 
@@ -498,7 +498,7 @@ const FieldComponent: React.FC<FieldProps> = ({
             {...commonProps}
             keyboardType="phone-pad"
             autoComplete="tel"
-            leftIcon={leftIcon || 'phone'}
+            leftIcon={leftIcon || 'call'}
           />
         );
 
@@ -661,7 +661,7 @@ const SubmitButtonComponent: React.FC<SubmitButtonProps> = ({
       accessibilityState={{ disabled: isDisabled }}
     >
       {icon && !isLoading && (
-        <MaterialIcons
+        <Ionicons
           name={icon as any}
           size={scale(size === 'small' ? 16 : size === 'large' ? 24 : 20)}
           color={getTextColor()}
@@ -672,7 +672,7 @@ const SubmitButtonComponent: React.FC<SubmitButtonProps> = ({
       {isLoading && (
         <View style={styles.buttonIcon}>
           {/* Loading indicator would go here */}
-          <MaterialIcons
+          <Ionicons
             name="hourglass-empty"
             size={scale(size === 'small' ? 16 : size === 'large' ? 24 : 20)}
             color={getTextColor()}

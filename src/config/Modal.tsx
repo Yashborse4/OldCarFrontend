@@ -16,14 +16,14 @@ import {
   TextStyle,
   Text,
 } from 'react-native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { 
-  scaleSize as scale, 
-  getResponsiveSpacing, 
-  getResponsiveTypography, 
+import {
+  scaleSize as scale,
+  getResponsiveSpacing,
+  getResponsiveTypography,
   getResponsiveBorderRadius,
-  useResponsiveLayout, 
+  useResponsiveLayout,
   RESPONSIVE_DIMENSIONS
 } from '../utils/responsive';
 import { spacing as SPACING, typography, borderRadius } from '../design-system/tokens';
@@ -36,33 +36,33 @@ interface BaseModalProps {
   visible: boolean;
   onClose: () => void;
   children: ReactNode;
-  
+
   // Animation
   animationType?: 'slide' | 'fade' | 'scale' | 'slideFromBottom' | 'slideFromTop' | 'slideFromLeft' | 'slideFromRight';
   animationDuration?: number;
-  
+
   // Behavior
   dismissible?: boolean;
   closeOnBackdropPress?: boolean;
   closeOnBackButton?: boolean;
-  
+
   // Styling
   overlayStyle?: ViewStyle;
   containerStyle?: ViewStyle;
   contentStyle?: ViewStyle;
-  
+
   // Backdrop
   showBackdrop?: boolean;
   backdropOpacity?: number;
   backdropColor?: string;
-  
+
   // Positioning
   position?: 'center' | 'top' | 'bottom' | 'fullScreen';
-  
+
   // Accessibility
   accessibilityLabel?: string;
   accessibilityRole?: string;
-  
+
   // Callbacks
   onShow?: () => void;
   onDismiss?: () => void;
@@ -95,7 +95,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const responsive = useResponsiveLayout();
-  
+
   const [modalVisible, setModalVisible] = useState(visible);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.3)).current;
@@ -133,7 +133,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
             }),
           ],
         };
-      
+
       case 'slideFromBottom':
         return {
           show: [
@@ -162,7 +162,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
             }),
           ],
         };
-      
+
       case 'slideFromTop':
         return {
           show: [
@@ -191,7 +191,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
             }),
           ],
         };
-      
+
       case 'slideFromLeft':
       case 'slideFromRight':
         const initialValue = animationType === 'slideFromLeft' ? -SCREEN_WIDTH : SCREEN_WIDTH;
@@ -222,7 +222,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
             }),
           ],
         };
-      
+
       default: // fade
         return {
           show: [
@@ -247,7 +247,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
   const showModal = useCallback(() => {
     setModalVisible(true);
     const animationConfig = getAnimationConfig();
-    
+
     // Reset animation values
     fadeAnim.setValue(0);
     if (animationType === 'scale') scaleAnim.setValue(0.3);
@@ -257,7 +257,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
       if (animationType === 'slideFromLeft') translateXAnim.setValue(-SCREEN_WIDTH);
       if (animationType === 'slideFromRight') translateXAnim.setValue(SCREEN_WIDTH);
     }
-    
+
     Animated.parallel(animationConfig.show).start(() => {
       onShow?.();
     });
@@ -266,7 +266,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
   // Hide modal animation
   const hideModal = useCallback(() => {
     const animationConfig = getAnimationConfig();
-    
+
     Animated.parallel(animationConfig.hide).start(() => {
       setModalVisible(false);
       onDismiss?.();
@@ -290,12 +290,12 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
       if (onBackButtonPress) {
         return onBackButtonPress();
       }
-      
+
       if (dismissible) {
         onClose();
         return true;
       }
-      
+
       return false;
     });
 
@@ -305,7 +305,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
   // Handle backdrop press
   const handleBackdropPress = useCallback(() => {
     onBackdropPress?.();
-    
+
     if (closeOnBackdropPress && dismissible) {
       onClose();
     }
@@ -314,7 +314,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
   // Get container transform style based on animation type
   const getContainerTransform = useCallback(() => {
     const transforms: any[] = [];
-    
+
     switch (animationType) {
       case 'scale':
         transforms.push({ scale: scaleAnim });
@@ -328,7 +328,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
         transforms.push({ translateX: translateXAnim });
         break;
     }
-    
+
     return transforms;
   }, [animationType, scaleAnim, slideAnim, translateXAnim]);
 
@@ -375,7 +375,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
         barStyle="light-content"
         translucent
       />
-      
+
       <View style={[styles.overlay, overlayStyle]}>
         {/* Backdrop */}
         {showBackdrop && (
@@ -391,7 +391,7 @@ const BaseModalComponent: React.FC<BaseModalProps> = ({
             accessible={false}
           />
         )}
-        
+
         {/* Content Container */}
         <Animated.View
           style={[
@@ -424,12 +424,12 @@ interface DialogProps extends Omit<BaseModalProps, 'children'> {
   iconColor?: string;
   actions?: DialogAction[];
   content?: ReactNode;
-  
+
   // Styling
   titleStyle?: TextStyle;
   messageStyle?: TextStyle;
   actionsStyle?: ViewStyle;
-  
+
   // Behavior
   scrollable?: boolean;
   maxHeight?: number;
@@ -497,21 +497,21 @@ const DialogComponent: React.FC<DialogProps> = ({
       {/* Header */}
       <View style={styles.dialogHeader}>
         {icon && (
-          <MaterialIcons
+          <Ionicons
             name={icon as any}
             size={scale(24)}
             color={iconColor || '#FFD700'}
             style={styles.dialogIcon}
           />
         )}
-        
+
         {title && (
           <Text style={[styles.dialogTitle, { color: '#1A202C' }, titleStyle]}>
             {title}
           </Text>
         )}
       </View>
-      
+
       {/* Content */}
       <View
         style={[
@@ -539,7 +539,7 @@ const DialogComponent: React.FC<DialogProps> = ({
           </>
         )}
       </View>
-      
+
       {/* Actions */}
       {renderActions()}
     </View>
@@ -565,12 +565,12 @@ interface BottomSheetProps extends Omit<BaseModalProps, 'position' | 'animationT
   snapPoints?: string[];
   initialSnapPoint?: number;
   expandable?: boolean;
-  
+
   // Header
   headerLeft?: ReactNode;
   headerRight?: ReactNode;
   showCloseButton?: boolean;
-  
+
   // Styling
   headerStyle?: ViewStyle;
   handleStyle?: ViewStyle;
@@ -613,14 +613,14 @@ const BottomSheetComponent: React.FC<BottomSheetProps> = ({
           <View style={[styles.handle, { backgroundColor: '#E2E8F0' }, handleStyle]} />
         </View>
       )}
-      
+
       {/* Header */}
       {(title || subtitle || headerLeft || headerRight || showCloseButton) && (
         <View style={[styles.bottomSheetHeader, headerStyle]}>
           <View style={styles.headerLeft}>
             {headerLeft}
           </View>
-          
+
           <View style={styles.headerCenter}>
             {title && (
               <Text style={[styles.bottomSheetTitle, { color: '#1A202C' }, titleStyle]}>
@@ -633,7 +633,7 @@ const BottomSheetComponent: React.FC<BottomSheetProps> = ({
               </Text>
             )}
           </View>
-          
+
           <View style={styles.headerRight}>
             {headerRight}
             {showCloseButton && (
@@ -641,7 +641,7 @@ const BottomSheetComponent: React.FC<BottomSheetProps> = ({
                 onPress={modalProps.onClose}
                 style={styles.closeButton}
               >
-                <MaterialIcons
+                <Ionicons
                   name="close"
                   size={scale(24)}
                   color={'#4A5568'}
@@ -651,7 +651,7 @@ const BottomSheetComponent: React.FC<BottomSheetProps> = ({
           </View>
         </View>
       )}
-      
+
       {/* Content */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -694,11 +694,11 @@ const LoadingDialogComponent: React.FC<LoadingDialogProps> = ({
           borderRadius={scale(20)}
           animated
         />
-        
+
         <Text style={[styles.loadingMessage, { color: '#1A202C' }]}>
           {message}
         </Text>
-        
+
         {showProgress && typeof progress === 'number' && (
           <View style={styles.progressContainer}>
             <View style={[styles.progressBar, { backgroundColor: '#F8FAFC' }]}>
@@ -736,7 +736,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  
+
   // Dialog styles
   dialogWrapper: {
     borderRadius: RESPONSIVE_DIMENSIONS.borderRadius.large,
@@ -784,7 +784,7 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizes.base,
     fontWeight: '500',
   },
-  
+
   // Bottom Sheet styles
   bottomSheetWrapper: {
     borderTopLeftRadius: getResponsiveBorderRadius('lg'),
@@ -838,7 +838,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: SPACING.lg,
   },
-  
+
   // Loading Dialog styles
   loadingDialogWrapper: {
     borderRadius: RESPONSIVE_DIMENSIONS.borderRadius.medium,

@@ -3,12 +3,12 @@
  * Provides enhanced FlatList with pagination, pull-to-refresh, search, and performance optimizations
  */
 
-import React, { 
-  memo, 
-  useCallback, 
-  useState, 
-  useRef, 
-  useEffect, 
+import React, {
+  memo,
+  useCallback,
+  useState,
+  useRef,
+  useEffect,
   useMemo,
   forwardRef,
   useImperativeHandle
@@ -27,13 +27,13 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
-import { 
-  scale, 
-  SPACING, 
-  FONT_SIZES, 
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {
+  scale,
+  SPACING,
+  FONT_SIZES,
   DIMENSIONS as RESPONSIVE_DIMENSIONS,
-  useResponsive 
+  useResponsive
 } from '../utils/responsive';
 import { withPerformanceTracking } from '../utils/performance';
 import { Skeleton, SkeletonList } from './Loading';
@@ -41,8 +41,8 @@ import { SearchInput } from './Input';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Type for MaterialIcons names
-type MaterialIconName = React.ComponentProps<typeof MaterialIcons>['name'];
+// Type for Ionicons names
+type MaterialIconName = React.ComponentProps<typeof Ionicons>['name'];
 
 // Enhanced List Props
 export interface EnhancedListRef<T> {
@@ -59,27 +59,27 @@ export interface EnhancedListRef<T> {
 interface BaseListProps<T> extends Omit<FlatListProps<T>, 'data' | 'renderItem' | 'refreshControl' | 'onEndReached'> {
   data: T[];
   renderItem: ListRenderItem<T>;
-  
+
   // Loading states
   loading?: boolean;
   refreshing?: boolean;
   loadingMore?: boolean;
-  
+
   // Pagination
   onEndReached?: () => void;
   onEndReachedThreshold?: number;
   hasMore?: boolean;
-  
+
   // Pull to refresh
   onRefresh?: () => void;
   pullToRefreshEnabled?: boolean;
-  
+
   // Search
   searchEnabled?: boolean;
   searchQuery?: string;
   onSearch?: (query: string) => void;
   searchPlaceholder?: string;
-  
+
   // Empty state
   emptyTitle?: string;
   emptyMessage?: string;
@@ -88,18 +88,18 @@ interface BaseListProps<T> extends Omit<FlatListProps<T>, 'data' | 'renderItem' 
     title: string;
     onPress: () => void;
   };
-  
+
   // Error state
   error?: string | null;
   onRetry?: () => void;
-  
+
   // Performance optimizations
   optimizeForPerformance?: boolean;
   estimatedItemSize?: number;
-  
+
   // Styling
   contentContainerStyle?: ViewStyle;
-  
+
   // Accessibility
   accessibilityLabel?: string;
 }
@@ -135,7 +135,7 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
   ...flatListProps
 }, ref) => {
   // Memoize colors to prevent hook dependency issues
-  const colors = useMemo(() => ({ 
+  const colors = useMemo(() => ({
     text: '#1A202C',
     textSecondary: '#4A5568',
     primary: '#FFD700',
@@ -236,21 +236,21 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
 
     return (
       <View style={styles.emptyContainer}>
-        <MaterialIcons
+        <Ionicons
           name={emptyIcon}
           size={scale(64)}
           color={colors.textSecondary}
           style={styles.emptyIcon}
         />
-        
+
         <Text style={[styles.emptyTitle, { color: colors.text }]}>
           {emptyTitle}
         </Text>
-        
+
         <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
           {emptyMessage}
         </Text>
-        
+
         {emptyAction && (
           <TouchableOpacity
             style={[styles.emptyAction, { backgroundColor: colors.primary }]}
@@ -271,27 +271,27 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
 
     return (
       <View style={styles.errorContainer}>
-        <MaterialIcons
+        <Ionicons
           name="error-outline"
           size={scale(64)}
           color={'#F56565'}
           style={styles.errorIcon}
         />
-        
+
         <Text style={[styles.errorTitle, { color: '#F56565' }]}>
           Something went wrong
         </Text>
-        
+
         <Text style={[styles.errorMessage, { color: colors.textSecondary }]}>
           {error}
         </Text>
-        
+
         {onRetry && (
           <TouchableOpacity
             style={[styles.retryButton, { backgroundColor: colors.primary }]}
             onPress={onRetry}
           >
-            <MaterialIcons
+            <Ionicons
               name="refresh"
               size={scale(18)}
               color={'#FFFFFF'}
@@ -329,10 +329,10 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
       renderSearchHeader(),
       ListHeaderComponent
     ].filter(Boolean);
-    
+
     if (components.length === 0) return null;
     if (components.length === 1) return components[0];
-    
+
     return (
       <View>
         {components.map((Component, index) => (
@@ -348,10 +348,10 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
       renderLoadingFooter(),
       ListFooterComponent
     ].filter(Boolean);
-    
+
     if (components.length === 0) return null;
     if (components.length === 1) return components[0];
-    
+
     return (
       <View>
         {components.map((Component, index) => (
@@ -393,7 +393,7 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
         data={data}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        
+
         // Performance optimizations
         {...(optimizeForPerformance && {
           getItemLayout: getItemLayout,
@@ -403,11 +403,11 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
           initialNumToRender: 10,
           windowSize: 10,
         })}
-        
+
         // Pagination
         onEndReached={hasMore ? onEndReached : undefined}
         onEndReachedThreshold={onEndReachedThreshold}
-        
+
         // Pull to refresh
         refreshControl={
           pullToRefreshEnabled && onRefresh ? (
@@ -420,24 +420,24 @@ const BaseListComponent = forwardRef<EnhancedListRef<any>, BaseListProps<any>>((
             />
           ) : undefined
         }
-        
+
         // Components
         ListHeaderComponent={combinedHeaderComponent}
         ListFooterComponent={combinedFooterComponent}
         ListEmptyComponent={renderEmptyState}
-        
+
         // Scroll handling
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        
+
         // Styling
         style={styles.list}
         showsVerticalScrollIndicator={false}
-        
+
         // Accessibility
         accessible={!!accessibilityLabel}
         accessibilityLabel={accessibilityLabel}
-        
+
         // Other props
         {...flatListProps}
       />
@@ -467,7 +467,7 @@ const CarListComponent: React.FC<CarListProps> = ({
   const renderCarItem = useCallback<ListRenderItem<any>>(({ item, index }) => {
     // Dynamic import to avoid circular dependencies
     const { CarCard } = require('./Card');
-    
+
     return (
       <CarCard
         car={item}
@@ -489,7 +489,7 @@ const CarListComponent: React.FC<CarListProps> = ({
       estimatedItemSize={compact ? scale(120) : scale(350)}
       emptyTitle="No cars found"
       emptyMessage="Try adjusting your search or filters"
-      emptyIcon="directions-car"
+      emptyIcon="car"
     />
   );
 };
@@ -512,7 +512,7 @@ const ProfileListComponent: React.FC<ProfileListProps> = ({
   const renderProfileItem = useCallback<ListRenderItem<any>>(({ item }) => {
     // Dynamic import to avoid circular dependencies
     const { ProfileCard } = require('./Card');
-    
+
     return (
       <ProfileCard
         user={item}
@@ -558,7 +558,7 @@ const SectionedListComponent = <T,>({
   stickyHeaders = true,
   ...baseProps
 }: SectionedListProps<T>) => {
-  const colors = { 
+  const colors = {
     text: '#1A202C',
     backgroundColor: '#4A5568',
     primary: '#FFD700',
@@ -573,7 +573,7 @@ const SectionedListComponent = <T,>({
   // Flatten sections into single array with section headers
   const flattenedData = useMemo(() => {
     const items: any[] = [];
-    
+
     sections.forEach((section, sectionIndex) => {
       // Add section header
       items.push({
@@ -582,7 +582,7 @@ const SectionedListComponent = <T,>({
         sectionIndex,
         key: `header-${sectionIndex}`,
       });
-      
+
       // Add section items
       section.data.forEach((item, itemIndex) => {
         items.push({
@@ -595,7 +595,7 @@ const SectionedListComponent = <T,>({
         });
       });
     });
-    
+
     return items;
   }, [sections]);
 
@@ -604,7 +604,7 @@ const SectionedListComponent = <T,>({
       if (renderSectionHeader) {
         return renderSectionHeader(flatItem.section);
       }
-      
+
       return (
         <View style={[styles.sectionHeader, { backgroundColor: colors.surfaceVariant }]}>
           <Text style={[styles.sectionHeaderText, { color: colors.onSurfaceVariant }]}>
@@ -613,7 +613,7 @@ const SectionedListComponent = <T,>({
         </View>
       );
     }
-    
+
     return renderItem(flatItem.item, flatItem.section, flatItem.itemIndex);
   }, [renderItem, renderSectionHeader, colors.surfaceVariant, colors.onSurfaceVariant]);
 
@@ -622,7 +622,7 @@ const SectionedListComponent = <T,>({
       {...baseProps}
       data={flattenedData}
       renderItem={renderFlattenedItem}
-      stickyHeaderIndices={stickyHeaders ? 
+      stickyHeaderIndices={stickyHeaders ?
         flattenedData
           .map((item, index) => item.type === 'header' ? index : null)
           .filter((index): index is number => index !== null)
@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
   list: {
     flex: 1,
   },
-  
+
   // Search
   searchContainer: {
     paddingHorizontal: SPACING.md,
@@ -649,7 +649,7 @@ const styles = StyleSheet.create({
   searchInput: {
     marginBottom: 0,
   },
-  
+
   // Loading
   loadingFooter: {
     padding: SPACING.lg,
@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.sm,
     fontWeight: '500',
   },
-  
+
   // Empty state
   emptyContainer: {
     flex: 1,
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
-  
+
   // Error state
   errorContainer: {
     flex: 1,
@@ -739,7 +739,7 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.md,
     fontWeight: '600',
   },
-  
+
   // Item styles
   carItem: {
     marginHorizontal: SPACING.md,
@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
     marginHorizontal: SPACING.md,
     marginBottom: SPACING.sm,
   },
-  
+
   // Section styles
   sectionHeader: {
     paddingHorizontal: SPACING.md,

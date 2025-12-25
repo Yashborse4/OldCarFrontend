@@ -7,7 +7,7 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { Vehicle } from '../services/CarApi';
 
@@ -80,7 +80,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
             />
           ) : (
             <View style={styles.placeholderImage}>
-              <MaterialIcons name="directions-car" size={40} color="#ccc" />
+              <Ionicons name="car" size={40} color="#ccc" />
             </View>
           )}
 
@@ -88,7 +88,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
           <View style={styles.badges}>
             {vehicle.featured && (
               <View style={styles.featuredBadge}>
-                <MaterialIcons name="star" size={12} color="#fff" />
+                <Ionicons name="star" size={12} color="#fff" />
                 <Text style={styles.featuredText}>Featured</Text>
               </View>
             )}
@@ -105,7 +105,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
               onPress={onBookmark}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <MaterialIcons
+              <Ionicons
                 name={isBookmarked ? 'bookmark' : 'bookmark-border'}
                 size={20}
                 color={isBookmarked ? colors.primary : '#fff'}
@@ -116,7 +116,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
           {/* Image Count */}
           {vehicle.images && vehicle.images.length > 1 && (
             <View style={styles.imageCount}>
-              <MaterialIcons name="photo-library" size={14} color="#fff" />
+              <Ionicons name="photo-library" size={14} color="#fff" />
               <Text style={styles.imageCountText}>{vehicle.images.length}</Text>
             </View>
           )}
@@ -131,7 +131,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
             </Text>
             {vehicle.isCoListed && (
               <View style={styles.coListedBadge}>
-                <MaterialIcons name="share" size={12} color={colors.primary} />
+                <Ionicons name="share" size={12} color={colors.primary} />
               </View>
             )}
           </View>
@@ -142,17 +142,17 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
           {/* Details Row */}
           <View style={styles.detailsRow}>
             <View style={styles.detailItem}>
-              <MaterialIcons name="speed" size={16} color="#666" />
+              <Ionicons name="speedometer" size={16} color="#666" />
               <Text style={styles.detailText}>{formatMileage(vehicle.mileage)}</Text>
             </View>
 
             <View style={styles.detailItem}>
-              <MaterialIcons name="location-on" size={16} color="#666" />
+              <Ionicons name="location" size={16} color="#666" />
               <Text style={styles.detailText}>{vehicle.location}</Text>
             </View>
 
             <View style={styles.detailItem}>
-              <MaterialIcons name="build" size={16} color="#666" />
+              <Ionicons name="build" size={16} color="#666" />
               <Text style={styles.detailText}>{vehicle.condition}</Text>
             </View>
           </View>
@@ -160,18 +160,18 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
           {/* Dealer Info */}
           <View style={styles.dealerRow}>
             <View style={styles.dealerInfo}>
-              <MaterialIcons name="storefront" size={14} color="#666" />
+              <Ionicons name="storefront" size={14} color="#666" />
               <Text style={styles.dealerText}>{vehicle.dealerName}</Text>
             </View>
 
             {/* Stats */}
             <View style={styles.stats}>
               <View style={styles.statItem}>
-                <MaterialIcons name="visibility" size={12} color="#666" />
+                <Ionicons name="eye" size={12} color="#666" />
                 <Text style={styles.statText}>{vehicle.views}</Text>
               </View>
               <View style={styles.statItem}>
-                <MaterialIcons name="message" size={12} color="#666" />
+                <Ionicons name="message" size={12} color="#666" />
                 <Text style={styles.statText}>{vehicle.inquiries}</Text>
               </View>
             </View>
@@ -180,20 +180,20 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
           {/* Action Buttons */}
           <View style={styles.actionRow}>
             <TouchableOpacity style={styles.contactButton} onPress={onPress}>
-              <MaterialIcons name="phone" size={16} color={colors.primary} />
+              <Ionicons name="call" size={16} color={colors.primary} />
               <Text style={styles.contactText}>Contact</Text>
             </TouchableOpacity>
 
             {showCoListButton && onCoList && (
               <TouchableOpacity style={styles.coListButton} onPress={onCoList}>
-                <MaterialIcons name="share" size={16} color={colors.primary} />
+                <Ionicons name="share" size={16} color={colors.primary} />
                 <Text style={styles.coListText}>Co-List</Text>
               </TouchableOpacity>
             )}
 
             <TouchableOpacity style={styles.viewButton} onPress={onPress}>
               <Text style={styles.viewText}>View Details</Text>
-              <MaterialIcons name="chevron-right" size={16} color="#fff" />
+              <Ionicons name="chevron-forward" size={16} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>

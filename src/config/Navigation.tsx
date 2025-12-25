@@ -25,7 +25,7 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -253,7 +253,7 @@ const CustomTabBarComponent: React.FC<CustomTabBarProps> = ({
           {/* Tab Icon */}
           {showIcons && iconName && (
             <View style={styles.tabIconContainer}>
-              <MaterialIcons
+              <Ionicons
                 name={iconName as any}
                 size={scale(iconSize)}
                 color={iconColor}
@@ -415,7 +415,7 @@ const CustomHeaderComponent: React.FC<HeaderProps> = ({
           style={styles.headerAction}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <MaterialIcons
+          <Ionicons
             name="arrow-back"
             size={scale(24)}
             color={colors.text}
@@ -431,7 +431,7 @@ const CustomHeaderComponent: React.FC<HeaderProps> = ({
           style={styles.headerAction}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <MaterialIcons
+          <Ionicons
             name="menu"
             size={scale(24)}
             color={colors.text}
@@ -514,7 +514,7 @@ const CustomHeaderComponent: React.FC<HeaderProps> = ({
           style={styles.headerAction}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <MaterialIcons
+          <Ionicons
             name="search"
             size={scale(24)}
             color={colors.text}
@@ -675,13 +675,13 @@ const FloatingActionButtonComponent: React.FC<FloatingActionButtonProps> = ({
         accessibilityState={{ disabled: disabled || loading }}
       >
         {loading ? (
-          <MaterialIcons
+          <Ionicons
             name="hourglass-empty"
             size={scale(iconSizeMap)}
             color={finalColor}
           />
         ) : (
-          <MaterialIcons
+          <Ionicons
             name={icon as any}
             size={scale(iconSizeMap)}
             color={finalColor}

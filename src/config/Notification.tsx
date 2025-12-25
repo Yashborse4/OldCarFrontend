@@ -17,7 +17,7 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
   scale, 
@@ -428,8 +428,8 @@ const NotificationItemComponent: React.FC<NotificationItemProps> = ({
       >
         {/* Icon */}
         <View style={styles.iconContainer}>
-          <MaterialIcons
-            name={icon as React.ComponentProps<typeof MaterialIcons>['name']}
+          <Ionicons
+            name={icon as React.ComponentProps<typeof Ionicons>['name']}
             size={24}
                 color={notificationColors.icon}
           />
@@ -496,7 +496,7 @@ const NotificationItemComponent: React.FC<NotificationItemProps> = ({
             style={styles.dismissButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <MaterialIcons
+            <Ionicons
               name="close"
               size={18}
               color={notificationColors.icon}
