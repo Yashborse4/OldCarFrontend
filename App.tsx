@@ -15,8 +15,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { isUserAuthorized } from './src/services/auth';
 import { RootStackParamList } from './src/navigation/types';
 import { AuthProvider } from './src/context/AuthContext';
-
-
+import { ChatProvider } from './src/context/ChatContext';
 import { ToastProvider } from './src/components/ui/ToastManager';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 
@@ -51,7 +50,9 @@ function App() {
       <ToastProvider>
         <ThemeProvider>
           <AuthProvider>
-            <AppContent initialRoute={initialRoute} />
+            <ChatProvider>
+              <AppContent initialRoute={initialRoute} />
+            </ChatProvider>
           </AuthProvider>
         </ThemeProvider>
       </ToastProvider>
