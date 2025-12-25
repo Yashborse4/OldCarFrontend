@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../config';
 
@@ -70,12 +70,12 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <MaterialIcons name="arrow-back" size={24} color={colors.color} />
+            <Ionicons name="arrow-back" size={24} color={colors.color} />
           </TouchableOpacity>
 
           <View style={styles.header}>
             <View style={styles.iconContainer}>
-              <MaterialIcons name="lock-reset" size={48} color={colors.color} />
+              <Ionicons name="lock-closed" size={48} color={colors.color} />
             </View>
             <Text style={styles.title}>Reset Password</Text>
             <Text style={styles.subtitle}>

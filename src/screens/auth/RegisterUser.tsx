@@ -9,17 +9,18 @@ import {
   Modal,
   ScrollView,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gradient } from '../../components/ui/Gradient';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useAuth } from '../../context/AuthContext';
 import { validateRegistrationForm } from '../../utils/validation';
 import { useTheme } from '../../theme/ThemeContext';
 import { getRoleName } from '../../utils/permissions';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { useNotifications } from '../../components/ui/ToastManager';
+import { ApiError } from '../../services/ApiClient';
 
 import { RegisterScreenNavigationProp } from '../../navigation/types';
 
@@ -31,6 +32,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
   const { theme, isDark } = useTheme();
   const { colors } = theme;
   const { register, isLoading: authLoading } = useAuth();
+  const { showError, showSuccess, showWarning } = useNotifications();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,7 +47,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
 
     // Basic validation
     if (!email || !password) {
-      Alert.alert(
+      showError(
         'Required Fields',
         'Please enter your email and password'
       );
@@ -55,7 +57,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert(
+      showError(
         'Invalid Email',
         'Please enter a valid email address'
       );
@@ -64,7 +66,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
 
     // Password length validation
     if (password.length < 6) {
-      Alert.alert(
+      showWarning(
         'Weak Password',
         'Password must be at least 6 characters'
       );
@@ -80,10 +82,41 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
         password,
         role
       });
+
+      showSuccess(
+        'Account Created!',
+        'Welcome to CarWorld! 🎉'
+      );
       // AuthContext handles navigation on successful registration
     } catch (error: any) {
       setError(error);
       console.error('Registration error:', error);
+
+      // Show detailed error message
+      let errorMessage = 'Registration failed. Please try again.';
+
+      if (error instanceof ApiError) {
+        if (error.fieldErrors) {
+          const fieldErrorMessages = Object.values(error.fieldErrors)
+            .map((msg) => `${msg}`)
+            .join('\n');
+          if (fieldErrorMessages) {
+            errorMessage = fieldErrorMessages;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      showError(
+        'Registration Failed',
+        errorMessage,
+        { duration: 5000 }
+      );
     } finally {
       setIsLoading(false);
     }
@@ -384,7 +417,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                 {/* Quick Sign Up */}
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionIconContainer}>
-                    <MaterialIcons name="rocket-launch" size={18} color={colors.primary} />
+                    <Ionicons name="rocket" size={18} color={colors.primary} />
                   </View>
                   <Text style={styles.sectionTitle}>Quick Sign Up</Text>
                 </View>
@@ -394,7 +427,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                     label="Email Address"
                     value={email}
                     onChangeText={setEmail}
-                    leftIcon="email"
+                    leftIcon="mail-outline"
                     placeholder="your.email@example.com"
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -414,10 +447,10 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                     <Text style={styles.roleLabel}>I want to *</Text>
                     <View style={styles.roleButton}>
                       <View style={styles.roleIconContainer}>
-                        <MaterialIcons name="group" size={24} color={colors.primary} />
+                        <Ionicons name="people" size={24} color={colors.primary} />
                       </View>
                       <Text style={styles.roleText}>{getRoleName(role)}</Text>
-                      <MaterialIcons name="keyboard-arrow-down" size={26} color={colors.textSecondary} />
+                      <Ionicons name="chevron-down" size={26} color={colors.textSecondary} />
                     </View>
                   </TouchableOpacity>
                 </View>
@@ -427,8 +460,8 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                     label="Password"
                     value={password}
                     onChangeText={setPassword}
-                    leftIcon="lock"
-                    placeholder="Create a password (min 6 characters)"
+                    leftIcon="lock-closed-outline"
+                    placeholder="Create a password (min 8 chars, strong)"
                     secureTextEntry
                     returnKeyType="done"
                     required
@@ -478,7 +511,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                 onPress={() => setPickerVisible(false)}
                 style={styles.modalClose}
               >
-                <MaterialIcons name="close" size={24} color={colors.textSecondary} />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -497,7 +530,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                 styles.modalOptionIcon,
                 role === 'VIEWER' && styles.modalOptionIconSelected
               ]}>
-                <MaterialIcons
+                <Ionicons
                   name="person"
                   size={24}
                   color={role === 'VIEWER' ? colors.primary : colors.textSecondary}
@@ -508,7 +541,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.modalOptionSubtitle}>Browse, buy and sell cars</Text>
               </View>
               {role === 'VIEWER' && (
-                <MaterialIcons name="check-circle" size={24} color={colors.primary} />
+                <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
               )}
             </TouchableOpacity>
 
@@ -530,7 +563,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                 styles.modalOptionIcon,
                 role === 'DEALER' && styles.modalOptionIconSelected
               ]}>
-                <MaterialIcons
+                <Ionicons
                   name="business"
                   size={24}
                   color={role === 'DEALER' ? colors.primary : colors.textSecondary}
@@ -541,7 +574,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.modalOptionSubtitle}>Professional car dealer</Text>
               </View>
               {role === 'DEALER' && (
-                <MaterialIcons name="check-circle" size={24} color={colors.primary} />
+                <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
               )}
             </TouchableOpacity>
           </View>

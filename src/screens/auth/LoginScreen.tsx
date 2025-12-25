@@ -14,7 +14,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../components/ui/ToastManager';
 import { Button } from '../../components/ui/Button';
 import { ModernInput as Input } from '../../components/ui/InputModern';
-import MaterialIcons from '@react-native-vector-icons/material-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { setSkipLogin } from '../../services/auth';
 
 import { useTheme } from '../../theme';
 import {
@@ -63,7 +64,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [errors]);
 
-  // Handle login
   const handleLogin = useCallback(async () => {
     // Clear previous errors
     setErrors({ email: '', password: '' });
@@ -100,6 +100,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         password: formData.password.trim()
       });
 
+      await setSkipLogin(false);
       notifyLoginSuccess('Welcome back! 🎉');
       navigation.replace('Dashboard');
     } catch (error: any) {
@@ -109,6 +110,18 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       setIsLoading(false);
     }
   }, [formData, validateEmail, login, notifyLoginSuccess, notifyLoginError, navigation]);
+
+  const handleSkipLogin = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      await setSkipLogin(true);
+      navigation.replace('Dashboard');
+    } catch (error) {
+      console.error('Skip login error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [navigation]);
 
   // Memoize form validation
   const isFormValid = useMemo(() => {
@@ -237,6 +250,18 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       color: colors.primary,
       fontWeight: '700',
     },
+    skipButton: {
+      marginTop: getResponsiveSpacing('sm'),
+      paddingVertical: scaleSize(8),
+      paddingHorizontal: scaleSize(16),
+      borderRadius: getResponsiveBorderRadius('full'),
+      backgroundColor: 'transparent',
+    },
+    skipButtonText: {
+      fontSize: getResponsiveTypography('sm'),
+      color: colors.textSecondary,
+      fontWeight: '600',
+    },
   }), [colors, isDark]);
 
   return (
@@ -262,8 +287,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.header}>
               <View style={styles.logoContainer}>
                 <View style={styles.logo}>
-                  <MaterialIcons
-                    name="directions-car"
+                  <Ionicons
+                    name="car"
                     size={scaleSize(48)}
                     color="#FFFFFF"
                   />
@@ -284,7 +309,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                   autoCapitalize="none"
                   autoCorrect={false}
                   error={errors.email}
-                  leftIcon="email"
+                  leftIcon="mail-outline"
                   variant="filled"
                   accessibilityLabel="Email address input"
                   accessibilityHint="Enter your email address"
@@ -299,7 +324,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                   placeholder="••••••••"
                   secureTextEntry
                   error={errors.password}
-                  leftIcon="lock"
+                  leftIcon="lock-closed-outline"
                   variant="filled"
                   accessibilityLabel="Password input"
                   accessibilityHint="Enter your password"
@@ -326,7 +351,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 loading={isLoading}
                 disabled={isLoading || !isFormValid}
                 style={styles.loginButton}
-                icon="login"
+                icon="log-in-outline"
               />
             </View>
           </View>
@@ -346,6 +371,16 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.signUpButtonText}>Create Account</Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={handleSkipLogin}
+            activeOpacity={0.7}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Skip login and continue to dashboard"
+          >
+            <Text style={styles.skipButtonText}>Skip for now</Text>
+          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
