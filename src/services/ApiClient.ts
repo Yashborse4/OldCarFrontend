@@ -5,12 +5,14 @@ import axios, {
   InternalAxiosRequestConfig,
 } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Platform} from 'react-native';
+import { Platform } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
+
 
 // API Configuration
 const API_CONFIG = {
-  baseURL: __DEV__ ? 'http://localhost:9000' : 'https://your-production-api.com',
+
+  baseURL: 'http://10.46.185.217:9000', // Use your server's IP address
   timeout: 15000, // Increased timeout for better mobile network handling
   headers: {
     'Content-Type': 'application/json',
@@ -25,6 +27,8 @@ const STORAGE_KEYS = {
   ACCESS_TOKEN: '@carworld_access_token',
   REFRESH_TOKEN: '@carworld_refresh_token',
   USER_DATA: '@carworld_user_data',
+  TOKEN_EXPIRY: '@carworld_token_expiry',
+  REFRESH_EXPIRY: '@carworld_refresh_expiry',
 };
 
 // API Response types
@@ -42,7 +46,7 @@ export interface ApiErrorResponse {
   details: string;
   path: string;
   errorCode: string;
-  fieldErrors?: {[key: string]: string};
+  fieldErrors?: { [key: string]: string };
 }
 
 export interface AuthTokens {
@@ -60,6 +64,14 @@ export interface AuthTokens {
   refreshExpiresIn: number;
 }
 
+export interface RegisterResponse {
+  userId: number;
+  username: string;
+  email: string;
+  role: string;
+  createdAt: string;
+}
+
 export interface UserData {
   id?: string | number; // For backward compatibility with chat features
   userId: number;
@@ -75,7 +87,7 @@ export class ApiError extends Error {
   public errorCode: string;
   public details: string;
   public path: string;
-  public fieldErrors?: {[key: string]: string};
+  public fieldErrors?: { [key: string]: string };
   public status: number;
 
   constructor(response: ApiErrorResponse, status: number = 500) {
@@ -92,7 +104,7 @@ export class ApiError extends Error {
 // Network error class specifically for connection issues
 export class NetworkError extends Error {
   public isNetworkError = true;
-  
+
   constructor(message: string = 'No internet connection available') {
     super(message);
     this.name = 'NetworkError';
@@ -107,6 +119,7 @@ class ApiClient {
     reject: (error: any) => void;
   }> = [];
   private networkCheckInterval: ReturnType<typeof setTimeout> | null = null;
+  private tokenRefreshTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private retryConfig = {
     retries: 3,
     retryDelay: 1000, // Base delay in milliseconds
@@ -129,19 +142,106 @@ class ApiClient {
     this.setupInterceptors();
     this.setupRetryLogic();
     this.startNetworkMonitoring();
+    this.scheduleTokenRefreshFromStorage().catch(() => undefined);
+  }
+
+  private clearTokenRefreshTimer(): void {
+    if (this.tokenRefreshTimeoutId) {
+      clearTimeout(this.tokenRefreshTimeoutId);
+      this.tokenRefreshTimeoutId = null;
+    }
+  }
+
+  private scheduleTokenRefresh(expiresAtMs: number): void {
+    this.clearTokenRefreshTimer();
+
+    const now = Date.now();
+    const msUntilExpiry = expiresAtMs - now;
+    const refreshInMs = Math.max(msUntilExpiry - 120_000, 60_000);
+
+    if (msUntilExpiry <= 0) {
+      this.tokenRefreshTimeoutId = setTimeout(() => {
+        this.performProactiveRefresh().catch(() => undefined);
+      }, 0);
+      return;
+    }
+
+    this.tokenRefreshTimeoutId = setTimeout(() => {
+      this.performProactiveRefresh().catch(() => undefined);
+    }, refreshInMs);
+  }
+
+  async scheduleTokenRefreshFromStorage(): Promise<void> {
+    const [accessToken, refreshToken, tokenExpiry] = await AsyncStorage.multiGet([
+      STORAGE_KEYS.ACCESS_TOKEN,
+      STORAGE_KEYS.REFRESH_TOKEN,
+      STORAGE_KEYS.TOKEN_EXPIRY,
+    ]);
+
+    if (!accessToken?.[1] || !refreshToken?.[1] || !tokenExpiry?.[1]) {
+      this.clearTokenRefreshTimer();
+      return;
+    }
+
+    const expiresAtMs = Number(tokenExpiry[1]);
+    if (!Number.isFinite(expiresAtMs)) {
+      this.clearTokenRefreshTimer();
+      return;
+    }
+
+    this.scheduleTokenRefresh(expiresAtMs);
+  }
+
+  private async performProactiveRefresh(): Promise<void> {
+    const isOnline = await this.checkNetworkConnectivity();
+    if (!isOnline) {
+      this.clearTokenRefreshTimer();
+      this.tokenRefreshTimeoutId = setTimeout(() => {
+        this.performProactiveRefresh().catch(() => undefined);
+      }, 30_000);
+      return;
+    }
+
+    const [refreshToken, refreshExpiry] = await AsyncStorage.multiGet([
+      STORAGE_KEYS.REFRESH_TOKEN,
+      STORAGE_KEYS.REFRESH_EXPIRY,
+    ]);
+
+    const refreshTokenValue = refreshToken?.[1];
+    const refreshExpiryMs = refreshExpiry?.[1] ? Number(refreshExpiry[1]) : NaN;
+
+    if (!refreshTokenValue || !Number.isFinite(refreshExpiryMs) || Date.now() >= refreshExpiryMs) {
+      await this.clearAuthData();
+      return;
+    }
+
+    await this.refreshAccessToken(refreshTokenValue);
   }
 
   private setupInterceptors() {
     // Request interceptor - Add auth token to requests
     this.instance.interceptors.request.use(
       async (config: InternalAxiosRequestConfig) => {
-        try {
-          const token = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-          if (token && config.headers) {
-            config.headers.Authorization = `Bearer ${token}`;
+        // Skip adding JWT token for public auth endpoints (login, register)
+        const publicEndpoints = [
+          '/api/auth/login',
+          '/api/auth/register',
+          '/api/auth/refresh-token',
+          '/api/auth/forgot-password',
+          '/api/auth/reset-password',
+          '/api/auth/validate-token',
+        ];
+        const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
+
+        if (!isPublicEndpoint) {
+          try {
+            const token = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+            if (token && config.headers) {
+              config.headers.Authorization = `Bearer ${token}`;
+            }
+          } catch (error) {
+            console.warn('Failed to get access token:', error);
           }
-        } catch (error) {
-          console.warn('Failed to get access token:', error);
         }
 
         // Add additional headers for mobile
@@ -165,13 +265,16 @@ class ApiClient {
       },
       async (error) => {
         const originalRequest = error.config;
+        const isRefreshEndpoint = typeof originalRequest?.url === 'string'
+          ? originalRequest.url.includes('/api/auth/refresh-token')
+          : false;
 
         // Handle 401 errors and token refresh
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 401 && !originalRequest._retry && !isRefreshEndpoint) {
           if (this.isRefreshing) {
             // Queue the request if token refresh is in progress
             return new Promise((resolve, reject) => {
-              this.failedQueue.push({resolve, reject});
+              this.failedQueue.push({ resolve, reject });
             })
               .then((token) => {
                 if (originalRequest.headers) {
@@ -194,11 +297,11 @@ class ApiClient {
             if (refreshToken) {
               const newTokens = await this.refreshAccessToken(refreshToken);
               this.processQueue(newTokens.accessToken);
-              
+
               if (originalRequest.headers) {
                 originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
               }
-              
+
               return this.instance(originalRequest);
             } else {
               throw new Error('No refresh token available');
@@ -218,11 +321,11 @@ class ApiClient {
         } else if (error.request) {
           // Check if it's a network connectivity issue
           const isOnline = await this.checkNetworkConnectivity();
-          
+
           if (!isOnline) {
             throw new NetworkError('No internet connection available');
           }
-          
+
           throw new ApiError(
             {
               timestamp: new Date().toISOString(),
@@ -250,7 +353,7 @@ class ApiClient {
   }
 
   private processQueue(token: string | null) {
-    this.failedQueue.forEach(({resolve, reject}) => {
+    this.failedQueue.forEach(({ resolve, reject }) => {
       if (token) {
         resolve(token);
       } else {
@@ -321,10 +424,10 @@ class ApiClient {
         '/api/auth/login',
         credentials,
       );
-      
+
       const authData = response.data.data;
       await this.saveAuthData(authData);
-      
+
       console.log('Login successful for user:', authData.username);
       return authData;
     } catch (error: any) {
@@ -337,21 +440,16 @@ class ApiClient {
     username: string;
     email: string;
     password: string;
-    firstName?: string;
-    lastName?: string;
     role?: string;
-    location?: string;
-    phoneNumber?: string;
   }): Promise<AuthTokens> {
     try {
       const response = await this.instance.post<ApiSuccessResponse<AuthTokens>>(
         '/api/auth/register',
         userData
       );
-      
       const authData = response.data.data;
       await this.saveAuthData(authData);
-      
+
       console.log('Registration successful for user:', authData.username);
       return authData;
     } catch (error: any) {
@@ -361,7 +459,7 @@ class ApiClient {
   }
 
   async forgotPassword(username: string): Promise<void> {
-    await this.instance.post('/api/auth/forgot-password', {username});
+    await this.instance.post('/api/auth/forgot-password', { username });
   }
 
   async resetPassword(data: {
@@ -375,7 +473,7 @@ class ApiClient {
   async refreshAccessToken(refreshToken: string): Promise<AuthTokens> {
     const response = await this.instance.post<ApiSuccessResponse<AuthTokens>>(
       '/api/auth/refresh-token',
-      {refreshToken},
+      { refreshToken },
     );
     const authData = response.data.data;
     await this.saveAuthData(authData);
@@ -418,7 +516,7 @@ class ApiClient {
   private handleAuthError(error: any, defaultMessage: string): Error {
     if (error.response?.data) {
       const apiError = error.response.data;
-      
+
       // Handle field validation errors
       if (apiError.fieldErrors) {
         const fieldErrors = Object.entries(apiError.fieldErrors)
@@ -429,14 +527,14 @@ class ApiClient {
           message: fieldErrors
         }, error.response.status);
       }
-      
+
       return new ApiError(apiError, error.response.status);
     }
-    
+
     if (error.request) {
       return new NetworkError('Network error - please check your connection');
     }
-    
+
     return new Error(defaultMessage);
   }
 
@@ -546,7 +644,7 @@ class ApiClient {
       });
 
       const response = await this.instance.get(`/api/v2/cars/search?${params.toString()}`);
-      
+
       // Backend returns ApiResponse<Page<CarResponseV2>>
       if (response.data && response.data.success && response.data.data) {
         return response.data.data; // Return the Page<CarResponseV2>
@@ -611,25 +709,38 @@ class ApiClient {
     if (error instanceof ApiError || error instanceof NetworkError) {
       return error;
     }
-    
+
     if (error.response?.data) {
       const apiError = error.response.data;
       return new ApiError(apiError, error.response.status);
     }
-    
+
     if (error.request) {
       return new NetworkError('Network error - please check your connection');
     }
-    
+
     return new Error(defaultMessage);
   }
 
   // Token and storage management
   private async saveAuthData(authData: AuthTokens): Promise<void> {
     try {
+      const now = Date.now();
+      const parsedExpiresAt = authData.expiresAt ? new Date(authData.expiresAt).getTime() : NaN;
+      const parsedRefreshExpiresAt = authData.refreshExpiresAt ? new Date(authData.refreshExpiresAt).getTime() : NaN;
+
+      const accessExpiryMs = Number.isFinite(parsedExpiresAt)
+        ? parsedExpiresAt
+        : now + authData.expiresIn * 1000;
+      const refreshExpiryMs = Number.isFinite(parsedRefreshExpiresAt)
+        ? parsedRefreshExpiresAt
+        : now + authData.refreshExpiresIn * 1000;
+
       await AsyncStorage.multiSet([
         [STORAGE_KEYS.ACCESS_TOKEN, authData.accessToken],
         [STORAGE_KEYS.REFRESH_TOKEN, authData.refreshToken],
+        [STORAGE_KEYS.TOKEN_EXPIRY, accessExpiryMs.toString()],
+        [STORAGE_KEYS.REFRESH_EXPIRY, refreshExpiryMs.toString()],
         [
           STORAGE_KEYS.USER_DATA,
           JSON.stringify({
@@ -641,6 +752,7 @@ class ApiClient {
           }),
         ],
       ]);
+      this.scheduleTokenRefresh(accessExpiryMs);
     } catch (error) {
       console.error('Failed to save auth data:', error);
       throw new Error('Failed to save authentication data');
@@ -649,10 +761,13 @@ class ApiClient {
 
   private async clearAuthData(): Promise<void> {
     try {
+      this.clearTokenRefreshTimer();
       await AsyncStorage.multiRemove([
         STORAGE_KEYS.ACCESS_TOKEN,
         STORAGE_KEYS.REFRESH_TOKEN,
         STORAGE_KEYS.USER_DATA,
+        STORAGE_KEYS.TOKEN_EXPIRY,
+        STORAGE_KEYS.REFRESH_EXPIRY,
       ]);
     } catch (error) {
       console.error('Failed to clear auth data:', error);
@@ -696,13 +811,13 @@ class ApiClient {
       return validation.valid;
     } catch (error) {
       console.error('Authentication check failed:', error);
-      
+
       // If it's a network error, check if we have a token stored
       if (error instanceof NetworkError) {
         const token = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
         return !!token;
       }
-      
+
       return false;
     }
   }
