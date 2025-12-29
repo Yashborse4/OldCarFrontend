@@ -1,14 +1,74 @@
-import React from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity, StatusBar, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { useTheme } from '../../theme/ThemeContext';
+import { apiClient, ApiSuccessResponse } from '../../services/ApiClient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { useAuth } from '../../context/AuthContext';
 
 const ProfileScreen = ({ navigation }: { navigation: any }) => {
-  const { theme, isDark, toggleTheme } = useTheme();
+  const { theme, isDark } = useTheme();
   const { colors } = theme;
+  const { user, logout } = useAuth();
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [loadingImage, setLoadingImage] = useState(true);
+
+  // Fetch profile image with caching
+  // Fetch profile image with caching
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchProfileImage = async () => {
+      if (!user) return;
+
+      try {
+        if (isMounted) setLoadingImage(true);
+
+        // Fetch user profile to get the image URL
+        const response = await apiClient.get<ApiSuccessResponse<{
+          profileImageUrl: string | null;
+          [key: string]: any;
+        }>>('/user/profile');
+
+        if (!isMounted) return;
+
+        if (response.data?.data?.profileImageUrl) {
+          let fullImageUrl = response.data.data.profileImageUrl;
+
+          // If URL is relative, prepend the base URL
+          if (!fullImageUrl.startsWith('http')) {
+            const apiBaseUrl = apiClient.getBaseUrl();
+            const baseUrl = apiBaseUrl.endsWith('/') ? apiBaseUrl.slice(0, -1) : apiBaseUrl;
+            const path = fullImageUrl.startsWith('/') ? fullImageUrl : `/${fullImageUrl}`;
+            fullImageUrl = `${baseUrl}${path}`;
+          }
+
+          console.log('Profile image URL resolved:', fullImageUrl);
+          setProfileImageUrl(fullImageUrl);
+          await AsyncStorage.setItem('profile_image_url', fullImageUrl);
+        }
+      } catch (error) {
+        console.error('Error fetching profile image:', error);
+        // Keep cached image if API fails
+        const cachedImage = await AsyncStorage.getItem('profile_image_url');
+        if (isMounted && cachedImage) {
+          setProfileImageUrl(cachedImage);
+        }
+      } finally {
+        if (isMounted) setLoadingImage(false);
+      }
+    };
+
+    fetchProfileImage();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   const handleComingSoon = (feature: string) => {
     Alert.alert('Coming Soon', `${feature} feature is under development.`);
@@ -23,7 +83,16 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
         {
           text: 'Logout',
           style: 'destructive',
-          onPress: () => navigation.replace('Login'),
+          onPress: async () => {
+            try {
+              // Clear cached profile data
+              await AsyncStorage.removeItem('profile_image_url');
+              await logout();
+              navigation.replace('Login');
+            } catch (error) {
+              console.error('Logout error:', error);
+            }
+          },
         },
       ]
     );
@@ -46,38 +115,29 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
       <Card style={styles.profileCard}>
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            <Ionicons name="person-circle" size={80} color={colors.primary} />
+            {profileImageUrl ? (
+              <Image
+                source={{ uri: profileImageUrl }}
+                style={styles.avatarImage}
+              />
+            ) : (
+              <Ionicons name="person-circle" size={80} color={colors.primary} />
+            )}
           </View>
-          <Text style={[styles.userName, { color: colors.text }]}>John Doe</Text>
-          <Text style={[styles.userEmail, { color: colors.textSecondary }]}>john.doe@example.com</Text>
-          <Text style={[styles.userRole, { color: colors.textSecondary }]}>Car Enthusiast</Text>
+          <Text style={[styles.userName, { color: colors.text }]}>
+            {user?.name || user?.username || 'Guest User'}
+          </Text>
+          <Text style={[styles.userEmail, { color: colors.textSecondary }]}>
+            {user?.email || 'No email connected'}
+          </Text>
+          <Text style={[styles.userRole, { color: colors.textSecondary }]}>
+            {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase() : 'Guest'}
+          </Text>
         </View>
       </Card>
 
       {/* Settings */}
       <View style={styles.settingsContainer}>
-        {/* Theme Toggle */}
-        <Card style={styles.settingCard}>
-          <View style={styles.settingItem}>
-            <View style={styles.settingLeft}>
-              <Ionicons
-                name={isDark ? "dark-mode" : "light-mode"}
-                size={24}
-                color={colors.primary}
-              />
-              <Text style={[styles.settingLabel, { color: colors.text }]}>
-                {isDark ? "Dark Mode" : "Light Mode"}
-              </Text>
-            </View>
-            <Switch
-              value={isDark}
-              onValueChange={toggleTheme}
-              trackColor={{ false: '#E2E8F0', true: colors.primary }}
-              thumbColor="#FFFFFF"
-            />
-          </View>
-        </Card>
-
         {/* Menu Items */}
         <Card style={styles.settingCard} onPress={() => handleComingSoon('My Listings')}>
           <View style={styles.settingItem}>
@@ -161,6 +221,11 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     marginBottom: 16,
+  },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   userName: {
     fontSize: 24,
