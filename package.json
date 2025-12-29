@@ -16,6 +16,7 @@
     "bundle:size": "node scripts/analyze-bundle-size.js"
   },
   "dependencies": {
+    "@apollo/client": "^4.0.11",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/blur": "^4.4.1",
     "@react-native-community/geolocation": "^3.4.0",
@@ -31,6 +32,7 @@
     "@stomp/stompjs": "^7.1.1",
     "axios": "^1.11.0",
     "crypto-js": "^4.2.0",
+    "graphql": "^16.12.0",
     "ionicons": "^8.0.13",
     "react": "19.1.0",
     "react-native": "0.81.1",
