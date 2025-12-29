@@ -21,6 +21,8 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { VehicleCard } from '../../config/VehicleCard';
 import { carApi } from '../../services/CarApi';
+import { useLazyQuery } from '@apollo/client/react';
+import { SEARCH_CARS_QUERY } from '../../services/queries';
 
 const { width } = Dimensions.get('window');
 
@@ -55,6 +57,16 @@ interface QuickFilter {
   icon: string;
 }
 
+interface SearchCarsResult {
+  searchCars: {
+    content: any[];
+    totalPages: number;
+    totalElements: number;
+    pageNumber: number;
+    pageSize: number;
+  };
+}
+
 const VehicleSearchScreen: React.FC = () => {
   const navigation = useNavigation<VehicleSearchNavigationProp>();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -83,6 +95,7 @@ const VehicleSearchScreen: React.FC = () => {
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+
   const colors = {
     background: '#FAFBFC',
     surface: '#FFFFFF',
@@ -244,99 +257,127 @@ const VehicleSearchScreen: React.FC = () => {
     { value: 'mileage-high', label: 'Mileage: High to Low' },
   ];
 
-  useEffect(() => {
-    loadVehicles();
+  // Execute search query
+  const [searchCars, { loading: queryLoading, data, fetchMore, refetch }] = useLazyQuery<SearchCarsResult>(SEARCH_CARS_QUERY, {
+    notifyOnNetworkStatusChange: true,
+  });
+
+
+
+  // Map filters to GraphQL input
+  const getSearchInput = useCallback((currentFilters: SearchFilters, pageNum: number) => {
+    return {
+      keyword: currentFilters.searchText || null,
+      brands: currentFilters.make.length > 0 ? currentFilters.make : null,
+      models: currentFilters.model.length > 0 ? currentFilters.model : null,
+      minYear: currentFilters.yearMin ? parseInt(currentFilters.yearMin) : null,
+      maxYear: currentFilters.yearMax ? parseInt(currentFilters.yearMax) : null,
+      minPrice: currentFilters.priceMin ? parseFloat(currentFilters.priceMin) : null,
+      maxPrice: currentFilters.priceMax ? parseFloat(currentFilters.priceMax) : null,
+      cities: currentFilters.location.length > 0 ? currentFilters.location : null,
+      fuelTypes: currentFilters.fuelType.length > 0 ? currentFilters.fuelType : null,
+      transmissions: currentFilters.transmission.length > 0 ? currentFilters.transmission : null,
+      page: pageNum - 1, // backend is 0-indexed
+      size: 20
+    };
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [vehicles, filters]);
 
-  const loadVehicles = useCallback(async () => {
+  const loadVehicles = useCallback(async (reset = false) => {
     try {
       setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setVehicles(mockVehiclesMemo);
-        setLoading(false);
-      }, 1000);
+      const pageToFetch = reset ? 1 : page;
+      if (reset) {
+        setPage(1);
+        setVehicles([]);
+        setFilteredVehicles([]); // Clear list on new search
+      }
+
+      const input = getSearchInput(filters, pageToFetch);
+
+      if (reset) {
+        await searchCars({
+          variables: { input }
+        });
+      } else {
+        await fetchMore({
+          variables: { input },
+        });
+      }
     } catch (error) {
       console.error('Error loading vehicles:', error);
+    } finally {
       setLoading(false);
     }
-  }, [mockVehiclesMemo]);
+  }, [filters, page, searchCars, fetchMore, getSearchInput]);
 
-  const applyFilters = useCallback(() => {
-    let filtered = vehicles;
+  useEffect(() => {
+    // Initial load
+    loadVehicles(true);
+  }, []); // Only run once on mount, specific filter changes trigger via other means if needed, or we rely on user hitting search/apply
 
-    // Text search
-    if (filters.searchText) {
-      const searchLower = filters.searchText.toLowerCase();
-      filtered = filtered.filter(vehicle =>
-        vehicle.make.toLowerCase().includes(searchLower) ||
-        vehicle.model.toLowerCase().includes(searchLower) ||
-        vehicle.dealerName.toLowerCase().includes(searchLower) ||
-        vehicle.location.toLowerCase().includes(searchLower)
-      );
-    }
+  // Update vehicles when data changes
+  useEffect(() => {
+    if (data?.searchCars?.content) {
+      const newVehicles = data.searchCars.content.map((car: any) => ({
+        id: car.id,
+        make: car.brand,
+        model: car.model,
+        year: car.year,
+        price: car.price,
+        mileage: car.mileage || 0,
+        location: car.city || 'N/A',
+        condition: car.condition || 'Used',
+        images: car.thumbnailUrl ? [car.thumbnailUrl] : [],
+        dealerId: car.sellerType === 'DEALER' ? 'dealer_placeholder' : 'private_placeholder', // You might want to get actual owner ID if available
+        dealerName: car.ownerName || (car.verifiedDealer ? 'Verified Dealer' : 'Private Seller'),
+        isCoListed: false, // Not in search result yet
+        coListedIn: [],
+        views: car.views || 0,
+        inquiries: 0,
+        shares: 0,
+        specifications: {
+          fuelType: car.fuelType,
+          transmission: car.transmission
+        }
+      }));
 
-    // Make filter
-    if (filters.make.length > 0) {
-      filtered = filtered.filter(vehicle => filters.make.includes(vehicle.make));
-    }
+      if (page === 1) {
+        setVehicles(newVehicles);
+        setFilteredVehicles(newVehicles);
+      } else {
+        setVehicles(prev => [...prev, ...newVehicles]);
+        setFilteredVehicles(prev => [...prev, ...newVehicles]);
+      }
 
-    // Model filter
-    if (filters.model.length > 0) {
-      filtered = filtered.filter(vehicle => filters.model.includes(vehicle.model));
+      setHasMore(data.searchCars.pageNumber < data.searchCars.totalPages - 1);
     }
+  }, [data, page]);
 
-    // Year range
-    if (filters.yearMin) {
-      filtered = filtered.filter(vehicle => vehicle.year >= parseInt(filters.yearMin));
-    }
-    if (filters.yearMax) {
-      filtered = filtered.filter(vehicle => vehicle.year <= parseInt(filters.yearMax));
-    }
+  // Debounce filter changes or handle Apply button
+  // For now, let's trigger search when filters change (debouncing might be needed for text)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadVehicles(true);
+    }, 500); // 500ms debounce
+    return () => clearTimeout(timer);
+  }, [filters]);
 
-    // Price range
-    if (filters.priceMin) {
-      filtered = filtered.filter(vehicle => vehicle.price >= parseInt(filters.priceMin));
-    }
-    if (filters.priceMax) {
-      filtered = filtered.filter(vehicle => vehicle.price <= parseInt(filters.priceMax));
-    }
+  // Client-side filtering is no longer needed as backend does it, 
+  // but if we want to sort client side we can. 
+  // Ideally backend implementation handles sort, but schema didn't have sort param yet?
+  // Our schema doesn't seem to have sort in CarSearchInput yet.
+  // The plan didn't explicitly mention adding Sort to backend input.
+  // We can do client side sort for current page, OR add sort to backend.
+  // Given user asked for 'proper' implementation, backend sort is better, but sticky changes.
+  // Let's stick to client sorting of the *fetched* results for now to minimize backend changes not in plan,
+  // or just accept that sort might only apply to current page.
+  // Actually the previous code did applyFilters client side. 
+  // We should update applyFilters to ONLY do sorting, not filtering.
 
-    // Mileage
-    if (filters.mileageMax) {
-      filtered = filtered.filter(vehicle => vehicle.mileage <= parseInt(filters.mileageMax));
-    }
-
-    // Location filter
-    if (filters.location.length > 0) {
-      filtered = filtered.filter(vehicle => filters.location.includes(vehicle.location));
-    }
-
-    // Condition filter
-    if (filters.condition.length > 0) {
-      filtered = filtered.filter(vehicle => filters.condition.includes(vehicle.condition));
-    }
-
-    // Fuel type filter
-    if (filters.fuelType.length > 0) {
-      filtered = filtered.filter(vehicle =>
-        vehicle.specifications?.fuelType && filters.fuelType.includes(vehicle.specifications.fuelType)
-      );
-    }
-
-    // Transmission filter
-    if (filters.transmission.length > 0) {
-      filtered = filtered.filter(vehicle =>
-        vehicle.specifications?.transmission && filters.transmission.includes(vehicle.specifications.transmission)
-      );
-    }
-
-    // Sort
-    filtered.sort((a, b) => {
+  const applyClientSideSort = useCallback(() => {
+    let sorted = [...vehicles];
+    sorted.sort((a, b) => {
       switch (filters.sortBy) {
         case 'price-low':
           return a.price - b.price;
@@ -354,9 +395,42 @@ const VehicleSearchScreen: React.FC = () => {
           return 0;
       }
     });
+    setFilteredVehicles(sorted);
+  }, [vehicles, filters.sortBy]);
 
-    setFilteredVehicles(filtered);
-  }, [vehicles, filters]);
+
+  useEffect(() => {
+    applyClientSideSort();
+  }, [vehicles, filters.sortBy]);
+
+
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      setPage(p => p + 1);
+      // useEffect on page change will trigger fetchMore if we wire it up, 
+      // but easier to call fetchMore directly here?
+      // actually loadVehicles depends on 'page'.
+      // Let's just update page, and let a useEffect trigger load?
+      // BUT loadVehicles(true) resets page.
+      // Let's make loadVehicles handle the current 'page' state.
+
+      // Better approach:
+      // Just call fetchMore here.
+      const input = getSearchInput(filters, page + 1);
+      fetchMore({
+        variables: { input },
+        updateQuery: (prev: SearchCarsResult, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev;
+          return Object.assign({}, prev, {
+            searchCars: {
+              ...fetchMoreResult.searchCars,
+              content: [...prev.searchCars.content, ...fetchMoreResult.searchCars.content]
+            }
+          });
+        }
+      });
+    }
+  };
 
   const updateFilter = (key: keyof SearchFilters, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -533,13 +607,18 @@ const VehicleSearchScreen: React.FC = () => {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.vehiclesList}
         showsVerticalScrollIndicator={false}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={loading && page > 1 ? <ActivityIndicator style={{ margin: 20 }} /> : null}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="search-off" size={60} color="#ddd" />
-            <Text style={styles.emptyStateText}>
-              No vehicles match your search criteria
-            </Text>
-          </View>
+          !loading && filteredVehicles.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="search-off" size={60} color="#ddd" />
+              <Text style={styles.emptyStateText}>
+                No vehicles match your search criteria
+              </Text>
+            </View>
+          ) : null
         }
       />
 

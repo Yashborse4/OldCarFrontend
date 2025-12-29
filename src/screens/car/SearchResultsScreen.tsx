@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Modal,
   Dimensions,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -51,13 +52,39 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const searchInputRef = useRef<TextInput>(null);
 
   // Filter state
   const [tempFilters, setTempFilters] = useState<VehicleSearchFilters>(filters);
 
+  // Auto-focus search input on mount
   useEffect(() => {
-    searchVehicles(true);
+    setTimeout(() => searchInputRef.current?.focus(), 100);
   }, []);
+
+  // Debounced search effect
+  useEffect(() => {
+    if (searchQuery.length === 0) {
+      setVehicles([]);
+      setTotalResults(0);
+      return;
+    }
+
+    if (searchQuery.length < 2) {
+      return;
+    }
+
+    setIsSearching(true);
+    const debounceTimer = setTimeout(() => {
+      searchVehicles(true);
+    }, 300);
+
+    return () => {
+      clearTimeout(debounceTimer);
+    };
+  }, [searchQuery]);
 
   const searchVehicles = useCallback(async (reset: boolean = false, pageOverride?: number) => {
     try {
@@ -71,6 +98,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
       const nextPage = reset ? 0 : (pageOverride ?? 0);
       const searchFilters = {
         ...filters,
+        query: searchQuery || undefined,
         page: nextPage,
         size: 10,
         sort: sortBy,
@@ -95,6 +123,7 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
       setLoading(false);
       setLoadingMore(false);
       setRefreshing(false);
+      setIsSearching(false);
     }
   }, [filters, sortBy]);
 
@@ -143,21 +172,37 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
         <Ionicons name="arrow-back" size={24} color={colors.text} />
       </TouchableOpacity>
 
-      <View style={styles.headerContent}>
-        <Text style={styles.headerTitle}>Search Results</Text>
-        <Text style={styles.resultCount}>
-          {totalResults} vehicle{totalResults !== 1 ? 's' : ''} found
-        </Text>
+      <View style={styles.searchInputContainer}>
+        <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
+        <TextInput
+          ref={searchInputRef}
+          style={styles.searchInput}
+          placeholder="Search cars, brands, or budget..."
+          placeholderTextColor={colors.textSecondary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoFocus={true}
+          returnKeyType="search"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity
+            onPress={() => setSearchQuery('')}
+            style={styles.clearButton}
+          >
+            <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+        )}
+        {isSearching && (
+          <ActivityIndicator size="small" color={colors.primary} style={styles.searchLoader} />
+        )}
       </View>
 
-      <View style={styles.headerActions}>
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => setShowFilters(true)}
-        >
-          <Ionicons name="filter-list" size={24} color={colors.primary} />
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={styles.filterButton}
+        onPress={() => setShowFilters(true)}
+      >
+        <Ionicons name="options" size={24} color={colors.primary} />
+      </TouchableOpacity>
     </View>
   );
 
@@ -330,21 +375,74 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
     </Modal>
   );
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <Ionicons name="search-off" size={80} color={colors.textSecondary} />
-      <Text style={styles.emptyStateTitle}>No vehicles found</Text>
-      <Text style={styles.emptyStateText}>
-        Try adjusting your search filters or search terms
-      </Text>
-      <Button
-        title="Clear Filters"
-        onPress={clearFilters}
-        variant="outline"
-        style={styles.clearFiltersButton}
-      />
-    </View>
-  );
+  const renderEmptyState = () => {
+    // If query is empty, show popular searches
+    if (searchQuery.length === 0) {
+      const popularSearches = [
+        'SUVs under ₹20L',
+        'Honda City',
+        'Low mileage cars',
+        'Automatic transmission',
+        'Diesel cars',
+        'Toyota Fortuner',
+        'Hyundai Creta',
+        'Cars in Mumbai',
+      ];
+
+      return (
+        <View style={styles.popularSearchesContainer}>
+          <Text style={styles.popularSearchesTitle}>Popular Searches</Text>
+          <View style={styles.popularSearchesGrid}>
+            {popularSearches.map((search, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.popularSearchChip}
+                onPress={() => setSearchQuery(search)}
+              >
+                <Ionicons name="search" size={16} color={colors.textSecondary} />
+                <Text style={styles.popularSearchText}>{search}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      );
+    }
+
+    // If query too short, show hint
+    if (searchQuery.length > 0 && searchQuery.length < 2) {
+      return (
+        <View style={styles.emptyState}>
+          <Ionicons name="create-outline" size={60} color={colors.textSecondary} />
+          <Text style={styles.emptyStateTitle}>Keep typing...</Text>
+          <Text style={styles.emptyStateText}>
+            Enter at least 2 characters to search
+          </Text>
+        </View>
+      );
+    }
+
+    // If searching, show loading
+    if (isSearching) {
+      return null; // Loading handled by main loading state
+    }
+
+    // If no results found
+    return (
+      <View style={styles.emptyState}>
+        <Ionicons name="search-off" size={80} color={colors.textSecondary} />
+        <Text style={styles.emptyStateTitle}>No vehicles found</Text>
+        <Text style={styles.emptyStateText}>
+          Try adjusting your search terms or filters
+        </Text>
+        <Button
+          title="Clear Search"
+          onPress={() => setSearchQuery('')}
+          variant="outline"
+          style={styles.clearFiltersButton}
+        />
+      </View>
+    );
+  };
 
   const renderLoadingFooter = () => {
     if (!loadingMore) return null;
@@ -592,6 +690,61 @@ const styles = StyleSheet.create({
   },
   applyButton: {
     width: '100%',
+  },
+  searchInputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginHorizontal: 8,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1a1a1a',
+    paddingVertical: 10,
+  },
+  clearButton: {
+    padding: 4,
+    marginLeft: 4,
+  },
+  searchLoader: {
+    marginLeft: 8,
+  },
+  popularSearchesContainer: {
+    padding: 20,
+  },
+  popularSearchesTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    marginBottom: 16,
+  },
+  popularSearchesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  popularSearchChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    gap: 8,
+  },
+  popularSearchText: {
+    fontSize: 14,
+    color: '#1a1a1a',
+    fontWeight: '500',
   },
 });
 
