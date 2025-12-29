@@ -5,6 +5,7 @@ export enum UserRole {
   ADMIN = 'ADMIN',
   DEALER = 'DEALER',
   SELLER = 'SELLER',
+  USER = 'USER',
   VIEWER = 'VIEWER',
 }
 
@@ -65,6 +66,10 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_ANALYTICS,
   ],
   [UserRole.VIEWER]: [
+    Permission.VIEW_CAR,
+    Permission.CHAT_WITH_USERS,
+  ],
+  [UserRole.USER]: [
     Permission.VIEW_CAR,
     Permission.CHAT_WITH_USERS,
   ],
@@ -187,6 +192,7 @@ export const getRoleName = (role: string): string => {
       return 'Dealer';
     case UserRole.SELLER:
       return 'Seller';
+    case UserRole.USER:
     case UserRole.VIEWER:
       return 'Normal User';
     default:

@@ -6,6 +6,7 @@ import { createStackNavigator, TransitionPresets, CardStyleInterpolators, Header
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterUser from '../screens/auth/RegisterUser';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
+import EmailVerificationScreen from '../screens/auth/EmailVerificationScreen';
 
 // Main App Screens
 import DashboardScreen from '../screens/main/DashboardScreenModern';
@@ -106,6 +107,7 @@ const AppNavigator = ({ initialRouteName }: { initialRouteName: keyof RootStackP
       />
       <Stack.Screen name="RegisterUser" component={RegisterUser} />
       <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
+      <Stack.Screen name="EmailVerificationScreen" component={EmailVerificationScreen} />
       
       {/* Main App Screens */}
       <Stack.Screen name="Dashboard" component={DashboardScreen} />

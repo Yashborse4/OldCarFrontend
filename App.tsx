@@ -18,6 +18,8 @@ import { AuthProvider } from './src/context/AuthContext';
 import { ChatProvider } from './src/context/ChatContext';
 import { ToastProvider } from './src/components/ui/ToastManager';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { ApolloProvider } from '@apollo/client/react';
+import { client } from './src/services/graphql';
 
 function App() {
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
@@ -51,7 +53,9 @@ function App() {
         <ThemeProvider>
           <AuthProvider>
             <ChatProvider>
-              <AppContent initialRoute={initialRoute} />
+              <ApolloProvider client={client}>
+                <AppContent initialRoute={initialRoute} />
+              </ApolloProvider>
             </ChatProvider>
           </AuthProvider>
         </ThemeProvider>
