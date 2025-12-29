@@ -101,8 +101,16 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       });
 
       await setSkipLogin(false);
-      notifyLoginSuccess('Welcome back! 🎉');
-      navigation.replace('Dashboard');
+
+      // Decide next screen based on email verification flag
+      // If email not verified, send user to verification screen and block main app
+      if ((await import('../../context/AuthContext')).useAuth().user?.emailVerified === false) {
+        notifyLoginSuccess('Check your email to verify your account.');
+        navigation.replace('EmailVerificationScreen');
+      } else {
+        notifyLoginSuccess('Welcome back! 🎉');
+        navigation.replace('Dashboard');
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       notifyLoginError(error.message || 'Login failed. Please try again.');
@@ -218,10 +226,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       letterSpacing: 0.2,
     },
     footer: {
-      position: 'absolute',
-      bottom: hp(4),
-      left: getResponsiveSpacing('lg'),
-      right: getResponsiveSpacing('lg'),
+      marginTop: getResponsiveSpacing('xxl'),
       alignItems: 'center',
       backgroundColor: isDark ? 'rgba(28, 28, 30, 0.95)' : colors.surface,
       paddingVertical: getResponsiveSpacing('md'),
@@ -275,7 +280,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.gradientBackground} />
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
         <ScrollView
@@ -355,35 +360,34 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               />
             </View>
           </View>
-        </ScrollView>
-
-        <View style={styles.footer}>
-          <View style={styles.signUpContainer}>
-            <Text style={styles.signUpText}>Don't have an account?</Text>
+          <View style={styles.footer}>
+            <View style={styles.signUpContainer}>
+              <Text style={styles.signUpText}>Don't have an account?</Text>
+              <TouchableOpacity
+                style={styles.signUpButton}
+                onPress={() => navigation.navigate('RegisterUser')}
+                activeOpacity={0.7}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel="Create new account"
+              >
+                <Text style={styles.signUpButtonText}>Create Account</Text>
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity
-              style={styles.signUpButton}
-              onPress={() => navigation.navigate('RegisterUser')}
+              style={styles.skipButton}
+              onPress={handleSkipLogin}
               activeOpacity={0.7}
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel="Create new account"
+              accessibilityLabel="Skip login and continue to dashboard"
             >
-              <Text style={styles.signUpButtonText}>Create Account</Text>
+              <Text style={styles.skipButtonText}>Skip for now</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.skipButton}
-            onPress={handleSkipLogin}
-            activeOpacity={0.7}
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Skip login and continue to dashboard"
-          >
-            <Text style={styles.skipButtonText}>Skip for now</Text>
-          </TouchableOpacity>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 };
 
