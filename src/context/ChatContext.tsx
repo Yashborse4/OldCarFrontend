@@ -135,12 +135,12 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
       const conversations = state.conversations.map(conv => {
         if (conv.id === conversationId) {
           const newMessages = [...conv.messages, message];
-          const unreadCount = message.senderId !== conv.participant.id 
-            ? conv.unreadCount 
-            : state.activeConversation === conversationId 
-              ? 0 
+          const unreadCount = message.senderId !== conv.participant.id
+            ? conv.unreadCount
+            : state.activeConversation === conversationId
+              ? 0
               : conv.unreadCount + 1;
-          
+
           return {
             ...conv,
             messages: newMessages,
@@ -165,11 +165,11 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
         conversations: state.conversations.map(conv =>
           conv.id === conversationId
             ? {
-                ...conv,
-                messages: conv.messages.map(msg =>
-                  msg.id === messageId ? { ...msg, ...updates } : msg
-                ),
-              }
+              ...conv,
+              messages: conv.messages.map(msg =>
+                msg.id === messageId ? { ...msg, ...updates } : msg
+              ),
+            }
             : conv
         ),
       };
@@ -201,7 +201,7 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
     case 'SET_TYPING': {
       const { conversationId, userId, isTyping } = action.payload;
       const currentTypers = state.typingUsers[conversationId] || [];
-      
+
       let newTypers: string[];
       if (isTyping) {
         newTypers = currentTypers.includes(userId) ? currentTypers : [...currentTypers, userId];
@@ -250,13 +250,13 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
         conversations: state.conversations.map(conv =>
           conv.participant.id === participantId
             ? {
-                ...conv,
-                participant: {
-                  ...conv.participant,
-                  isOnline,
-                  lastSeen: lastSeen || conv.participant.lastSeen,
-                },
-              }
+              ...conv,
+              participant: {
+                ...conv.participant,
+                isOnline,
+                lastSeen: lastSeen || conv.participant.lastSeen,
+              },
+            }
             : conv
         ),
       };
@@ -276,26 +276,26 @@ interface ChatContextType {
   setActiveConversation: (conversationId: string | null) => void;
   pinConversation: (conversationId: string) => void;
   deleteConversation: (conversationId: string) => void;
-  
+
   // Message management
   sendMessage: (conversationId: string, text: string) => Promise<void>;
   sendImage: (conversationId: string, imageUri: string) => Promise<void>;
   sendLocation: (conversationId: string, latitude: number, longitude: number, address: string) => Promise<void>;
   sendCarShare: (conversationId: string, carId: string) => Promise<void>;
   markMessagesAsRead: (conversationId: string, messageIds: string[]) => void;
-  
+
   // Typing indicators
   startTyping: (conversationId: string) => void;
   stopTyping: (conversationId: string) => void;
-  
+
   // Real-time updates
   connectWebSocket: () => void;
   disconnectWebSocket: () => void;
-  
+
   // Notifications
   markNotificationAsRead: (notificationId: string) => void;
   clearAllNotifications: () => void;
-  
+
   // Utilities
   getConversation: (conversationId: string) => ChatConversation | undefined;
   searchMessages: (query: string) => ChatMessage[];
@@ -313,35 +313,16 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(chatReducer, initialState);
   const authContext = useContext(AuthContext);
   const user = authContext?.user;
-  
+
   // WebSocket connection for real-time messaging
   let websocket: WebSocket | null = null;
 
-  // Load conversations from API
   const loadConversations = async () => {
     try {
       // TODO: Replace with actual API call
-      const mockConversations: ChatConversation[] = [
-        {
-          id: '1',
-          participant: {
-            id: 'buyer1',
-            name: 'Rajesh Kumar',
-            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-            type: 'buyer',
-            isOnline: true,
-            location: 'Mumbai, Maharashtra'
-          },
-          messages: [],
-          unreadCount: 3,
-          isPinned: true,
-          relatedCarId: 'car1',
-          relatedCarTitle: '2020 Honda City VX CVT',
-          conversationType: 'buyer_inquiry',
-          isTyping: false
-        }
-      ];
-      
+      // For now, start with empty conversations
+      const mockConversations: ChatConversation[] = [];
+
       dispatch({ type: 'SET_CONVERSATIONS', payload: mockConversations });
     } catch (error) {
       console.error('Failed to load conversations:', error);
@@ -360,7 +341,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         conversationType: participant.type === 'dealer' ? 'dealer_network' : 'buyer_inquiry',
         isTyping: false
       };
-      
+
       // TODO: API call to create conversation
       dispatch({ type: 'ADD_CONVERSATION', payload: newConversation });
       return newConversation.id;
@@ -373,15 +354,15 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   // Set active conversation
   const setActiveConversation = (conversationId: string | null) => {
     dispatch({ type: 'SET_ACTIVE_CONVERSATION', payload: conversationId });
-    
+
     if (conversationId) {
       // Mark messages as read when opening conversation
       const conversation = state.conversations.find(conv => conv.id === conversationId);
       if (conversation && conversation.unreadCount > 0) {
         const unreadMessageIds = conversation.messages
-          .filter(msg => !msg.isRead && msg.senderId !== user?.id)
+          .filter(msg => !msg.isRead && msg.senderId !== user?.userId)
           .map(msg => msg.id);
-        
+
         if (unreadMessageIds.length > 0) {
           markMessagesAsRead(conversationId, unreadMessageIds);
         }
@@ -414,15 +395,15 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         id: Date.now().toString(),
         text,
         timestamp: new Date(),
-        senderId: user?.id || 'current_user',
-        senderName: user?.name || 'You',
+        senderId: user?.userId || 'current_user',
+        senderName: user?.username || 'You',
         type: 'text',
         isRead: false,
         deliveryStatus: 'sending'
       };
 
       dispatch({ type: 'ADD_MESSAGE', payload: { conversationId, message } });
-      
+
       // TODO: API call to send message
       // Simulate message delivery
       setTimeout(() => {
@@ -458,8 +439,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         id: Date.now().toString(),
         text: '',
         timestamp: new Date(),
-        senderId: user?.id || 'current_user',
-        senderName: user?.name || 'You',
+        senderId: user?.userId || 'current_user',
+        senderName: user?.username || 'You',
         type: 'image',
         imageUrl: imageUri,
         isRead: false,
@@ -467,7 +448,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       };
 
       dispatch({ type: 'ADD_MESSAGE', payload: { conversationId, message } });
-      
+
       // TODO: Upload image and send message via API
     } catch (error) {
       console.error('Failed to send image:', error);
@@ -490,7 +471,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       };
 
       dispatch({ type: 'ADD_MESSAGE', payload: { conversationId, message } });
-      
+
       // TODO: API call to send location
     } catch (error) {
       console.error('Failed to send location:', error);
@@ -524,7 +505,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       };
 
       dispatch({ type: 'ADD_MESSAGE', payload: { conversationId, message } });
-      
+
       // TODO: API call to send car share
     } catch (error) {
       console.error('Failed to send car share:', error);
@@ -534,7 +515,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   // Mark messages as read
   const markMessagesAsRead = (conversationId: string, messageIds: string[]) => {
     dispatch({ type: 'MARK_MESSAGES_READ', payload: { conversationId, messageIds } });
-    
+
     // TODO: API call to mark messages as read
   };
 
@@ -543,20 +524,20 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     if (user?.id) {
       dispatch({
         type: 'SET_TYPING',
-        payload: { conversationId, userId: user.id, isTyping: true }
+        payload: { conversationId, userId: user.userId, isTyping: true }
       });
-      
+
       // TODO: Send typing status via WebSocket
     }
   };
 
   const stopTyping = (conversationId: string) => {
-    if (user?.id) {
+    if (user?.userId) {
       dispatch({
         type: 'SET_TYPING',
-        payload: { conversationId, userId: user.id, isTyping: false }
+        payload: { conversationId, userId: user.userId, isTyping: false }
       });
-      
+
       // TODO: Send typing status via WebSocket
     }
   };
@@ -566,7 +547,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     try {
       // TODO: Replace with actual WebSocket URL
       // websocket = new WebSocket('ws://your-api-url/chat');
-      
+
       // websocket.onopen = () => {
       //   dispatch({ type: 'SET_CONNECTION_STATUS', payload: true });
       // };
@@ -583,7 +564,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       // websocket.onerror = (error) => {
       //   console.error('WebSocket error:', error);
       // };
-      
+
       // Simulate connection for demo
       dispatch({ type: 'SET_CONNECTION_STATUS', payload: true });
     } catch (error) {
@@ -607,7 +588,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
           type: 'ADD_MESSAGE',
           payload: { conversationId: data.conversationId, message: data.message }
         });
-        
+
         // Add notification if not in active conversation
         if (state.activeConversation !== data.conversationId) {
           const notification: ChatNotification = {
@@ -620,7 +601,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
           dispatch({ type: 'ADD_NOTIFICATION', payload: notification });
         }
         break;
-        
+
       case 'typing_status':
         dispatch({
           type: 'SET_TYPING',
@@ -631,7 +612,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
           }
         });
         break;
-        
+
       case 'user_status':
         dispatch({
           type: 'UPDATE_PARTICIPANT_STATUS',
@@ -662,7 +643,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const searchMessages = (query: string): ChatMessage[] => {
     const results: ChatMessage[] = [];
     const lowercaseQuery = query.toLowerCase();
-    
+
     state.conversations.forEach(conversation => {
       conversation.messages.forEach(message => {
         if (message.text.toLowerCase().includes(lowercaseQuery)) {
@@ -670,7 +651,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         }
       });
     });
-    
+
     return results.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   };
 

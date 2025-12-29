@@ -26,12 +26,14 @@ interface BottomNavigationProps {
   items: NavigationItem[];
   activeRoute: string;
   onPress: (route: string, item: NavigationItem) => void;
+  accessibilityLabel?: string;
 }
 
 export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   items,
   activeRoute,
   onPress,
+  accessibilityLabel,
 }) => {
   const insets = useSafeAreaInsets();
   const { theme, isDark } = useTheme();
@@ -166,7 +168,10 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   }, [activeRoute, handlePress]);
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+    <View
+      style={[styles.container, { paddingBottom: insets.bottom }]}
+      accessibilityLabel={accessibilityLabel}
+    >
       {/* Background */}
       <View
         style={[

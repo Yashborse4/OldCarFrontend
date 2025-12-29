@@ -25,6 +25,7 @@ import { Gradient } from '../../components/ui/Gradient';
 import { useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { useChat } from '../../context/ChatContext';
+import { carApi, Vehicle } from '../../services/CarApi';
 import {
   scaleSize,
   getResponsiveSpacing,
@@ -74,56 +75,7 @@ const QUICK_ACTIONS = [
   },
 ];
 
-const CAR_LISTINGS = [
-  {
-    id: 1,
-    image: 'https://images.pexels.com/photos/358070/pexels-photo-358070.jpeg?auto=compress&w=400',
-    title: 'Mercedes-Benz C-Class',
-    certified: true,
-    verified: true,
-    price: '₹28,50,000',
-    originalPrice: '₹32,00,000',
-    location: 'Mumbai',
-    year: 2020,
-    km: '25,000',
-    fuel: 'Petrol',
-    rating: 4.8,
-    discount: '₹3.5L off',
-    savings: 11,
-  },
-  {
-    id: 2,
-    image: 'https://images.pexels.com/photos/170782/pexels-photo-170782.jpeg?auto=compress&w=400',
-    title: 'BMW 3 Series',
-    certified: false,
-    verified: true,
-    price: '₹35,80,000',
-    originalPrice: '₹38,50,000',
-    location: 'Delhi',
-    year: 2019,
-    km: '32,000',
-    fuel: 'Diesel',
-    rating: 4.6,
-    discount: '₹2.7L off',
-    savings: 7,
-  },
-  {
-    id: 3,
-    image: 'https://images.pexels.com/photos/358070/pexels-photo-358070.jpeg?auto=compress&w=400',
-    title: 'Audi A4',
-    certified: true,
-    verified: false,
-    price: '₹42,20,000',
-    originalPrice: '₹45,00,000',
-    location: 'Bangalore',
-    year: 2021,
-    km: '18,000',
-    fuel: 'Petrol',
-    rating: 4.9,
-    discount: '₹2.8L off',
-    savings: 6,
-  },
-];
+
 
 const BOTTOM_NAV_ITEMS = [
   { id: 'home', icon: 'home', label: 'Home', route: 'home' },
@@ -138,16 +90,26 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
   const { theme, isDark } = useTheme();
   const { colors } = theme;
   const { width: windowWidth } = useWindowDimensions();
-  const { isAuthenticated } = useAuth();
-  const { getUnreadCount } = useChat();
+  const { isAuthenticated, user } = useAuth();
+  const { getUnreadCount, state: chatState } = useChat();
   const [selectedCity, setSelectedCity] = useState('Mumbai');
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [currentRoute, setCurrentRoute] = useState('home');
   const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [featuredCars, setFeaturedCars] = useState<Vehicle[]>([]);
+  const [loadingCars, setLoadingCars] = useState(true);
+  const [totalCars, setTotalCars] = useState(0);
   const scrollY = useRef(new Animated.Value(0)).current; // Properly dispose of animated value
   const flatListRef = useRef<FlatList>(null);
+
+  // Redirect unverified users to dedicated verification screen
+  useEffect(() => {
+    if (isAuthenticated && user && user.emailVerified === false) {
+      navigation.replace('EmailVerificationScreen');
+    }
+  }, [isAuthenticated, user, navigation]);
 
   // Enhanced refresh with error handling
   const onRefresh = useCallback(async () => {
@@ -164,14 +126,39 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
     }
   }, []);
 
+  const fetchFeaturedCars = useCallback(async () => {
+    try {
+      setLoadingCars(true);
+      const response = await carApi.searchVehicles({
+        featured: true,
+        size: 10,
+        page: 0
+      });
+
+      setFeaturedCars(response.content);
+      setTotalCars(response.totalElements);
+    } catch (error) {
+      console.error('Error fetching featured cars:', error);
+      setFeaturedCars([]);
+      setTotalCars(0);
+    } finally {
+      setLoadingCars(false);
+    }
+  }, []);
+
   const handleBottomNavPress = useCallback((route: string, item: any) => {
     setCurrentRoute(route);
   }, []);
 
+  // Fetch featured cars on mount
+  useEffect(() => {
+    fetchFeaturedCars();
+  }, [fetchFeaturedCars]);
+
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
-      
+
       const loadRecentlyViewed = async () => {
         try {
           const raw = await AsyncStorage.getItem(RECENTLY_VIEWED_KEY);
@@ -200,9 +187,9 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
           }
         }
       };
-      
+
       loadRecentlyViewed();
-      
+
       return () => {
         isActive = false;
       };
@@ -211,8 +198,8 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
 
   // Memoized styles for performance
   const recentlyViewedCars = useMemo(
-    () => CAR_LISTINGS.filter(item => recentlyViewedIds.includes(String(item.id))),
-    [recentlyViewedIds]
+    () => featuredCars.filter(item => recentlyViewedIds.includes(String(item.id))),
+    [recentlyViewedIds, featuredCars]
   );
 
   const unreadCount = getUnreadCount();
@@ -222,9 +209,9 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
       BOTTOM_NAV_ITEMS.map(item =>
         item.id === 'chat'
           ? {
-              ...item,
-              badge: unreadCount > 0 ? unreadCount : undefined,
-            }
+            ...item,
+            badge: unreadCount > 0 ? unreadCount : undefined,
+          }
           : item
       ),
     [unreadCount]
@@ -496,7 +483,9 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
     <View style={styles.headerContainer}>
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.greeting} accessibilityLabel="Good Morning, Alex">Good Morning, Alex 👋</Text>
+          <Text style={styles.greeting} accessibilityLabel={`Good Morning, ${isAuthenticated ? (user?.username || 'Guest') : 'Guest'}`}>
+            Good Morning, {isAuthenticated ? (user?.username || 'Guest') : 'Guest'} 👋
+          </Text>
           <Text style={styles.subGreeting} accessibilityLabel="Let's find your dream car">Let's find your dream car</Text>
         </View>
         <TouchableOpacity style={styles.citySelector} accessibilityRole="button" accessibilityLabel={`Selected city: ${selectedCity}`}>
@@ -513,7 +502,7 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
       <TouchableOpacity
         style={styles.searchWrapper}
         activeOpacity={0.9}
-        onPress={() => navigation.navigate('SearchResults')}
+        onPress={() => navigation.navigate('SearchResults', { filters: {} })}
         accessibilityRole="button"
         accessibilityLabel="Search for cars"
       >
@@ -532,7 +521,7 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
           padding: scaleSize(6),
           borderRadius: scaleSize(8)
         }}
-        accessibilityLabel="Search options"
+          accessibilityLabel="Search options"
         >
           <Ionicons name="options" size={scaleSize(20)} color={colors.text} />
         </View>
@@ -634,24 +623,61 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
   const renderFeaturedCars = () => (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle} accessibilityLabel="Featured Cars">Featured Cars</Text>
-        <TouchableOpacity style={styles.viewAllButton} accessibilityRole="button" accessibilityLabel="View all featured cars">
-          <Text style={styles.viewAllText}>View All</Text>
-          <Ionicons name="arrow-forward" size={scaleSize(16)} color={colors.primary} />
-        </TouchableOpacity>
+        <Text style={styles.sectionTitle}>Featured Cars</Text>
+        {totalCars > 10 && (
+          <TouchableOpacity
+            style={styles.viewAllButton}
+            onPress={() => navigation.navigate('SearchResults', { filters: { featured: true } })}
+            accessibilityRole="button"
+            accessibilityLabel="View all featured cars"
+          >
+            <Text style={styles.viewAllText}>View All</Text>
+            <Ionicons name="arrow-forward" size={scaleSize(16)} color={colors.primary} />
+          </TouchableOpacity>
+        )}
       </View>
-      <FlatList
-        ref={flatListRef}
-        data={CAR_LISTINGS}
-        renderItem={renderCarCard}
-        keyExtractor={item => item.id.toString()}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingRight: getResponsiveSpacing('lg') }}
-        snapToInterval={scaleSize(280) + getResponsiveSpacing('lg')}
-        decelerationRate="fast"
-        accessibilityLabel="Featured cars list"
-      />
+
+      {loadingCars ? (
+        <View style={{ padding: getResponsiveSpacing('xl'), alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={{ marginTop: getResponsiveSpacing('sm'), color: colors.textSecondary }}>
+            Loading featured cars...
+          </Text>
+        </View>
+      ) : featuredCars.length === 0 ? (
+        <View style={{ padding: getResponsiveSpacing('xl'), alignItems: 'center' }}>
+          <Ionicons name="car-outline" size={scaleSize(60)} color={colors.textSecondary} />
+          <Text style={{
+            marginTop: getResponsiveSpacing('md'),
+            fontSize: getResponsiveTypography('md'),
+            color: colors.textSecondary,
+            textAlign: 'center'
+          }}>
+            No featured cars found
+          </Text>
+          <Text style={{
+            marginTop: getResponsiveSpacing('xs'),
+            fontSize: getResponsiveTypography('sm'),
+            color: colors.textSecondary,
+            textAlign: 'center'
+          }}>
+            Check back later for new listings
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          ref={flatListRef}
+          data={featuredCars}
+          renderItem={renderCarCard}
+          keyExtractor={item => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingRight: getResponsiveSpacing('lg') }}
+          snapToInterval={scaleSize(280) + getResponsiveSpacing('lg')}
+          decelerationRate="fast"
+          accessibilityLabel="Featured cars list"
+        />
+      )}
     </View>
   );
 
@@ -730,38 +756,69 @@ const DashboardScreenModern: React.FC<Props> = ({ navigation }) => {
     </View>
   );
 
-  const renderChatTop = () => (
-    <View style={styles.sectionContainer}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Recent chats</Text>
-        <TouchableOpacity
-          style={styles.viewAllButton}
-          onPress={() => navigation.navigate('ChatList')}
-        >
-          <Text style={styles.viewAllText}>Open inbox</Text>
-          <Ionicons name="arrow-forward" size={scaleSize(16)} color={colors.primary} />
-        </TouchableOpacity>
+  const renderChatTop = () => {
+    const conversations = chatState.conversations;
+
+    return (
+      <View style={styles.sectionContainer}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Recent chats</Text>
+          <TouchableOpacity
+            style={styles.viewAllButton}
+            onPress={() => navigation.navigate('ChatList')}
+          >
+            <Text style={styles.viewAllText}>Open inbox</Text>
+            <Ionicons name="arrow-forward" size={scaleSize(16)} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
+
+        {conversations.length === 0 ? (
+          <View style={{ paddingHorizontal: getResponsiveSpacing('lg'), paddingVertical: getResponsiveSpacing('xl'), alignItems: 'center' }}>
+            <Ionicons name="chatbubbles-outline" size={scaleSize(48)} color={colors.textSecondary} />
+            <Text style={{ fontSize: getResponsiveTypography('md'), color: colors.textSecondary, marginTop: getResponsiveSpacing('md'), textAlign: 'center' }}>
+              No chats yet
+            </Text>
+            <Text style={{ fontSize: getResponsiveTypography('sm'), color: colors.textSecondary, marginTop: getResponsiveSpacing('xs'), textAlign: 'center' }}>
+              Start a conversation with a car listing
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: getResponsiveSpacing('lg') }}
+          >
+            {conversations.map((conv) => (
+              <TouchableOpacity
+                key={conv.id}
+                style={styles.chatPill}
+                onPress={() => navigation.navigate('ChatList')}
+              >
+                <Ionicons name="person-circle" size={scaleSize(20)} color={colors.primary} />
+                <Text style={styles.chatPillText}>{conv.participant.name}</Text>
+                {conv.unreadCount > 0 && (
+                  <View style={{
+                    backgroundColor: colors.error,
+                    borderRadius: scaleSize(10),
+                    minWidth: scaleSize(20),
+                    height: scaleSize(20),
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginLeft: scaleSize(6),
+                    paddingHorizontal: scaleSize(6)
+                  }}>
+                    <Text style={{ color: '#FFF', fontSize: getResponsiveTypography('xs'), fontWeight: '700' }}>
+                      {conv.unreadCount > 99 ? '99+' : conv.unreadCount}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
       </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: getResponsiveSpacing('lg') }}
-      >
-        <View style={styles.chatPill}>
-          <Ionicons name="person-circle" size={scaleSize(20)} color={colors.primary} />
-          <Text style={styles.chatPillText}>New buyers near you</Text>
-        </View>
-        <View style={styles.chatPill}>
-          <Ionicons name="flash" size={scaleSize(18)} color={colors.primary} />
-          <Text style={styles.chatPillText}>Hot leads</Text>
-        </View>
-        <View style={styles.chatPill}>
-          <Ionicons name="notifications" size={scaleSize(18)} color={colors.primary} />
-          <Text style={styles.chatPillText}>Unread messages</Text>
-        </View>
-      </ScrollView>
-    </View>
-  );
+    );
+  };
 
   const renderProfileTop = () => {
     const isGuest = !isAuthenticated;
