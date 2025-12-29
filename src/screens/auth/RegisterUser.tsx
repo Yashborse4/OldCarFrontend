@@ -36,7 +36,8 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('VIEWER');
+  // Role is fixed to USER on backend; frontend must not choose role during registration
+  const [role] = useState('USER');
   const [isLoading, setIsLoading] = useState(false);
   const [isPickerVisible, setPickerVisible] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -65,10 +66,10 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
     }
 
     // Password length validation
-    if (password.length < 6) {
+    if (password.length < 8) {
       showWarning(
         'Weak Password',
-        'Password must be at least 6 characters'
+        'Password must be at least 8 characters'
       );
       return;
     }
@@ -80,14 +81,14 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
         username: email,
         email,
         password,
-        role
       });
 
+      // After registration, email is not verified yet – guide user to verification screen
       showSuccess(
         'Account Created!',
-        'Welcome to CarWorld! 🎉'
+        'Please verify your email to start using the app.'
       );
-      // AuthContext handles navigation on successful registration
+      navigation.replace('EmailVerificationScreen');
     } catch (error: any) {
       setError(error);
       console.error('Registration error:', error);
@@ -96,7 +97,10 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
       let errorMessage = 'Registration failed. Please try again.';
 
       if (error instanceof ApiError) {
-        if (error.fieldErrors) {
+        // Handle 409 Conflict specifically
+        if (error.status === 409 || error.message?.toLowerCase().includes('already exists')) {
+          errorMessage = 'User with this email already exists. Please sign in instead.';
+        } else if (error.fieldErrors) {
           const fieldErrorMessages = Object.values(error.fieldErrors)
             .map((msg) => `${msg}`)
             .join('\n');
@@ -109,7 +113,11 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
           errorMessage = error.message;
         }
       } else if (error?.message) {
-        errorMessage = error.message;
+        if (error.message.toLowerCase().includes('already exists')) {
+          errorMessage = 'User with this email already exists. Please sign in instead.';
+        } else {
+          errorMessage = error.message;
+        }
       }
 
       showError(
@@ -402,7 +410,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
         </Gradient>
 
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardView}
         >
           <ScrollView
@@ -438,22 +446,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
 
 
 
-                <View style={styles.inputSection}>
-                  <TouchableOpacity
-                    style={styles.rolePicker}
-                    onPress={() => setPickerVisible(true)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.roleLabel}>I want to *</Text>
-                    <View style={styles.roleButton}>
-                      <View style={styles.roleIconContainer}>
-                        <Ionicons name="people" size={24} color={colors.primary} />
-                      </View>
-                      <Text style={styles.roleText}>{getRoleName(role)}</Text>
-                      <Ionicons name="chevron-down" size={26} color={colors.textSecondary} />
-                    </View>
-                  </TouchableOpacity>
-                </View>
+                {/* Role selection removed: backend always assigns USER role on registration */}
 
                 <View style={styles.inputSection}>
                   <Input
@@ -493,93 +486,8 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
         </KeyboardAvoidingView>
       </View>
 
-      <Modal
-        animationType="slide"
-        transparent
-        visible={isPickerVisible}
-        onRequestClose={() => setPickerVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setPickerVisible(false)}
-        >
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Your Role</Text>
-              <TouchableOpacity
-                onPress={() => setPickerVisible(false)}
-                style={styles.modalClose}
-              >
-                <Ionicons name="close" size={24} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={[
-                styles.modalOption,
-                role === 'VIEWER' && styles.modalOptionSelected
-              ]}
-              onPress={() => {
-                setRole('VIEWER');
-                setPickerVisible(false);
-              }}
-              activeOpacity={0.7}
-            >
-              <View style={[
-                styles.modalOptionIcon,
-                role === 'VIEWER' && styles.modalOptionIconSelected
-              ]}>
-                <Ionicons
-                  name="person"
-                  size={24}
-                  color={role === 'VIEWER' ? colors.primary : colors.textSecondary}
-                />
-              </View>
-              <View style={styles.modalOptionContent}>
-                <Text style={styles.modalOptionTitle}>Normal User</Text>
-                <Text style={styles.modalOptionSubtitle}>Browse, buy and sell cars</Text>
-              </View>
-              {role === 'VIEWER' && (
-                <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
-              )}
-            </TouchableOpacity>
-
-
-
-            <TouchableOpacity
-              style={[
-                styles.modalOption,
-                styles.modalOptionLast,
-                role === 'DEALER' && styles.modalOptionSelected
-              ]}
-              onPress={() => {
-                setRole('DEALER');
-                setPickerVisible(false);
-              }}
-              activeOpacity={0.7}
-            >
-              <View style={[
-                styles.modalOptionIcon,
-                role === 'DEALER' && styles.modalOptionIconSelected
-              ]}>
-                <Ionicons
-                  name="business"
-                  size={24}
-                  color={role === 'DEALER' ? colors.primary : colors.textSecondary}
-                />
-              </View>
-              <View style={styles.modalOptionContent}>
-                <Text style={styles.modalOptionTitle}>Dealer</Text>
-                <Text style={styles.modalOptionSubtitle}>Professional car dealer</Text>
-              </View>
-              {role === 'DEALER' && (
-                <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
-              )}
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      {/* Role picker modal removed: registration always creates USER accounts.
+          Dealer status is granted by admins inside the system. */}
     </>);
 };
 
