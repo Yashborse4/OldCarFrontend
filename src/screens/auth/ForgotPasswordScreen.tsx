@@ -7,12 +7,13 @@ import {
   Platform,
   KeyboardAvoidingView,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../config';
+import { useAuth } from '../../context/AuthContext';
+import { useToastActions } from '../../components/ui/ToastManager';
 
 interface Props {
   navigation: any;
@@ -23,39 +24,30 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
     color: '#1A202C',
   };
 
+  const { forgotPassword } = useAuth();
+  const { showSuccess, showError } = useToastActions();
+
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
   const handleResetPassword = async () => {
     if (!email) {
-      Alert.alert('Email Required', 'Please enter your email address.');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      showError('Email Required', 'Please enter your email.');
       return;
     }
 
     setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await forgotPassword(email);
       setEmailSent(true);
-      setIsLoading(false);
-      Alert.alert(
-        'Email Sent',
-        'If an account exists, a reset link has been sent to your email.',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('Login'),
-          },
-        ]
+      showSuccess(
+        'OTP Sent',
+        'Check your email for the OTP.'
       );
-    }, 2000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
