@@ -11,8 +11,7 @@ import NetInfo from '@react-native-community/netinfo';
 
 // API Configuration
 const API_CONFIG = {
-
-  baseURL: 'http://10.46.185.217:9000', // Use your server's IP address
+  baseURL: 'http://192.168.1.11:9000', // Use your server's IP address
   timeout: 15000, // Increased timeout for better mobile network handling
   headers: {
     'Content-Type': 'application/json',
@@ -58,6 +57,9 @@ export interface AuthTokens {
   email: string;
   role: string;
   location?: string;
+  // Backend verification flags coming from JwtAuthResponseV2
+  emailVerified: boolean;
+  verifiedDealer: boolean;
   expiresAt: string;
   refreshExpiresAt: string;
   expiresIn: number;
@@ -80,6 +82,9 @@ export interface UserData {
   email: string;
   role: string;
   location?: string;
+  // Role/verification flags used for permission matrix
+  emailVerified?: boolean;
+  verifiedDealer?: boolean;
 }
 
 // Custom error class for API errors
@@ -136,6 +141,10 @@ class ApiClient {
       );
     },
   };
+
+  public getBaseUrl(): string {
+    return API_CONFIG.baseURL;
+  }
 
   constructor() {
     this.instance = axios.create(API_CONFIG);
@@ -440,12 +449,16 @@ class ApiClient {
     username: string;
     email: string;
     password: string;
-    role?: string;
   }): Promise<AuthTokens> {
     try {
+      const payload = {
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+      };
       const response = await this.instance.post<ApiSuccessResponse<AuthTokens>>(
         '/api/auth/register',
-        userData
+        payload
       );
       const authData = response.data.data;
       await this.saveAuthData(authData);
@@ -749,6 +762,8 @@ class ApiClient {
             email: authData.email,
             role: authData.role,
             location: authData.location,
+            emailVerified: authData.emailVerified,
+            verifiedDealer: authData.verifiedDealer,
           }),
         ],
       ]);
