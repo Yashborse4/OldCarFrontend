@@ -542,6 +542,7 @@ export const isUserAuthorized = async (): Promise<boolean> => {
             console.error('Skip login flag read failed:', error);
         }
     }
+    // Delegate to ApiClient so we respect server-side token validation
     return authService.isUserAuthorized();
 };
 

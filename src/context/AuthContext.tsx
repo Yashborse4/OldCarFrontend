@@ -106,6 +106,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         email: authData.email,
         role: authData.role,
         location: authData.location,
+        emailVerified: authData.emailVerified,
+        verifiedDealer: authData.verifiedDealer,
       });
       setIsAuthenticated(true);
 
@@ -127,14 +129,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     username: string;
     email: string;
     password: string;
-    role?: string;
   }) => {
     try {
       setIsLoading(true);
       console.log('🔄 Attempting registration with data:', {
         username: userData.username,
         email: userData.email,
-        role: userData.role,
       });
 
       const authData = await apiClient.register(userData);
@@ -147,6 +147,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         email: authData.email,
         role: authData.role,
         location: authData.location,
+        emailVerified: authData.emailVerified,
+        verifiedDealer: authData.verifiedDealer,
       });
       setIsAuthenticated(true);
     } catch (error) {
