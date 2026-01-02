@@ -22,6 +22,7 @@ import { Button } from '../../components/ui/Button';
 import { VehicleCard } from '../../config/VehicleCard';
 import { carApi } from '../../services/CarApi';
 import { useLazyQuery } from '@apollo/client/react';
+
 import { SEARCH_CARS_QUERY } from '../../services/queries';
 
 const { width } = Dimensions.get('window');
@@ -419,7 +420,7 @@ const VehicleSearchScreen: React.FC = () => {
       const input = getSearchInput(filters, page + 1);
       fetchMore({
         variables: { input },
-        updateQuery: (prev: SearchCarsResult, { fetchMoreResult }) => {
+        updateQuery: (prev: SearchCarsResult, { fetchMoreResult }: { fetchMoreResult?: SearchCarsResult }) => {
           if (!fetchMoreResult) return prev;
           return Object.assign({}, prev, {
             searchCars: {

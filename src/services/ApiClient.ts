@@ -11,7 +11,8 @@ import NetInfo from '@react-native-community/netinfo';
 
 // API Configuration
 const API_CONFIG = {
-  baseURL: 'http://192.168.1.11:9000', // Use your server's IP address
+
+  baseURL: 'http://192.168.1.4:9000', // Use your server's IP address
   timeout: 15000, // Increased timeout for better mobile network handling
   headers: {
     'Content-Type': 'application/json',
@@ -277,9 +278,12 @@ class ApiClient {
         const isRefreshEndpoint = typeof originalRequest?.url === 'string'
           ? originalRequest.url.includes('/api/auth/refresh-token')
           : false;
+        const isLoginEndpoint = typeof originalRequest?.url === 'string'
+          ? originalRequest.url.includes('/api/auth/login')
+          : false;
 
         // Handle 401 errors and token refresh
-        if (error.response?.status === 401 && !originalRequest._retry && !isRefreshEndpoint) {
+        if (error.response?.status === 401 && !originalRequest._retry && !isRefreshEndpoint && !isLoginEndpoint) {
           if (this.isRefreshing) {
             // Queue the request if token refresh is in progress
             return new Promise((resolve, reject) => {
@@ -471,6 +475,37 @@ class ApiClient {
     }
   }
 
+  private isOtpRequestInProgress = false;
+  private lastOtpRequestTime = 0;
+
+  async sendOtp(email: string, purpose: string = 'EMAIL_VERIFICATION'): Promise<void> {
+    const now = Date.now();
+
+    // Prevent concurrent requests
+    if (this.isOtpRequestInProgress) {
+      throw new Error('Please wait, OTP request in progress...');
+    }
+
+    // Prevent spamming (frontend side throttle - 5 seconds)
+    // The backend handles the strict 60s cooldown, this prevents accidental double-clicks or rapid spam
+    if (now - this.lastOtpRequestTime < 5000) {
+      throw new Error(`Please wait ${Math.ceil((5000 - (now - this.lastOtpRequestTime)) / 1000)} seconds before retrying.`);
+    }
+
+    try {
+      this.isOtpRequestInProgress = true;
+      await this.instance.post('/api/auth/otp/send', { email, purpose });
+      this.lastOtpRequestTime = Date.now();
+    } finally {
+      this.isOtpRequestInProgress = false;
+    }
+  }
+
+  async verifyOtp(email: string, otp: string, purpose: string = 'EMAIL_VERIFICATION'): Promise<boolean> {
+    const response = await this.instance.post<ApiSuccessResponse<boolean>>('/api/auth/otp/verify', { email, otp, purpose });
+    return response.data.data;
+  }
+
   async forgotPassword(username: string): Promise<void> {
     await this.instance.post('/api/auth/forgot-password', { username });
   }
@@ -527,6 +562,10 @@ class ApiClient {
   }
 
   private handleAuthError(error: any, defaultMessage: string): Error {
+    if (error instanceof ApiError || error instanceof NetworkError) {
+      return error;
+    }
+
     if (error.response?.data) {
       const apiError = error.response.data;
 
@@ -650,15 +689,27 @@ class ApiClient {
   }): Promise<any> {
     try {
       const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, value.toString());
-        }
-      });
 
-      const response = await this.instance.get(`/api/v2/cars/search?${params.toString()}`);
+      // Map filters to backend search parameters
+      if (filters.make) params.append('brands', filters.make);
+      if (filters.model) params.append('models', filters.model);
+      if (filters.location) params.append('cities', filters.location);
+      if (filters.fuelType) params.append('fuelTypes', filters.fuelType);
+      if (filters.transmission) params.append('transmissions', filters.transmission);
 
-      // Backend returns ApiResponse<Page<CarResponseV2>>
+      // Direct mappings
+      if (filters.minYear) params.append('minYear', filters.minYear.toString());
+      if (filters.maxYear) params.append('maxYear', filters.maxYear.toString());
+      if (filters.minPrice) params.append('minPrice', filters.minPrice.toString());
+      if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
+
+      // Pagination
+      if (filters.page !== undefined) params.append('page', filters.page.toString());
+      if (filters.size !== undefined) params.append('size', filters.size.toString());
+
+      const response = await this.instance.get(`/api/search/cars?${params.toString()}`);
+
+      // Backend returns ApiResponse<Page<CarSearchHitDto>>
       if (response.data && response.data.success && response.data.data) {
         return response.data.data; // Return the Page<CarResponseV2>
       }

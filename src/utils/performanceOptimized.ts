@@ -1,8 +1,8 @@
-import React, { 
-  useCallback, 
-  useMemo, 
-  useRef, 
-  useEffect, 
+import React, {
+  useCallback,
+  useMemo,
+  useRef,
+  useEffect,
   useState,
   memo,
   ComponentType,
@@ -29,28 +29,28 @@ export const PERFORMANCE_ANIMATION_CONFIG = {
     easing: Easing.bezier(0.25, 0.1, 0.25, 1), // Material Design standard
     useNativeDriver: true,
   },
-  
+
   // Standard smooth animations
   smooth: {
     duration: 250,
     easing: Easing.out(Easing.quad),
     useNativeDriver: true,
   },
-  
+
   // Quick animations for micro-interactions
   quick: {
     duration: 150,
     easing: Easing.out(Easing.cubic),
     useNativeDriver: true,
   },
-  
+
   // Spring animations for bouncy effects
   spring: {
     tension: 300,
     friction: 20,
     useNativeDriver: true,
   },
-  
+
   // Layout animations
   layout: {
     duration: 300,
@@ -67,7 +67,7 @@ export const PERFORMANCE_ANIMATION_CONFIG = {
       property: LayoutAnimation.Properties.opacity,
     },
   },
-} ;
+};
 
 // Performance monitoring utilities
 export class PerformanceMonitor {
@@ -86,39 +86,39 @@ export class PerformanceMonitor {
 
   startMonitoring() {
     if (this.isMonitoring) return;
-    
+
     this.isMonitoring = true;
     this.frameDrops = 0;
     this.lastFrameTime = Date.now();
-    
+
     const monitorFrame = (currentTime: number) => {
       const deltaTime = currentTime - this.lastFrameTime;
-      
+
       // Detect frame drops (> 16.67ms for 60fps)
       if (deltaTime > 18) { // Small buffer for fluctuations
         this.frameDrops++;
       }
-      
+
       this.lastFrameTime = currentTime;
-      
+
       if (this.isMonitoring) {
         this.animationFrameId = requestAnimationFrame(monitorFrame);
       }
     };
-    
+
     this.animationFrameId = requestAnimationFrame(monitorFrame);
   }
 
   stopMonitoring(): { frameDrops: number; performance: 'excellent' | 'good' | 'poor' } {
     this.isMonitoring = false;
-    
+
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
 
     const performance = this.frameDrops < 5 ? 'excellent' : this.frameDrops < 15 ? 'good' : 'poor';
-    
+
     return { frameDrops: this.frameDrops, performance };
   }
 }
@@ -130,7 +130,7 @@ export const useOptimizedCallback = <T extends (...args: any[]) => any>(
   options: { debounceMs?: number; throttleMs?: number } = {}
 ): T => {
   const { debounceMs, throttleMs } = options;
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastCallRef = useRef<number>(0);
 
   // Cleanup timeout on unmount
@@ -145,26 +145,26 @@ export const useOptimizedCallback = <T extends (...args: any[]) => any>(
   return useCallback(
     ((...args: Parameters<T>) => {
       const now = Date.now();
-      
+
       // Throttling logic
       if (throttleMs && now - lastCallRef.current < throttleMs) {
         return;
       }
-      
+
       // Debouncing logic
       if (debounceMs) {
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
-        
+
         timeoutRef.current = setTimeout(() => {
           lastCallRef.current = now;
           callback(...args);
         }, debounceMs);
-        
+
         return;
       }
-      
+
       lastCallRef.current = now;
       return callback(...args);
     }) as T,
@@ -176,17 +176,17 @@ export const useOptimizedCallback = <T extends (...args: any[]) => any>(
 export const shallowEqual = (obj1: any, obj2: any): boolean => {
   const keys1 = Object.keys(obj1);
   const keys2 = Object.keys(obj2);
-  
+
   if (keys1.length !== keys2.length) {
     return false;
   }
-  
+
   for (const key of keys1) {
     if (obj1[key] !== obj2[key]) {
       return false;
     }
   }
-  
+
   return true;
 };
 
@@ -207,7 +207,7 @@ export const OPTIMIZED_FLATLIST_PROPS = {
     initialNumToRender: 10,
     windowSize: 10,
   },
-  
+
   // Heavy optimization for large lists
   heavy: {
     removeClippedSubviews: true,
@@ -221,7 +221,7 @@ export const OPTIMIZED_FLATLIST_PROPS = {
       index,
     }),
   },
-} ;
+};
 
 // Optimized animation hook
 export const useOptimizedAnimation = (
@@ -239,7 +239,7 @@ export const useOptimizedAnimation = (
 
   const startAnimation = useCallback(() => {
     setIsAnimating(true);
-    
+
     Animated.timing(animatedValue, {
       ...PERFORMANCE_ANIMATION_CONFIG.smooth,
       ...config,
@@ -266,7 +266,7 @@ export const useOptimizedAnimation = (
 // Interaction-safe async operations
 export const useInteractionSafeAsync = () => {
   const mountedRef = useRef(true);
-  
+
   useEffect(() => {
     return () => {
       mountedRef.current = false;
@@ -295,7 +295,7 @@ export const useInteractionSafeAsync = () => {
 export const useBatchedState = <T extends Record<string, any>>(initialState: T) => {
   const [state, setState] = useState(initialState);
   const pendingUpdatesRef = useRef<Partial<T>[]>([]);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -308,19 +308,19 @@ export const useBatchedState = <T extends Record<string, any>>(initialState: T) 
 
   const batchedSetState = useCallback((update: Partial<T> | ((prevState: T) => Partial<T>)) => {
     const updateObj = typeof update === 'function' ? update(state) : update;
-    
+
     pendingUpdatesRef.current.push(updateObj);
-    
+
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    
+
     timeoutRef.current = setTimeout(() => {
       const mergedUpdate = pendingUpdatesRef.current.reduce(
         (acc, curr) => ({ ...acc, ...curr }),
         {}
       );
-      
+
       setState(prevState => ({ ...prevState, ...mergedUpdate }));
       pendingUpdatesRef.current = [];
     }, 0);
@@ -342,7 +342,7 @@ export const getOptimizedImageProps = (
   };
 
   return {
-    resizeMode: 'cover' ,
+    resizeMode: 'cover',
     style: { width, height },
     fadeDuration: 300,
     progressiveRenderingEnabled: true,
@@ -357,14 +357,14 @@ export const withPerformanceTracking = <P extends object>(
 ) => {
   const PerformanceTrackedComponent: React.FC<P> = (props) => {
     const renderStartTime = useRef<number>(0);
-    
+
     useEffect(() => {
       renderStartTime.current = Date.now();
     });
 
     useEffect(() => {
       const renderTime = Date.now() - renderStartTime.current;
-      
+
       // Log slow renders (> 16ms for 60fps)
       if (renderTime > 16) {
         console.warn(`Slow render detected in ${componentName}: ${renderTime.toFixed(2)}ms`);
@@ -375,7 +375,7 @@ export const withPerformanceTracking = <P extends object>(
   };
 
   PerformanceTrackedComponent.displayName = `withPerformanceTracking(${componentName})`;
-  
+
   return optimizedMemo(PerformanceTrackedComponent);
 };
 
@@ -394,7 +394,7 @@ export const useVirtualization = <T>(
       start + Math.ceil(containerHeight / itemHeight) + overscan,
       data.length
     );
-    
+
     return {
       start: Math.max(0, start - overscan),
       end,
@@ -427,13 +427,13 @@ export const createLazyComponent = <P extends object>(
 ) => {
   return React.lazy(async () => {
     const module = await importFunc();
-    
+
     // Pre-warm the component with performance tracking
     const Component = withPerformanceTracking(
       module.default,
       module.default.displayName || module.default.name || 'LazyComponent'
     );
-    
+
     return { default: Component };
   });
 };
@@ -452,17 +452,17 @@ export class AnimationQueue {
 
   private async process() {
     this.isRunning = true;
-    
+
     while (this.queue.length > 0) {
       const animation = this.queue.shift();
       if (animation) {
         await animation();
-        
+
         // Wait for next frame to maintain 60fps
         await new Promise(resolve => requestAnimationFrame(resolve));
       }
     }
-    
+
     this.isRunning = false;
   }
 }
