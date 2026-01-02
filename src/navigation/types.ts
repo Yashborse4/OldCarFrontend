@@ -59,13 +59,14 @@ export type RootStackParamList = {
   Login: undefined;
   RegisterUser: undefined;
   ForgotPasswordScreen: undefined;
-  
+  EmailVerificationScreen: { email: string };
+
   // Main App
   Dashboard: undefined;
   Settings: undefined;
   Profile: undefined;
   Notifications: undefined;
-  
+
   // Car-related
   CarDetails: { carId: string };
   SellCar: undefined;
@@ -76,7 +77,7 @@ export type RootStackParamList = {
   VehicleAnalytics: undefined;
   ManageCar: { car: Car };
   MyGarage: undefined;
-  
+
   // Chat/Messaging
   Messages: undefined;
   Chat: { dealerId: string; dealerName: string };
@@ -84,7 +85,7 @@ export type RootStackParamList = {
   ChatConversation: { conversationId: string };
   CreateGroup: undefined;
   GroupDetails: { groupId: string };
-  
+
   // Dealer Networking
   DealerGroups: undefined;
   DealerAddCar: undefined;
@@ -92,7 +93,7 @@ export type RootStackParamList = {
   DealerInquiries: undefined;
   DealerNetworkChat: { networkId: string };
   DealerProfile: { dealerId: string };
-  
+
   // Future screens (commented out in navigator)
   GroupMembers?: { groupId: string };
   InviteMembers?: { groupId: string };

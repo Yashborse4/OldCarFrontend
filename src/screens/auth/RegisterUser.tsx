@@ -6,9 +6,9 @@ import {
   StatusBar,
   Platform,
   KeyboardAvoidingView,
-  Modal,
-  ScrollView,
   StyleSheet,
+  ScrollView,
+  NativeModules,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gradient } from '../../components/ui/Gradient';
@@ -36,10 +36,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // Role is fixed to USER on backend; frontend must not choose role during registration
-  const [role] = useState('USER');
   const [isLoading, setIsLoading] = useState(false);
-  const [isPickerVisible, setPickerVisible] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const handleRegister = async () => {
@@ -88,7 +85,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
         'Account Created!',
         'Please verify your email to start using the app.'
       );
-      navigation.replace('EmailVerificationScreen');
+      navigation.replace('EmailVerificationScreen', { email });
     } catch (error: any) {
       setError(error);
       console.error('Registration error:', error);
@@ -133,6 +130,36 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
   const handleRetryRegistration = () => {
     setError(null);
     handleRegister();
+  };
+
+  const { TruecallerAuthModule } = NativeModules;
+
+  const handleTruecallerVerification = async () => {
+    try {
+      setIsLoading(true);
+      if (TruecallerAuthModule) {
+        const result = await TruecallerAuthModule.authenticate();
+        console.log('Truecaller Result:', result);
+
+        if (result.successful) {
+          // Pre-fill form or auto-register logic would go here
+          if (result.email) setEmail(result.email);
+          if (result.firstName) {
+            // If we had name fields, we would set them
+          }
+          showSuccess('Truecaller Verified', `Welcome ${result.firstName || 'User'}! Please complete your password.`);
+        } else if (result.error) {
+          showWarning('Truecaller Verification Failed', `Error: ${result.error}`);
+        }
+      } else {
+        showError('Error', 'Truecaller SDK not available');
+      }
+    } catch (e: any) {
+      console.error(e);
+      showError('Verification Error', e.message || 'Unknown error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const dismissError = () => {
@@ -304,89 +331,6 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
       fontWeight: '700',
       color: colors.primary,
     },
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.65)',
-      justifyContent: 'flex-end',
-      padding: 0,
-    },
-    modalContent: {
-      backgroundColor: colors.surface,
-      borderTopLeftRadius: 28,
-      borderTopRightRadius: 28,
-      paddingBottom: Platform.OS === 'ios' ? 38 : 28,
-    },
-    modalHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 28,
-      paddingVertical: 24,
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? colors.border : '#F3F4F6',
-    },
-    modalTitle: {
-      fontSize: 22,
-      fontWeight: '800',
-      color: colors.text,
-      letterSpacing: 0.3,
-    },
-    modalClose: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: isDark ? colors.surfaceVariant : '#F3F4F6',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    modalOption: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 28,
-      paddingVertical: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? colors.border : '#F3F4F6',
-      backgroundColor: colors.surface,
-    },
-    modalOptionSelected: {
-      backgroundColor: isDark
-        ? `${colors.primary}18`
-        : `${colors.primary}10`,
-      borderLeftWidth: 5,
-      borderLeftColor: colors.primary,
-    },
-    modalOptionLast: {
-      borderBottomWidth: 0,
-    },
-    modalOptionIcon: {
-      width: 52,
-      height: 52,
-      borderRadius: 14,
-      backgroundColor: isDark ? colors.surfaceVariant : '#F3F4F6',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 18,
-    },
-    modalOptionIconSelected: {
-      backgroundColor: isDark
-        ? `${colors.primary}30`
-        : `${colors.primary}20`,
-    },
-    modalOptionContent: {
-      flex: 1,
-    },
-    modalOptionTitle: {
-      fontSize: 18,
-      fontWeight: '700',
-      color: colors.text,
-      marginBottom: 5,
-      letterSpacing: 0.2,
-    },
-    modalOptionSubtitle: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      fontWeight: '500',
-    },
   });
 
   return (
@@ -429,6 +373,15 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                   </View>
                   <Text style={styles.sectionTitle}>Quick Sign Up</Text>
                 </View>
+
+                {/* Truecaller Option */}
+                <Button
+                  title="Verify with Truecaller"
+                  onPress={handleTruecallerVerification}
+                  variant="outline"
+                  icon="shield-checkmark"
+                  style={{ marginBottom: 25 }}
+                />
 
                 <View style={styles.inputSection}>
                   <Input

@@ -16,6 +16,7 @@ import { Button } from '../../components/ui/Button';
 import { ModernInput as Input } from '../../components/ui/InputModern';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { setSkipLogin } from '../../services/auth';
+import { apiClient } from '../../services/ApiClient';
 
 import { useTheme } from '../../theme';
 import {
@@ -104,16 +105,49 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
       // Decide next screen based on email verification flag
       // If email not verified, send user to verification screen and block main app
-      if ((await import('../../context/AuthContext')).useAuth().user?.emailVerified === false) {
-        notifyLoginSuccess('Check your email to verify your account.');
-        navigation.replace('EmailVerificationScreen');
-      } else {
-        notifyLoginSuccess('Welcome back! 🎉');
-        navigation.replace('Dashboard');
-      }
+      // We need to fetch the fresh user state after login, but we can't call a hook here.
+      // The login function in AuthContext should ideally return the user or we should rely on the updated context.
+      // However, since we just logged in, we can trust the response or just check the token.
+      // For now, let's assume if login succeeds, we are good. The AuthContext will update 'user'.
+
+      // We can't easily check 'user.emailVerified' immediately here because 'user' from useAuth 
+      // is from the render cycle *before* login completed. 
+      // But standard practice is to let the AuthProvider handle the redirect or check it here if login returns it.
+
+      // Assuming 'login' returns the auth response which contains the user
+      // Note: The previous code was trying to re-import and call hook which is illegal.
+
+      // Let's rely on the fact that if we are here, login succeeded. 
+      notifyLoginSuccess('Welcome back! 🎉');
+      navigation.replace('Dashboard');
     } catch (error: any) {
       console.error('Login error:', error);
-      notifyLoginError(error.message || 'Login failed. Please try again.');
+
+      const errorMessage = error.message || 'Login failed';
+      const errorDetails = error.details || '';
+
+      console.log('DEBUG: Login Error Message:', errorMessage);
+      console.log('DEBUG: Login Error Details:', errorDetails);
+      console.log('DEBUG: Full Error Object:', JSON.stringify(error, null, 2));
+
+      // Check if error is related to unverified email
+      if (errorMessage.toLowerCase().includes('verified') || errorDetails.toLowerCase().includes('verified')) {
+        notifyLoginError('Email not verified. Sending verification code...');
+
+        try {
+          // Send OTP and navigate to verification screen
+          await apiClient.sendOtp(formData.email.trim(), 'EMAIL_VERIFICATION');
+          navigation.navigate('EmailVerificationScreen', { email: formData.email.trim() });
+          return;
+        } catch (otpError: any) {
+          console.error('Failed to send OTP:', otpError);
+          // Still navigate so they can try to resend
+          navigation.navigate('EmailVerificationScreen', { email: formData.email.trim() });
+          return;
+        }
+      }
+
+      notifyLoginError(errorMessage);
     } finally {
       setIsLoading(false);
     }

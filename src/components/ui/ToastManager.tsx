@@ -82,16 +82,16 @@ export const useToastActions = () => {
   return {
     showSuccess: (title: string, message?: string, options?: Partial<ToastConfig>) =>
       showToast({ type: 'success', title, message, ...options }),
-    
+
     showError: (title: string, message?: string, options?: Partial<ToastConfig>) =>
       showToast({ type: 'error', title, message, ...options }),
-    
+
     showWarning: (title: string, message?: string, options?: Partial<ToastConfig>) =>
       showToast({ type: 'warning', title, message, ...options }),
-    
+
     showInfo: (title: string, message?: string, options?: Partial<ToastConfig>) =>
       showToast({ type: 'info', title, message, ...options }),
-    
+
     hideToast,
     hideAllToasts,
   };
@@ -103,7 +103,7 @@ export const useNotifications = () => {
 
   return {
     ...actions,
-    
+
     // Authentication notifications
     notifyLoginSuccess: (username?: string) =>
       actions.showSuccess(
@@ -111,17 +111,17 @@ export const useNotifications = () => {
         username ? `Hello ${username}` : 'Successfully logged in',
         { duration: 2000 }
       ),
-    
+
     notifyLoginError: (message?: string) =>
       actions.showError(
         'Login Failed',
         message || 'Please check your credentials',
         { duration: 4000 }
       ),
-    
+
     notifyLogout: () =>
       actions.showInfo('Logged Out', 'See you next time!', { duration: 2000 }),
-    
+
     // Car-related notifications
     notifyCarSaved: (carName?: string) =>
       actions.showSuccess(
@@ -129,17 +129,17 @@ export const useNotifications = () => {
         carName ? `${carName} added to favorites` : 'Added to your favorites',
         { duration: 2500 }
       ),
-    
+
     notifyCarRemoved: (carName?: string) =>
       actions.showInfo(
         'Car Removed',
         carName ? `${carName} removed from favorites` : 'Removed from favorites',
         { duration: 2000 }
       ),
-    
+
     notifyMessageSent: () =>
       actions.showSuccess('Message Sent', 'The seller will get back to you soon', { duration: 3000 }),
-    
+
     // Network notifications
     notifyNetworkError: () =>
       actions.showError(
@@ -147,23 +147,29 @@ export const useNotifications = () => {
         'Please check your internet connection',
         { duration: 5000 }
       ),
-    
+
     notifyOffline: () =>
       actions.showWarning('Offline', 'Some features may be limited', { duration: 4000 }),
-    
+
     notifyOnline: () =>
       actions.showSuccess('Back Online', 'Connection restored', { duration: 2000 }),
-    
+
     // Generic action notifications
     notifyActionSuccess: (action: string) =>
       actions.showSuccess('Success', `${action} completed successfully`, { duration: 2500 }),
-    
+
     notifyActionError: (action: string, error?: string) =>
       actions.showError(
         `${action} Failed`,
         error || 'Something went wrong. Please try again.',
         { duration: 4000 }
       ),
+
+    notifySuccess: (message: string) =>
+      actions.showSuccess('Success', message, { duration: 3000 }),
+
+    notifyError: (message: string) =>
+      actions.showError('Error', message, { duration: 4000 }),
   };
 };
 
