@@ -162,14 +162,6 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
     }
   ], []);
 
-  useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
-
-  useEffect(() => {
-    filterConversations();
-  }, [filterConversations]);
-
   const loadConversations = useCallback(async () => {
     try {
       setLoading(true);
@@ -204,6 +196,14 @@ const ChatListScreen: React.FC = ({ navigation }: any) => {
 
     setFilteredConversations(filtered);
   }, [conversations, searchQuery, selectedFilter]);
+
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
+
+  useEffect(() => {
+    filterConversations();
+  }, [filterConversations]);
 
   const formatTimestamp = (timestamp: Date) => {
     const now = new Date();

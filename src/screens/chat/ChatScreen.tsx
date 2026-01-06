@@ -203,10 +203,13 @@ const ChatScreen: React.FC = () => {
     },
   ], []);
 
-  useEffect(() => {
-    loadMessages();
-    loadUserVehicles();
-  }, [loadMessages, loadUserVehicles]);
+  const scrollToBottom = React.useCallback(() => {
+    if (flatListRef.current && messages.length > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages]);
 
   const loadMessages = useCallback(async () => {
     try {
@@ -231,13 +234,10 @@ const ChatScreen: React.FC = () => {
     }
   }, [mockUserVehicles]);
 
-  const scrollToBottom = React.useCallback(() => {
-    if (flatListRef.current && messages.length > 0) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
-  }, [messages]);
+  useEffect(() => {
+    loadMessages();
+    loadUserVehicles();
+  }, [loadMessages, loadUserVehicles]);
 
   const sendMessage = async (messageType: 'text' | 'vehicle' | 'quote' = 'text', attachments?: any) => {
     if (messageType === 'text' && !messageText.trim()) return;

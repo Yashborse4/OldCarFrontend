@@ -141,14 +141,6 @@ const MessagesScreen: React.FC = () => {
     },
   ], []);
 
-  useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
-
-  useEffect(() => {
-    filterConversations();
-  }, [filterConversations]);
-
   const loadConversations = useCallback(async () => {
     try {
       setLoading(true);
@@ -176,6 +168,14 @@ const MessagesScreen: React.FC = () => {
     );
     setFilteredConversations(filtered);
   }, [searchText, conversations]);
+
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
+
+  useEffect(() => {
+    filterConversations();
+  }, [filterConversations]);
 
   const onRefresh = async () => {
     setRefreshing(true);
