@@ -1,1207 +1,1131 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  StatusBar,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
-  Image,
   TextInput,
-  Modal,
   Alert,
-  Dimensions,
+  Image,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  FlatList,
 } from 'react-native';
-import { useAuth } from '../../context/AuthContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
-
-const { width, height } = Dimensions.get('window');
+import { useTheme } from '../../theme';
+import { useAuth } from '../../context/AuthContext';
+import { Gradient } from '../../components/ui/Gradient';
+import {
+  scaleSize,
+  getResponsiveSpacing,
+  getResponsiveTypography,
+  getResponsiveBorderRadius,
+  wp,
+  hp,
+} from '../../utils/responsiveEnhanced';
 
 interface Props {
   navigation: any;
 }
 
-interface CarFormData {
-  // Basic Details
-  make: string;
+// Car brands with icons
+const CAR_BRANDS = [
+  { id: 'maruti', name: 'Maruti Suzuki', icon: '🚗' },
+  { id: 'hyundai', name: 'Hyundai', icon: '🚙' },
+  { id: 'tata', name: 'Tata', icon: '🚐' },
+  { id: 'mahindra', name: 'Mahindra', icon: '🚕' },
+  { id: 'honda', name: 'Honda', icon: '🏎️' },
+  { id: 'toyota', name: 'Toyota', icon: '🚘' },
+  { id: 'kia', name: 'Kia', icon: '🚖' },
+  { id: 'mg', name: 'MG', icon: '🏁' },
+  { id: 'skoda', name: 'Skoda', icon: '🚔' },
+  { id: 'volkswagen', name: 'Volkswagen', icon: '🚓' },
+];
+
+const FUEL_TYPES = [
+  { id: 'petrol', name: 'Petrol', icon: 'water-outline' },
+  { id: 'diesel', name: 'Diesel', icon: 'flash-outline' },
+  { id: 'electric', name: 'Electric', icon: 'battery-charging-outline' },
+  { id: 'cng', name: 'CNG', icon: 'leaf-outline' },
+  { id: 'hybrid', name: 'Hybrid', icon: 'sync-outline' },
+];
+
+const TRANSMISSION_TYPES = [
+  { id: 'manual', name: 'Manual', icon: 'cog-outline' },
+  { id: 'automatic', name: 'Automatic', icon: 'settings-outline' },
+];
+
+const OWNER_OPTIONS = [
+  { id: '1', label: '1st Owner', sublabel: 'First hand' },
+  { id: '2', label: '2nd Owner', sublabel: 'Second hand' },
+  { id: '3', label: '3rd Owner', sublabel: 'Third hand' },
+  { id: '4+', label: '4+ Owners', sublabel: 'Multiple owners' },
+];
+
+const COLORS = [
+  { id: 'white', name: 'White', hex: '#FFFFFF' },
+  { id: 'black', name: 'Black', hex: '#1A1A1A' },
+  { id: 'silver', name: 'Silver', hex: '#C0C0C0' },
+  { id: 'grey', name: 'Grey', hex: '#808080' },
+  { id: 'red', name: 'Red', hex: '#DC2626' },
+  { id: 'blue', name: 'Blue', hex: '#2563EB' },
+  { id: 'brown', name: 'Brown', hex: '#92400E' },
+  { id: 'green', name: 'Green', hex: '#059669' },
+];
+
+interface FormData {
+  // Step 1: Car Identity
+  brand: string;
   model: string;
   variant: string;
-  year: string;
-  price: string;
-  negotiable: boolean;
-  
-  // Physical Details
-  mileage: string;
+  color: string;
+
+  // Step 2: Ownership & Registration
+  registrationYear: string;
+  ownerNumber: string;
   fuelType: string;
   transmission: string;
-  bodyType: string;
-  color: string;
-  seatingCapacity: string;
-  
-  // Ownership & Documents
-  ownerNumber: string;
-  registrationNumber: string;
-  registrationState: string;
-  insuranceType: string;
-  insuranceExpiry: string;
-  pucExpiry: string;
-  
-  // Engine & Performance
-  engineCapacity: string;
-  maxPower: string;
-  maxTorque: string;
-  driveTrain: string;
-  
-  // Features
-  exteriorFeatures: string[];
-  interiorFeatures: string[];
-  safetyFeatures: string[];
-  comfortFeatures: string[];
-  entertainmentFeatures: string[];
-  
-  // Condition & History
-  accidentHistory: boolean;
-  floodHistory: boolean;
-  serviceHistory: 'dealer' | 'independent' | 'mixed' | 'unknown';
-  lastServiceDate: string;
-  lastServiceKms: string;
-  
-  // Warranty & Certification
-  manufacturerWarranty: boolean;
-  warrantyExpiry: string;
-  extendedWarranty: boolean;
-  rtoCleared: boolean;
-  
-  // Dealer Specific
-  dealerWarranty: boolean;
-  dealerWarrantyPeriod: string;
-  certificationLevel: 'basic' | 'premium' | 'luxury';
-  inspectionReport: boolean;
-  
-  // Additional Info
+  mileage: string;
+  usage: string;
+
+  // Step 3: Condition
+  accidentHistory: boolean | null;
+  repaintedParts: boolean | null;
+  engineIssues: boolean | null;
+  floodDamage: boolean | null;
+  insuranceClaims: boolean | null;
+
+  // Step 4: Pricing & Media
+  price: string;
   description: string;
-  keyFeatures: string[];
   images: string[];
-  documents: string[];
 }
 
-const MAKES = ['Maruti Suzuki', 'Hyundai', 'Tata', 'Mahindra', 'Honda', 'Toyota', 'BMW', 'Audi', 'Mercedes-Benz'];
-const FUEL_TYPES = ['Petrol', 'Diesel', 'Electric', 'Hybrid', 'CNG', 'LPG'];
-const TRANSMISSION_TYPES = ['Manual', 'Automatic', 'CVT', 'DCT', 'AMT'];
-const BODY_TYPES = ['Hatchback', 'Sedan', 'SUV', 'Coupe', 'Convertible', 'Wagon'];
-const COLORS = ['White', 'Black', 'Silver', 'Red', 'Blue', 'Brown', 'Green', 'Yellow', 'Orange'];
-
-const EXTERIOR_FEATURES = [
-  'Alloy Wheels', 'LED Headlights', 'LED DRLs', 'Fog Lights', 'Sunroof', 'Rain Sensing Wipers',
-  'Power Windows', 'Central Locking', 'Anti-theft Device', 'Engine Immobilizer',
-];
-
-const INTERIOR_FEATURES = [
-  'Leather Seats', 'Power Steering', 'AC', 'Heater', 'Adjustable Steering', 'Height Adjustable Driver Seat',
-  'Electric Adjust Seat', 'Automatic Climate Control', 'Air Quality Control', 'Remote Engine Start',
-];
-
-const SAFETY_FEATURES = [
-  'ABS', 'Airbags', 'EBD', 'ESP', 'Traction Control', 'Hill Hold Control',
-  'ISOFIX Child Seat Mounts', 'Reverse Camera', 'Parking Sensors', 'Blind Spot Monitor',
-];
-
-const COMFORT_FEATURES = [
-  'Cruise Control', 'Push Button Start', 'Keyless Entry', 'USB Ports', 'Wireless Charging',
-  'Cup Holders', 'Armrest', 'Rear AC Vents', 'Cooled Glove Box', 'Electric Mirrors',
-];
-
-const ENTERTAINMENT_FEATURES = [
-  'Music System', 'Bluetooth', 'Android Auto', 'Apple CarPlay', 'Navigation System',
-  'Touchscreen', 'Steering Mounted Controls', 'Voice Command', 'Premium Sound System',
-];
+const TOTAL_STEPS = 4;
+const ADD_CAR_DRAFT_KEY = '@dealer_add_car_draft';
 
 const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
-  const isDark = false;
-  const colors = {
-    background: '#FAFBFC',
-    surface: '#FFFFFF',
-    text: '#1A202C',
-    textSecondary: '#4A5568',
-    primary: '#FFD700',
-    border: '#E2E8F0',
-    error: '#F56565',
-    success: '#48BB78',
-  };
+  const { theme, isDark } = useTheme();
+  const { colors } = theme;
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [activeStep, setActiveStep] = useState(0);
-  const [showImagePicker, setShowImagePicker] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
 
-  const [formData, setFormData] = useState<CarFormData>({
-    make: '',
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  const [formData, setFormData] = useState<FormData>({
+    brand: '',
     model: '',
     variant: '',
-    year: '',
-    price: '',
-    negotiable: true,
-    mileage: '',
+    color: '',
+    registrationYear: '',
+    ownerNumber: '',
     fuelType: '',
     transmission: '',
-    bodyType: '',
-    color: '',
-    seatingCapacity: '',
-    ownerNumber: '',
-    registrationNumber: '',
-    registrationState: '',
-    insuranceType: '',
-    insuranceExpiry: '',
-    pucExpiry: '',
-    engineCapacity: '',
-    maxPower: '',
-    maxTorque: '',
-    driveTrain: '',
-    exteriorFeatures: [],
-    interiorFeatures: [],
-    safetyFeatures: [],
-    comfortFeatures: [],
-    entertainmentFeatures: [],
-    accidentHistory: false,
-    floodHistory: false,
-    serviceHistory: 'dealer',
-    lastServiceDate: '',
-    lastServiceKms: '',
-    manufacturerWarranty: false,
-    warrantyExpiry: '',
-    extendedWarranty: false,
-    rtoCleared: true,
-    dealerWarranty: true,
-    dealerWarrantyPeriod: '6 months',
-    certificationLevel: 'premium',
-    inspectionReport: true,
+    mileage: '',
+    usage: '',
+    accidentHistory: null,
+    repaintedParts: null,
+    engineIssues: null,
+    floodDamage: null,
+    insuranceClaims: null,
+    price: '',
     description: '',
-    keyFeatures: [],
     images: [],
-    documents: [],
   });
 
-  const steps = [
-    { title: 'Basic Info', icon: 'directions-car' },
-    { title: 'Specifications', icon: 'settings' },
-    { title: 'Features', icon: 'star' },
-    { title: 'History', icon: 'history' },
-    { title: 'Warranty', icon: 'verified' },
-    { title: 'Media', icon: 'image' },
-  ];
+  const updateField = useCallback(<K extends keyof FormData>(field: K, value: FormData[K]) => {
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      AsyncStorage.setItem(ADD_CAR_DRAFT_KEY, JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+  }, []);
 
-  const handleInputChange = <K extends keyof CarFormData>(field: K, value: CarFormData[K]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  useEffect(() => {
+    const loadDraft = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(ADD_CAR_DRAFT_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored) as Partial<FormData>;
+          setFormData(prev => ({ ...prev, ...parsed }));
+        }
+      } catch {
+      }
+    };
 
-  const toggleFeature = (category: keyof Pick<CarFormData, 'exteriorFeatures' | 'interiorFeatures' | 'safetyFeatures' | 'comfortFeatures' | 'entertainmentFeatures'>, feature: string) => {
-    const current = formData[category];
-    const updated = current.includes(feature)
-      ? current.filter(f => f !== feature)
-      : [...current, feature];
-    handleInputChange(category, updated);
-  };
+    loadDraft();
+  }, []);
 
-  const nextStep = () => {
-    if (activeStep < steps.length - 1) {
-      setActiveStep(activeStep + 1);
-      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  const canProceed = useCallback(() => {
+    switch (currentStep) {
+      case 1:
+        return formData.brand && formData.model;
+      case 2:
+        return formData.registrationYear && formData.fuelType && formData.transmission;
+      case 3:
+        return true; // All optional
+      case 4:
+        return formData.price;
+      default:
+        return false;
+    }
+  }, [currentStep, formData]);
+
+  const handleNext = () => {
+    if (currentStep < TOTAL_STEPS) {
+      setCurrentStep(currentStep + 1);
     }
   };
 
-  const previousStep = () => {
-    if (activeStep > 0) {
-      setActiveStep(activeStep - 1);
-      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    } else {
+      navigation.goBack();
     }
   };
 
   const handleSubmit = async () => {
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // TODO: API call to submit car
+      await new Promise<void>((resolve) => setTimeout(() => resolve(), 2000));
+      AsyncStorage.removeItem(ADD_CAR_DRAFT_KEY).catch(() => {});
+      Alert.alert(
+        'Success! 🎉',
+        'Your car listing has been submitted for review.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to submit. Please try again.');
+    } finally {
       setLoading(false);
-      Alert.alert('Success', 'Car listing created successfully!', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
-    }, 2000);
+    }
   };
 
-  const renderStepIndicator = () => (
-    <View style={[styles.stepIndicator, { backgroundColor: colors.surface }]}>
-      {steps.map((step, index) => (
-        <TouchableOpacity
-          key={index}
+  // ============= STEP COMPONENTS =============
+
+  const renderProgressBar = () => (
+    <View style={styles.progressContainer}>
+      <View style={styles.progressHeader}>
+        <Text style={[styles.progressText, { color: colors.textSecondary }]}>
+          Step {currentStep} of {TOTAL_STEPS}
+        </Text>
+        <Text style={[styles.progressTitle, { color: colors.text }]}>
+          {currentStep === 1 && 'Identify Your Car'}
+          {currentStep === 2 && 'Ownership Details'}
+          {currentStep === 3 && 'Condition Check'}
+          {currentStep === 4 && 'Pricing & Photos'}
+        </Text>
+      </View>
+      <View style={[styles.progressTrack, { backgroundColor: isDark ? colors.surface : '#E5E7EB' }]}>
+        <View
           style={[
-            styles.stepItem,
-            index <= activeStep && [styles.stepItemActive, { backgroundColor: colors.primary }],
+            styles.progressFill,
+            { width: `${(currentStep / TOTAL_STEPS) * 100}%`, backgroundColor: colors.primary }
           ]}
-          onPress={() => setActiveStep(index)}
-        >
-          <Ionicons
-            name={step.icon as any}
-            size={16}
-            color={index <= activeStep ? '#111827' : colors.textSecondary}
-          />
-        </TouchableOpacity>
-      ))}
+        />
+      </View>
     </View>
   );
 
-  const renderBasicInfo = () => (
-    <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>Basic Information</Text>
-      
-      <View style={styles.formRow}>
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Make *</Text>
-          <View style={[styles.dropdown, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}>
-            <Text style={[styles.dropdownText, { color: formData.make ? colors.text : colors.textSecondary }]}>
-              {formData.make || 'Select Make'}
+  // Step 1: Car Identity
+  const renderStep1 = () => (
+    <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
+      <Text style={[styles.stepQuestion, { color: colors.text }]}>
+        What car are you selling?
+      </Text>
+      <Text style={[styles.stepHint, { color: colors.textSecondary }]}>
+        Select your car's brand to get started
+      </Text>
+
+      {/* Brand Selection */}
+      <View style={styles.brandGrid}>
+        {CAR_BRANDS.map(brand => (
+          <TouchableOpacity
+            key={brand.id}
+            style={[
+              styles.brandCard,
+              { backgroundColor: isDark ? colors.surface : '#FFFFFF', borderColor: colors.border },
+              formData.brand === brand.id && { borderColor: colors.primary, backgroundColor: isDark ? '#1F2937' : '#FEF3C7' }
+            ]}
+            onPress={() => updateField('brand', brand.id)}
+          >
+            <Text style={styles.brandEmoji}>{brand.icon}</Text>
+            <Text style={[styles.brandName, { color: colors.text }]} numberOfLines={1}>
+              {brand.name}
             </Text>
-            <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
-          </View>
-        </View>
-
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Year *</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-            value={formData.year}
-            onChangeText={(text) => handleInputChange('year', text)}
-            placeholder="e.g., 2020"
-            placeholderTextColor={colors.textSecondary}
-            keyboardType="number-pad"
-            maxLength={4}
-          />
-        </View>
+            {formData.brand === brand.id && (
+              <View style={[styles.checkBadge, { backgroundColor: colors.primary }]}>
+                <Ionicons name="checkmark" size={12} color="#111827" />
+              </View>
+            )}
+          </TouchableOpacity>
+        ))}
       </View>
 
-      <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: colors.text }]}>Model *</Text>
+      {/* Model Input */}
+      {formData.brand && (
+        <View style={styles.inputSection}>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>Model Name *</Text>
+          <TextInput
+            style={[styles.textInput, { backgroundColor: isDark ? colors.surface : '#F3F4F6', color: colors.text, borderColor: colors.border }]}
+            value={formData.model}
+            onChangeText={(text) => updateField('model', text)}
+            placeholder="e.g., Swift, i20, Nexon"
+            placeholderTextColor={colors.textSecondary}
+          />
+        </View>
+      )}
+
+      {/* Variant Input */}
+      {formData.model && (
+        <View style={styles.inputSection}>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>Variant (Optional)</Text>
+          <TextInput
+            style={[styles.textInput, { backgroundColor: isDark ? colors.surface : '#F3F4F6', color: colors.text, borderColor: colors.border }]}
+            value={formData.variant}
+            onChangeText={(text) => updateField('variant', text)}
+            placeholder="e.g., VXi, Sportz, XM"
+            placeholderTextColor={colors.textSecondary}
+          />
+        </View>
+      )}
+
+      {/* Color Selection */}
+      {formData.model && (
+        <View style={styles.inputSection}>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>Color (Optional)</Text>
+          <View style={styles.colorGrid}>
+            {COLORS.map(color => (
+              <TouchableOpacity
+                key={color.id}
+                style={[
+                  styles.colorChip,
+                  { backgroundColor: color.hex, borderColor: formData.color === color.id ? colors.primary : colors.border }
+                ]}
+                onPress={() => updateField('color', color.id)}
+              >
+                {formData.color === color.id && (
+                  <Ionicons name="checkmark" size={16} color={color.id === 'white' || color.id === 'silver' ? '#111827' : '#FFFFFF'} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+
+      <View style={{ height: hp(15) }} />
+    </ScrollView>
+  );
+
+  // Step 2: Ownership & Registration
+  const renderStep2 = () => (
+    <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
+      <Text style={[styles.stepQuestion, { color: colors.text }]}>
+        Tell us about the car's history
+      </Text>
+      <Text style={[styles.stepHint, { color: colors.textSecondary }]}>
+        This helps buyers make informed decisions
+      </Text>
+
+      {/* Registration Year */}
+      <View style={styles.inputSection}>
+        <Text style={[styles.inputLabel, { color: colors.text }]}>Registration Year *</Text>
         <TextInput
-          style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-          value={formData.model}
-          onChangeText={(text) => handleInputChange('model', text)}
-          placeholder="e.g., Swift, i20, Nexon"
+          style={[styles.textInput, { backgroundColor: isDark ? colors.surface : '#F3F4F6', color: colors.text, borderColor: colors.border }]}
+          value={formData.registrationYear}
+          onChangeText={(text) => updateField('registrationYear', text)}
+          placeholder="e.g., 2020"
           placeholderTextColor={colors.textSecondary}
+          keyboardType="number-pad"
+          maxLength={4}
         />
       </View>
 
-      <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: colors.text }]}>Variant</Text>
+      {/* Owner Number */}
+      <View style={styles.inputSection}>
+        <Text style={[styles.inputLabel, { color: colors.text }]}>Number of Owners</Text>
+        <View style={styles.ownerGrid}>
+          {OWNER_OPTIONS.map(option => (
+            <TouchableOpacity
+              key={option.id}
+              style={[
+                styles.ownerCard,
+                { backgroundColor: isDark ? colors.surface : '#FFFFFF', borderColor: colors.border },
+                formData.ownerNumber === option.id && { borderColor: colors.primary, backgroundColor: isDark ? '#1F2937' : '#FEF3C7' }
+              ]}
+              onPress={() => updateField('ownerNumber', option.id)}
+            >
+              <Text style={[styles.ownerLabel, { color: colors.text }]}>{option.label}</Text>
+              <Text style={[styles.ownerSublabel, { color: colors.textSecondary }]}>{option.sublabel}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Fuel Type */}
+      <View style={styles.inputSection}>
+        <Text style={[styles.inputLabel, { color: colors.text }]}>Fuel Type *</Text>
+        <View style={styles.optionRow}>
+          {FUEL_TYPES.map(fuel => (
+            <TouchableOpacity
+              key={fuel.id}
+              style={[
+                styles.optionPill,
+                { backgroundColor: isDark ? colors.surface : '#F3F4F6', borderColor: colors.border },
+                formData.fuelType === fuel.id && { backgroundColor: colors.primary, borderColor: colors.primary }
+              ]}
+              onPress={() => updateField('fuelType', fuel.id)}
+            >
+              <Ionicons
+                name={fuel.icon as any}
+                size={18}
+                color={formData.fuelType === fuel.id ? '#111827' : colors.text}
+              />
+              <Text style={[
+                styles.optionPillText,
+                { color: formData.fuelType === fuel.id ? '#111827' : colors.text }
+              ]}>
+                {fuel.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Transmission */}
+      <View style={styles.inputSection}>
+        <Text style={[styles.inputLabel, { color: colors.text }]}>Transmission *</Text>
+        <View style={styles.transmissionRow}>
+          {TRANSMISSION_TYPES.map(trans => (
+            <TouchableOpacity
+              key={trans.id}
+              style={[
+                styles.transmissionCard,
+                { backgroundColor: isDark ? colors.surface : '#FFFFFF', borderColor: colors.border },
+                formData.transmission === trans.id && { borderColor: colors.primary, backgroundColor: isDark ? '#1F2937' : '#FEF3C7' }
+              ]}
+              onPress={() => updateField('transmission', trans.id)}
+            >
+              <View style={[styles.transmissionIcon, { backgroundColor: formData.transmission === trans.id ? colors.primary : (isDark ? '#374151' : '#E5E7EB') }]}>
+                <Ionicons name={trans.icon as any} size={24} color={formData.transmission === trans.id ? '#111827' : colors.text} />
+              </View>
+              <Text style={[styles.transmissionName, { color: colors.text }]}>{trans.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Kilometers Driven */}
+      <View style={styles.inputSection}>
+        <Text style={[styles.inputLabel, { color: colors.text }]}>Kilometers Driven</Text>
         <TextInput
-          style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-          value={formData.variant}
-          onChangeText={(text) => handleInputChange('variant', text)}
-          placeholder="e.g., VXI, Sportz, XM"
+          style={[styles.textInput, { backgroundColor: isDark ? colors.surface : '#F3F4F6', color: colors.text, borderColor: colors.border }]}
+          value={formData.mileage}
+          onChangeText={(text) => updateField('mileage', text)}
+          placeholder="e.g., 45000"
           placeholderTextColor={colors.textSecondary}
+          keyboardType="number-pad"
         />
       </View>
 
-      <View style={styles.formRow}>
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Price (₹) *</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-            value={formData.price}
-            onChangeText={(text) => handleInputChange('price', text)}
-            placeholder="e.g., 500000"
-            placeholderTextColor={colors.textSecondary}
-            keyboardType="number-pad"
-          />
-        </View>
-
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Mileage *</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-            value={formData.mileage}
-            onChangeText={(text) => handleInputChange('mileage', text)}
-            placeholder="e.g., 45000"
-            placeholderTextColor={colors.textSecondary}
-            keyboardType="number-pad"
-          />
-        </View>
-      </View>
-
-      <View style={styles.checkboxGroup}>
-        <TouchableOpacity
-          style={styles.checkbox}
-          onPress={() => handleInputChange('negotiable', !formData.negotiable)}
-        >
-          <Ionicons
-            name={formData.negotiable ? 'check-box' : 'check-box-outline-blank'}
-            size={24}
-            color={colors.primary}
-          />
-          <Text style={[styles.checkboxText, { color: colors.text }]}>Price is negotiable</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.formRow}>
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Registration No.</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-            value={formData.registrationNumber}
-            onChangeText={(text) => handleInputChange('registrationNumber', text)}
-            placeholder="e.g., MH12AB1234"
-            placeholderTextColor={colors.textSecondary}
-            autoCapitalize="characters"
-          />
-        </View>
-
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Reg. State</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-            value={formData.registrationState}
-            onChangeText={(text) => handleInputChange('registrationState', text)}
-            placeholder="e.g., Maharashtra"
-            placeholderTextColor={colors.textSecondary}
-          />
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderSpecifications = () => (
-    <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>Technical Specifications</Text>
-      
-      <View style={styles.formRow}>
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Fuel Type *</Text>
-          <View style={styles.optionsContainer}>
-            {FUEL_TYPES.map((type) => (
-              <TouchableOpacity
-                key={type}
-                style={[
-                  styles.optionChip,
-                  { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                  formData.fuelType === type && { backgroundColor: colors.primary },
-                ]}
-                onPress={() => handleInputChange('fuelType', type)}
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    { color: colors.text },
-                    formData.fuelType === type && { backgroundColor: '#111827' },
-                  ]}
-                >
-                  {type}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.formRow}>
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Transmission *</Text>
-          <View style={styles.optionsContainer}>
-            {TRANSMISSION_TYPES.map((type) => (
-              <TouchableOpacity
-                key={type}
-                style={[
-                  styles.optionChip,
-                  { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                  formData.transmission === type && { backgroundColor: colors.primary },
-                ]}
-                onPress={() => handleInputChange('transmission', type)}
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    { color: colors.text },
-                    formData.transmission === type && { backgroundColor: '#111827' },
-                  ]}
-                >
-                  {type}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.formRow}>
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Body Type</Text>
-          <View style={styles.optionsContainer}>
-            {BODY_TYPES.map((type) => (
-              <TouchableOpacity
-                key={type}
-                style={[
-                  styles.optionChip,
-                  { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                  formData.bodyType === type && { backgroundColor: colors.primary },
-                ]}
-                onPress={() => handleInputChange('bodyType', type)}
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    { color: colors.text },
-                    formData.bodyType === type && { backgroundColor: '#111827' },
-                  ]}
-                >
-                  {type}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.formRow}>
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Color</Text>
-          <View style={styles.optionsContainer}>
-            {COLORS.map((color) => (
-              <TouchableOpacity
-                key={color}
-                style={[
-                  styles.optionChip,
-                  { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                  formData.color === color && { backgroundColor: colors.primary },
-                ]}
-                onPress={() => handleInputChange('color', color)}
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    { color: colors.text },
-                  formData.color === color && { color: '#111827' },
-                  ]}
-                >
-                  {color}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.formRow}>
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Engine Capacity (cc)</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-            value={formData.engineCapacity}
-            onChangeText={(text) => handleInputChange('engineCapacity', text)}
-            placeholder="e.g., 1200"
-            placeholderTextColor={colors.textSecondary}
-            keyboardType="number-pad"
-          />
-        </View>
-
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Seating Capacity</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-            value={formData.seatingCapacity}
-            onChangeText={(text) => handleInputChange('seatingCapacity', text)}
-            placeholder="e.g., 5"
-            placeholderTextColor={colors.textSecondary}
-            keyboardType="number-pad"
-          />
-        </View>
-      </View>
-
-      <View style={styles.formRow}>
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Max Power (bhp)</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-            value={formData.maxPower}
-            onChangeText={(text) => handleInputChange('maxPower', text)}
-            placeholder="e.g., 90"
-            placeholderTextColor={colors.textSecondary}
-            keyboardType="number-pad"
-          />
-        </View>
-
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Max Torque (Nm)</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-            value={formData.maxTorque}
-            onChangeText={(text) => handleInputChange('maxTorque', text)}
-            placeholder="e.g., 113"
-            placeholderTextColor={colors.textSecondary}
-            keyboardType="number-pad"
-          />
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderFeatures = () => (
-    <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>Car Features</Text>
-      
-      {/* Exterior Features */}
-      <View style={styles.featureSection}>
-        <Text style={[styles.featureSectionTitle, { color: colors.text }]}>Exterior Features</Text>
-        <View style={styles.featuresGrid}>
-          {EXTERIOR_FEATURES.map((feature) => (
-            <TouchableOpacity
-              key={feature}
-              style={[
-                styles.featureChip,
-                { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                formData.exteriorFeatures.includes(feature) && { backgroundColor: colors.primary },
-              ]}
-              onPress={() => toggleFeature('exteriorFeatures', feature)}
-            >
-              <Text
-                style={[
-                  styles.featureText,
-                  { color: colors.text },
-                  formData.exteriorFeatures.includes(feature) && { color: '#111827' },
-                ]}
-              >
-                {feature}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Interior Features */}
-      <View style={styles.featureSection}>
-        <Text style={[styles.featureSectionTitle, { color: colors.text }]}>Interior Features</Text>
-        <View style={styles.featuresGrid}>
-          {INTERIOR_FEATURES.map((feature) => (
-            <TouchableOpacity
-              key={feature}
-              style={[
-                styles.featureChip,
-                { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                formData.interiorFeatures.includes(feature) && { backgroundColor: colors.primary },
-              ]}
-              onPress={() => toggleFeature('interiorFeatures', feature)}
-            >
-              <Text
-                style={[
-                  styles.featureText,
-                  { color: colors.text },
-                  formData.interiorFeatures.includes(feature) && { color: '#111827' },
-                ]}
-              >
-                {feature}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Safety Features */}
-      <View style={styles.featureSection}>
-        <Text style={[styles.featureSectionTitle, { color: colors.text }]}>Safety Features</Text>
-        <View style={styles.featuresGrid}>
-          {SAFETY_FEATURES.map((feature) => (
-            <TouchableOpacity
-              key={feature}
-              style={[
-                styles.featureChip,
-                { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                formData.safetyFeatures.includes(feature) && { backgroundColor: colors.primary },
-              ]}
-              onPress={() => toggleFeature('safetyFeatures', feature)}
-            >
-              <Text
-                style={[
-                  styles.featureText,
-                  { color: colors.text },
-                  formData.safetyFeatures.includes(feature) && { color: '#111827' },
-                ]}
-              >
-                {feature}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderHistory = () => (
-    <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>Vehicle History</Text>
-      
-      <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: colors.text }]}>Owner Number</Text>
-        <View style={styles.optionsContainer}>
-          {[1, 2, 3, 4].map((num) => (
-            <TouchableOpacity
-              key={num}
-              style={[
-                styles.optionChip,
-                { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                formData.ownerNumber === num.toString() && { backgroundColor: colors.primary },
-              ]}
-              onPress={() => handleInputChange('ownerNumber', num.toString())}
-            >
-              <Text
-                style={[
-                  styles.optionText,
-                  { color: colors.text },
-                  formData.ownerNumber === num.toString() && { color: '#111827' },
-                ]}
-              >
-                {num === 1 ? '1st' : num === 2 ? '2nd' : num === 3 ? '3rd' : '4th+'}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.checkboxGroup}>
-        <TouchableOpacity
-          style={styles.checkbox}
-          onPress={() => handleInputChange('accidentHistory', !formData.accidentHistory)}
-        >
-          <Ionicons
-            name={formData.accidentHistory ? 'check-box' : 'check-box-outline-blank'}
-            size={24}
-            color={colors.primary}
-          />
-          <Text style={[styles.checkboxText, { color: colors.text }]}>Has accident history</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.checkbox}
-          onPress={() => handleInputChange('floodHistory', !formData.floodHistory)}
-        >
-          <Ionicons
-            name={formData.floodHistory ? 'check-box' : 'check-box-outline-blank'}
-            size={24}
-            color={colors.primary}
-          />
-          <Text style={[styles.checkboxText, { color: colors.text }]}>Has flood history</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: colors.text }]}>Service History</Text>
-        <View style={styles.optionsContainer}>
+      {/* Usage */}
+      <View style={styles.inputSection}>
+        <Text style={[styles.inputLabel, { color: colors.text }]}>Usage</Text>
+        <View style={styles.optionRow}>
           {[
-            { key: 'dealer', label: 'Dealer Service' },
-            { key: 'independent', label: 'Independent' },
-            { key: 'mixed', label: 'Mixed' },
-            { key: 'unknown', label: 'Unknown' },
-          ].map((option) => (
-            <TouchableOpacity
-              key={option.key}
-              style={[
-                styles.optionChip,
-                { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                formData.serviceHistory === option.key && { backgroundColor: colors.primary },
-              ]}
-              onPress={() => handleInputChange('serviceHistory', option.key as any)}
-            >
-              <Text
+            { id: 'personal', label: 'Personal' },
+            { id: 'commercial', label: 'Commercial' },
+          ].map(option => {
+            const isSelected = formData.usage === option.id;
+            return (
+              <TouchableOpacity
+                key={option.id}
                 style={[
-                  styles.optionText,
-                  { color: colors.text },
-                  formData.serviceHistory === option.key && { backgroundColor: '#111827' },
+                  styles.optionPill,
+                  {
+                    backgroundColor: isSelected
+                      ? colors.primary
+                      : isDark
+                      ? colors.surface
+                      : '#F3F4F6',
+                    borderColor: isSelected ? colors.primary : colors.border,
+                  },
                 ]}
+                onPress={() => updateField('usage', option.id)}
               >
-                {option.label}
-              </Text>
+                <Text
+                  style={[
+                    styles.optionPillText,
+                    { color: isSelected ? '#111827' : colors.text },
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+          <TouchableOpacity
+            style={[
+              styles.optionPill,
+              {
+                backgroundColor: isDark ? colors.surface : '#FFFFFF',
+                borderColor: colors.border,
+              },
+            ]}
+            onPress={() => updateField('usage', '')}
+          >
+            <Text style={[styles.optionPillText, { color: colors.textSecondary }]}>
+              I’ll add later
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={{ height: hp(15) }} />
+    </ScrollView>
+  );
+
+  // Step 3: Condition Check
+  const renderStep3 = () => {
+    const questions = [
+      { key: 'accidentHistory', question: 'Has the car been in an accident?', icon: 'warning-outline' },
+      { key: 'repaintedParts', question: 'Any parts repainted or replaced?', icon: 'color-palette-outline' },
+      { key: 'engineIssues', question: 'Engine or transmission issues?', icon: 'construct-outline' },
+      { key: 'floodDamage', question: 'Any flood damage history?', icon: 'water-outline' },
+      { key: 'insuranceClaims', question: 'Insurance claims made?', icon: 'document-text-outline' },
+    ];
+
+    return (
+      <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.stepQuestion, { color: colors.text }]}>
+          Let's verify the condition
+        </Text>
+        <Text style={[styles.stepHint, { color: colors.textSecondary }]}>
+          Honest answers build buyer trust 💪
+        </Text>
+
+        {questions.map((q, index) => (
+          <View
+            key={q.key}
+            style={[styles.conditionCard, { backgroundColor: isDark ? colors.surface : '#FFFFFF', borderColor: colors.border }]}
+          >
+            <View style={styles.conditionHeader}>
+              <View style={[styles.conditionIconWrap, { backgroundColor: isDark ? '#374151' : '#F3F4F6' }]}>
+                <Ionicons name={q.icon as any} size={20} color={colors.text} />
+              </View>
+              <Text style={[styles.conditionQuestion, { color: colors.text }]}>{q.question}</Text>
+            </View>
+            <View style={styles.conditionButtons}>
+              {['Yes', 'No', 'Not Sure'].map(answer => {
+                const value = answer === 'Yes' ? true : answer === 'No' ? false : null;
+                const isSelected = formData[q.key as keyof FormData] === value;
+                return (
+                  <TouchableOpacity
+                    key={answer}
+                    style={[
+                      styles.conditionButton,
+                      { backgroundColor: isDark ? '#374151' : '#F3F4F6' },
+                      isSelected && {
+                        backgroundColor: answer === 'Yes' ? '#FEE2E2' : answer === 'No' ? '#D1FAE5' : '#FEF3C7',
+                        borderColor: answer === 'Yes' ? '#EF4444' : answer === 'No' ? '#10B981' : '#F59E0B',
+                        borderWidth: 1,
+                      }
+                    ]}
+                    onPress={() => updateField(q.key as keyof FormData, value as any)}
+                  >
+                    <Text style={[
+                      styles.conditionButtonText,
+                      { color: colors.text },
+                      isSelected && { fontWeight: '600' }
+                    ]}>
+                      {answer}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        ))}
+
+        <View style={{ height: hp(15) }} />
+      </ScrollView>
+    );
+  };
+
+  // Step 4: Pricing & Media
+  const renderStep4 = () => {
+    const registrationYearNumber = parseInt(formData.registrationYear || '0', 10);
+    const mileageNumber = parseInt(formData.mileage || '0', 10);
+
+    const getPriceSuggestion = () => {
+      if (!registrationYearNumber || Number.isNaN(registrationYearNumber)) {
+        return null;
+      }
+
+      const currentYear = new Date().getFullYear();
+      const age = Math.max(0, currentYear - registrationYearNumber);
+
+      let base = 300000;
+      if (age <= 3) {
+        base = 700000;
+      } else if (age <= 7) {
+        base = 500000;
+      }
+
+      if (mileageNumber && !Number.isNaN(mileageNumber)) {
+        if (mileageNumber > 100000) {
+          base *= 0.7;
+        } else if (mileageNumber > 60000) {
+          base *= 0.85;
+        }
+      }
+
+      const min = Math.max(100000, Math.round(base * 0.9));
+      const max = Math.round(base * 1.1);
+
+      return {
+        min: min.toLocaleString('en-IN'),
+        max: max.toLocaleString('en-IN'),
+      };
+    };
+
+    const suggestion = getPriceSuggestion();
+
+    const autoDescriptionParts = [];
+    const brandName = CAR_BRANDS.find(b => b.id === formData.brand)?.name;
+    if (brandName || formData.model) {
+      autoDescriptionParts.push(`${brandName || ''} ${formData.model || ''}`.trim());
+    }
+    if (formData.registrationYear) {
+      autoDescriptionParts.push(`Registered in ${formData.registrationYear}`);
+    }
+    if (formData.mileage) {
+      autoDescriptionParts.push(`${formData.mileage} km driven`);
+    }
+    if (formData.fuelType) {
+      autoDescriptionParts.push(`${formData.fuelType.toUpperCase()} fuel`);
+    }
+    const autoDescription = autoDescriptionParts.length
+      ? `${autoDescriptionParts.join(' • ')}. Well maintained, ready for a new owner.`
+      : '';
+
+    return (
+      <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.stepQuestion, { color: colors.text }]}>
+          Set your price and add photos
+        </Text>
+        <Text style={[styles.stepHint, { color: colors.textSecondary }]}>
+          Great photos get 3x more inquiries!
+        </Text>
+
+        {/* Price Input */}
+        <View style={styles.inputSection}>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>Expected Price *</Text>
+          <View style={[styles.priceInput, { backgroundColor: isDark ? colors.surface : '#F3F4F6', borderColor: colors.border }]}>
+            <Text style={[styles.currencySymbol, { color: colors.text }]}>₹</Text>
+            <TextInput
+              style={[styles.priceTextInput, { color: colors.text }]}
+              value={formData.price}
+              onChangeText={(text) => updateField('price', text)}
+              placeholder="e.g., 5,00,000"
+              placeholderTextColor={colors.textSecondary}
+              keyboardType="number-pad"
+            />
+          </View>
+          {suggestion ? (
+            <Text style={[styles.priceHint, { color: colors.textSecondary }]}>
+              Suggested range: ₹{suggestion.min} – ₹{suggestion.max}
+            </Text>
+          ) : (
+            <Text style={[styles.priceHint, { color: colors.textSecondary }]}>
+              💡 Tip: Add registration year and mileage for a smarter suggestion
+            </Text>
+          )}
+        </View>
+
+      {/* Photo Upload */}
+      <View style={styles.inputSection}>
+        <Text style={[styles.inputLabel, { color: colors.text }]}>Car Photos</Text>
+        <View style={styles.photoGrid}>
+          {['Front View', 'Rear View', 'Interior', 'Dashboard', 'Engine'].map((label, index) => (
+            <TouchableOpacity
+              key={label}
+              style={[styles.photoBox, { backgroundColor: isDark ? colors.surface : '#F3F4F6', borderColor: colors.border }]}
+            >
+              <Ionicons name="camera-outline" size={28} color={colors.primary} />
+              <Text style={[styles.photoLabel, { color: colors.textSecondary }]}>{label}</Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
-      <View style={styles.formRow}>
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Last Service Date</Text>
+        {/* Description */}
+        <View style={styles.inputSection}>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>Description (Optional)</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-            value={formData.lastServiceDate}
-            onChangeText={(text) => handleInputChange('lastServiceDate', text)}
-            placeholder="DD/MM/YYYY"
+            style={[styles.textArea, { backgroundColor: isDark ? colors.surface : '#F3F4F6', color: colors.text, borderColor: colors.border }]}
+            value={formData.description}
+            onChangeText={(text) => updateField('description', text)}
+            placeholder={autoDescription || 'Add any additional details about your car...'}
             placeholderTextColor={colors.textSecondary}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
           />
         </View>
 
-        <View style={styles.formColumn}>
-          <Text style={[styles.label, { color: colors.text }]}>Service Kms</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-            value={formData.lastServiceKms}
-            onChangeText={(text) => handleInputChange('lastServiceKms', text)}
-            placeholder="e.g., 40000"
-            placeholderTextColor={colors.textSecondary}
-            keyboardType="number-pad"
-          />
+        {/* Preview Card */}
+        <View style={[styles.previewCard, { backgroundColor: isDark ? colors.surface : '#FFFFFF', borderColor: colors.border }]}>
+          <Text style={[styles.previewTitle, { color: colors.text }]}>📋 Listing Preview</Text>
+          <View style={styles.previewContent}>
+            <Text style={[styles.previewCarName, { color: colors.text }]}>
+              {brandName || 'Brand'} {formData.model || 'Model'}
+            </Text>
+            <Text style={[styles.previewVariant, { color: colors.textSecondary }]}>
+              {formData.variant || 'Variant'} • {formData.registrationYear || 'Year'} • {formData.mileage ? `${formData.mileage} km` : 'Mileage'}
+            </Text>
+            <Text style={[styles.previewPrice, { color: colors.primary }]}>
+              ₹{formData.price ? parseInt(formData.price, 10).toLocaleString('en-IN') : '0'}
+            </Text>
+          </View>
         </View>
-      </View>
-    </View>
-  );
 
-  const renderWarranty = () => (
-    <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>Warranty & Certification</Text>
-      
-      <View style={styles.checkboxGroup}>
-        <TouchableOpacity
-          style={styles.checkbox}
-          onPress={() => handleInputChange('manufacturerWarranty', !formData.manufacturerWarranty)}
-        >
-          <Ionicons
-            name={formData.manufacturerWarranty ? 'check-box' : 'check-box-outline-blank'}
-            size={24}
-            color={colors.primary}
-          />
-          <Text style={[styles.checkboxText, { color: colors.text }]}>Manufacturer warranty available</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.checkbox}
-          onPress={() => handleInputChange('extendedWarranty', !formData.extendedWarranty)}
-        >
-          <Ionicons
-            name={formData.extendedWarranty ? 'check-box' : 'check-box-outline-blank'}
-            size={24}
-            color={colors.primary}
-          />
-          <Text style={[styles.checkboxText, { color: colors.text }]}>Extended warranty available</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.checkbox}
-          onPress={() => handleInputChange('dealerWarranty', !formData.dealerWarranty)}
-        >
-          <Ionicons
-            name={formData.dealerWarranty ? 'check-box' : 'check-box-outline-blank'}
-            size={24}
-            color={colors.primary}
-          />
-          <Text style={[styles.checkboxText, { color: colors.text }]}>Dealer warranty included</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.checkbox}
-          onPress={() => handleInputChange('rtoCleared', !formData.rtoCleared)}
-        >
-          <Ionicons
-            name={formData.rtoCleared ? 'check-box' : 'check-box-outline-blank'}
-            size={24}
-            color={colors.primary}
-          />
-          <Text style={[styles.checkboxText, { color: colors.text }]}>RTO clearance available</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.checkbox}
-          onPress={() => handleInputChange('inspectionReport', !formData.inspectionReport)}
-        >
-          <Ionicons
-            name={formData.inspectionReport ? 'check-box' : 'check-box-outline-blank'}
-            size={24}
-            color={colors.primary}
-          />
-          <Text style={[styles.checkboxText, { color: colors.text }]}>Professional inspection report</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: colors.text }]}>Dealer Warranty Period</Text>
-        <View style={styles.optionsContainer}>
-          {['3 months', '6 months', '1 year', '2 years'].map((period) => (
-            <TouchableOpacity
-              key={period}
-              style={[
-                styles.optionChip,
-                { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                formData.dealerWarrantyPeriod === period && { backgroundColor: colors.primary },
-              ]}
-              onPress={() => handleInputChange('dealerWarrantyPeriod', period)}
-            >
-              <Text
-                style={[
-                  styles.optionText,
-                  { color: colors.text },
-                  formData.dealerWarrantyPeriod === period && { backgroundColor: '#111827' },
-                ]}
-              >
-                {period}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: colors.text }]}>Certification Level</Text>
-        <View style={styles.optionsContainer}>
-          {[
-            { key: 'basic', label: 'Basic Check' },
-            { key: 'premium', label: 'Premium Certified' },
-            { key: 'luxury', label: 'Luxury Certified' },
-          ].map((level) => (
-            <TouchableOpacity
-              key={level.key}
-              style={[
-                styles.optionChip,
-                { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                formData.certificationLevel === level.key && { backgroundColor: colors.primary },
-              ]}
-              onPress={() => handleInputChange('certificationLevel', level.key as any)}
-            >
-              <Text
-                style={[
-                  styles.optionText,
-                  { color: colors.text },
-                  formData.certificationLevel === level.key && { backgroundColor: '#111827' },
-                ]}
-              >
-                {level.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderMedia = () => (
-    <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>Images & Description</Text>
-      
-      {/* Image Upload Section */}
-      <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: colors.text }]}>Car Images</Text>
-        <TouchableOpacity
-          style={[styles.imageUpload, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}
-          onPress={() => setShowImagePicker(true)}
-        >
-          <Ionicons name="add-a-photo" size={32} color={colors.primary} />
-          <Text style={[styles.imageUploadText, { color: colors.text }]}>Add Images</Text>
-          <Text style={[styles.imageUploadSubtext, { color: colors.textSecondary }]}>
-            Upload high-quality images (Max 10)
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Description */}
-      <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: colors.text }]}>Description</Text>
-        <TextInput
-          style={[styles.input, styles.textArea, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-          value={formData.description}
-          onChangeText={(text) => handleInputChange('description', text)}
-          placeholder="Describe the car's condition, unique features, recent maintenance, etc."
-          placeholderTextColor={colors.textSecondary}
-          multiline
-          numberOfLines={6}
-          textAlignVertical="top"
-        />
-      </View>
-
-      {/* Key Features */}
-      <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: colors.text }]}>Key Highlights</Text>
-        <TextInput
-          style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
-          placeholder="Enter key features (comma separated)"
-          placeholderTextColor={colors.textSecondary}
-          multiline
-        />
-      </View>
-    </View>
-  );
+        <View style={{ height: hp(15) }} />
+      </ScrollView>
+    );
+  };
 
   const renderStepContent = () => {
-    switch (activeStep) {
-      case 0: return renderBasicInfo();
-      case 1: return renderSpecifications();
-      case 2: return renderFeatures();
-      case 3: return renderHistory();
-      case 4: return renderWarranty();
-      case 5: return renderMedia();
+    switch (currentStep) {
+      case 1: return renderStep1();
+      case 2: return renderStep2();
+      case 3: return renderStep3();
+      case 4: return renderStep4();
       default: return null;
     }
   };
 
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-      />
+  // ============= MAIN RENDER =============
 
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="left" size={24} color={colors.text} />
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Add New Car</Text>
-        <Text style={[styles.stepCounter, { color: colors.textSecondary }]}>
-          {activeStep + 1} of {steps.length}
-        </Text>
+        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="close" size={24} color={colors.text} />
+        </TouchableOpacity>
       </View>
 
-      {renderStepIndicator()}
+      {/* Progress Bar */}
+      {renderProgressBar()}
 
-      <KeyboardAvoidingView 
-        style={styles.content}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      {/* Step Content */}
+      <KeyboardAvoidingView
+        style={styles.contentContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView 
-          ref={scrollViewRef}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {renderStepContent()}
-        </ScrollView>
+        {renderStepContent()}
+      </KeyboardAvoidingView>
 
-        {/* Navigation Buttons */}
-        <View style={[styles.navigationButtons, { backgroundColor: colors.surface }]}>
+      {/* Bottom Action */}
+      <View style={[styles.bottomBar, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
+        {currentStep < TOTAL_STEPS ? (
           <TouchableOpacity
             style={[
-              styles.navButton,
-              styles.secondaryButton,
-              { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-              activeStep === 0 && styles.disabledButton,
+              styles.continueButton,
+              { backgroundColor: canProceed() ? colors.primary : (isDark ? '#374151' : '#D1D5DB') }
             ]}
-            onPress={previousStep}
-            disabled={activeStep === 0}
+            onPress={handleNext}
+            disabled={!canProceed()}
           >
-            <Text style={[styles.navButtonText, { color: activeStep === 0 ? colors.textSecondary : colors.text }]}>
-              Previous
+            <Text style={[styles.continueText, { color: canProceed() ? '#111827' : colors.textSecondary }]}>
+              Continue
             </Text>
+            <Ionicons name="arrow-forward" size={20} color={canProceed() ? '#111827' : colors.textSecondary} />
           </TouchableOpacity>
-
+        ) : (
           <TouchableOpacity
-            style={[styles.navButton, styles.Button, { backgroundColor: colors.primary }]}
-            onPress={activeStep === steps.length - 1 ? handleSubmit : nextStep}
+            style={[styles.submitButton, { backgroundColor: colors.primary }]}
+            onPress={handleSubmit}
             disabled={loading}
           >
-            <Text style={styles.ButtonText}>
-              {loading ? 'Creating...' : activeStep === steps.length - 1 ? 'Create Listing' : 'Next'}
-            </Text>
+            {loading ? (
+              <ActivityIndicator size="small" color="#111827" />
+            ) : (
+              <>
+                <Ionicons name="checkmark-circle" size={20} color="#111827" />
+                <Text style={styles.submitText}>Submit for Review</Text>
+              </>
+            )}
           </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+        )}
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16,
-    elevation: 2,
-
+    paddingHorizontal: getResponsiveSpacing('lg'),
+    paddingVertical: getResponsiveSpacing('md'),
+    borderBottomWidth: 1,
+  },
+  backButton: {
+    padding: scaleSize(4),
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: getResponsiveTypography('lg'),
     fontWeight: '700',
   },
-  stepCounter: {
-    fontSize: 14,
-    fontWeight: '600',
+  closeButton: {
+    padding: scaleSize(4),
   },
-  stepIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    gap: 8,
+
+  // Progress
+  progressContainer: {
+    paddingHorizontal: getResponsiveSpacing('lg'),
+    paddingVertical: getResponsiveSpacing('md'),
   },
-  stepItem: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    color: '#E0E0E0',
+  progressHeader: {
+    marginBottom: getResponsiveSpacing('sm'),
   },
-  stepItemActive: {
-    borderColor: 'transparent',
+  progressText: {
+    fontSize: getResponsiveTypography('xs'),
+    fontWeight: '500',
   },
-  content: {
+  progressTitle: {
+    fontSize: getResponsiveTypography('lg'),
+    fontWeight: '700',
+    marginTop: scaleSize(2),
+  },
+  progressTrack: {
+    height: scaleSize(4),
+    borderRadius: scaleSize(2),
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: scaleSize(2),
+  },
+
+  // Content
+  contentContainer: {
     flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 20,
   },
   stepContent: {
-    padding: 16,
+    flex: 1,
+    paddingHorizontal: getResponsiveSpacing('lg'),
   },
-  stepTitle: {
-    fontSize: 20,
+  stepQuestion: {
+    fontSize: getResponsiveTypography('xl'),
     fontWeight: '700',
-    marginBottom: 20,
+    marginTop: getResponsiveSpacing('md'),
+  },
+  stepHint: {
+    fontSize: getResponsiveTypography('sm'),
+    marginTop: scaleSize(4),
+    marginBottom: getResponsiveSpacing('lg'),
+  },
+
+  // Brand Grid
+  brandGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: getResponsiveSpacing('sm'),
+  },
+  brandCard: {
+    width: (wp(100) - getResponsiveSpacing('lg') * 2 - getResponsiveSpacing('sm') * 4) / 5,
+    aspectRatio: 1,
+    borderRadius: getResponsiveBorderRadius('lg'),
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: scaleSize(4),
+  },
+  brandEmoji: {
+    fontSize: scaleSize(24),
+    marginBottom: scaleSize(4),
+  },
+  brandName: {
+    fontSize: getResponsiveTypography('xs'),
+    fontWeight: '500',
     textAlign: 'center',
   },
-  formGroup: {
-    marginBottom: 20,
+  checkBadge: {
+    position: 'absolute',
+    top: scaleSize(4),
+    right: scaleSize(4),
+    width: scaleSize(16),
+    height: scaleSize(16),
+    borderRadius: scaleSize(8),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  formRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
+
+  // Input Section
+  inputSection: {
+    marginTop: getResponsiveSpacing('lg'),
   },
-  formColumn: {
-    flex: 1,
-  },
-  label: {
-    fontSize: 16,
+  inputLabel: {
+    fontSize: getResponsiveTypography('sm'),
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: scaleSize(8),
   },
-  input: {
-    height: 48,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    fontSize: 16,
+  textInput: {
+    borderWidth: 1,
+    borderRadius: getResponsiveBorderRadius('lg'),
+    paddingHorizontal: getResponsiveSpacing('md'),
+    paddingVertical: getResponsiveSpacing('sm'),
+    fontSize: getResponsiveTypography('md'),
   },
   textArea: {
-    height: 120,
-    paddingTop: 12,
-    textAlignVertical: 'top',
-  },
-  dropdown: {
-    height: 48,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  dropdownText: {
-    fontSize: 16,
-  },
-  optionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  optionChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  optionText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  checkboxGroup: {
-    gap: 16,
-    marginBottom: 20,
-  },
-  checkbox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  checkboxText: {
-    fontSize: 16,
-    marginLeft: 12,
-    flex: 1,
-  },
-  featureSection: {
-    marginBottom: 24,
-  },
-  featureSectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  featuresGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  featureChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  featureText: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  imageUpload: {
-    height: 120,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-    borderStyle: 'dashed',
-  },
-  imageUploadText: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  imageUploadSubtext: {
-    fontSize: 12,
-    marginTop: 4,
-  },
-  navigationButtons: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-    elevation: 4,
-
-  },
-  navButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  secondaryButton: {
     borderWidth: 1,
-    color: '#E0E0E0',
+    borderRadius: getResponsiveBorderRadius('lg'),
+    paddingHorizontal: getResponsiveSpacing('md'),
+    paddingVertical: getResponsiveSpacing('sm'),
+    fontSize: getResponsiveTypography('md'),
+    minHeight: scaleSize(100),
   },
-  Button: {
-    // backgroundColor set dynamically
+
+  // Color Grid
+  colorGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: getResponsiveSpacing('sm'),
   },
-  navButtonText: {
-    fontSize: 16,
+  colorChip: {
+    width: scaleSize(40),
+    height: scaleSize(40),
+    borderRadius: getResponsiveBorderRadius('full'),
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Owner Grid
+  ownerGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: getResponsiveSpacing('sm'),
+  },
+  ownerCard: {
+    flex: 1,
+    minWidth: (wp(100) - getResponsiveSpacing('lg') * 2 - getResponsiveSpacing('sm')) / 2 - 1,
+    padding: getResponsiveSpacing('md'),
+    borderRadius: getResponsiveBorderRadius('lg'),
+    borderWidth: 1,
+  },
+  ownerLabel: {
+    fontSize: getResponsiveTypography('sm'),
     fontWeight: '600',
   },
-  ButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
+  ownerSublabel: {
+    fontSize: getResponsiveTypography('xs'),
+    marginTop: scaleSize(2),
   },
-  disabledButton: {
-    opacity: 0.5,
+
+  // Option Row
+  optionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: getResponsiveSpacing('sm'),
+  },
+  optionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: getResponsiveSpacing('md'),
+    paddingVertical: getResponsiveSpacing('sm'),
+    borderRadius: getResponsiveBorderRadius('full'),
+    borderWidth: 1,
+    gap: scaleSize(6),
+  },
+  optionPillText: {
+    fontSize: getResponsiveTypography('sm'),
+    fontWeight: '500',
+  },
+
+  // Transmission
+  transmissionRow: {
+    flexDirection: 'row',
+    gap: getResponsiveSpacing('md'),
+  },
+  transmissionCard: {
+    flex: 1,
+    padding: getResponsiveSpacing('md'),
+    borderRadius: getResponsiveBorderRadius('xl'),
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  transmissionIcon: {
+    width: scaleSize(48),
+    height: scaleSize(48),
+    borderRadius: getResponsiveBorderRadius('full'),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: scaleSize(8),
+  },
+  transmissionName: {
+    fontSize: getResponsiveTypography('sm'),
+    fontWeight: '600',
+  },
+
+  // Condition
+  conditionCard: {
+    padding: getResponsiveSpacing('md'),
+    borderRadius: getResponsiveBorderRadius('xl'),
+    borderWidth: 1,
+    marginBottom: getResponsiveSpacing('sm'),
+  },
+  conditionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: getResponsiveSpacing('sm'),
+  },
+  conditionIconWrap: {
+    width: scaleSize(36),
+    height: scaleSize(36),
+    borderRadius: getResponsiveBorderRadius('md'),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: getResponsiveSpacing('sm'),
+  },
+  conditionQuestion: {
+    flex: 1,
+    fontSize: getResponsiveTypography('sm'),
+    fontWeight: '500',
+  },
+  conditionButtons: {
+    flexDirection: 'row',
+    gap: getResponsiveSpacing('sm'),
+  },
+  conditionButton: {
+    flex: 1,
+    paddingVertical: getResponsiveSpacing('sm'),
+    borderRadius: getResponsiveBorderRadius('md'),
+    alignItems: 'center',
+  },
+  conditionButtonText: {
+    fontSize: getResponsiveTypography('sm'),
+  },
+
+  // Price
+  priceInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: getResponsiveBorderRadius('lg'),
+    paddingHorizontal: getResponsiveSpacing('md'),
+  },
+  currencySymbol: {
+    fontSize: getResponsiveTypography('xl'),
+    fontWeight: '700',
+    marginRight: scaleSize(8),
+  },
+  priceTextInput: {
+    flex: 1,
+    fontSize: getResponsiveTypography('xl'),
+    fontWeight: '600',
+    paddingVertical: getResponsiveSpacing('md'),
+  },
+  priceHint: {
+    fontSize: getResponsiveTypography('xs'),
+    marginTop: scaleSize(8),
+  },
+
+  // Photo Grid
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: getResponsiveSpacing('sm'),
+  },
+  photoBox: {
+    width: (wp(100) - getResponsiveSpacing('lg') * 2 - getResponsiveSpacing('sm') * 2) / 3,
+    aspectRatio: 1,
+    borderRadius: getResponsiveBorderRadius('lg'),
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoLabel: {
+    fontSize: getResponsiveTypography('xs'),
+    marginTop: scaleSize(4),
+    textAlign: 'center',
+  },
+
+  // Preview
+  previewCard: {
+    marginTop: getResponsiveSpacing('lg'),
+    padding: getResponsiveSpacing('md'),
+    borderRadius: getResponsiveBorderRadius('xl'),
+    borderWidth: 1,
+  },
+  previewTitle: {
+    fontSize: getResponsiveTypography('sm'),
+    fontWeight: '600',
+    marginBottom: getResponsiveSpacing('sm'),
+  },
+  previewContent: {},
+  previewCarName: {
+    fontSize: getResponsiveTypography('lg'),
+    fontWeight: '700',
+  },
+  previewVariant: {
+    fontSize: getResponsiveTypography('sm'),
+    marginTop: scaleSize(2),
+  },
+  previewPrice: {
+    fontSize: getResponsiveTypography('xl'),
+    fontWeight: '800',
+    marginTop: scaleSize(8),
+  },
+
+  // Bottom Bar
+  bottomBar: {
+    paddingHorizontal: getResponsiveSpacing('lg'),
+    paddingVertical: getResponsiveSpacing('md'),
+    borderTopWidth: 1,
+  },
+  continueButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: getResponsiveSpacing('md'),
+    borderRadius: getResponsiveBorderRadius('lg'),
+    gap: scaleSize(8),
+  },
+  continueText: {
+    fontSize: getResponsiveTypography('md'),
+    fontWeight: '600',
+  },
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: getResponsiveSpacing('md'),
+    borderRadius: getResponsiveBorderRadius('lg'),
+    gap: scaleSize(8),
+  },
+  submitText: {
+    fontSize: getResponsiveTypography('md'),
+    fontWeight: '600',
+    color: '#111827',
   },
 });
 
 export default DealerAddCarScreen;
-
-

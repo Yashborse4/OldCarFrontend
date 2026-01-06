@@ -18,49 +18,6 @@ const DealerGroupsScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [_loading, setLoading] = useState(true);
 
-  // Mock data - replace with API calls later
-  const mockGroups = React.useMemo<DealerGroup[]>(() => [
-    {
-      id: '1',
-      name: 'Luxury Car Dealers Network',
-      description: 'Network for premium luxury vehicle dealers',
-      isPrivate: false,
-      adminId: 'dealer1',
-      members: [
-        { id: 'dealer1', name: 'John Smith', dealership: 'Premium Motors', role: 'admin' },
-        { id: 'dealer2', name: 'Sarah Johnson', dealership: 'Elite Cars', role: 'member' },
-        { id: 'dealer3', name: 'Mike Wilson', dealership: 'Luxury Auto Group', role: 'member' },
-      ],
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      name: 'Regional Dealers Alliance',
-      description: 'Private group for regional dealer partnerships',
-      isPrivate: true,
-      adminId: 'dealer2',
-      members: [
-        { id: 'dealer2', name: 'Sarah Johnson', dealership: 'Elite Cars', role: 'admin' },
-        { id: 'dealer4', name: 'David Brown', dealership: 'Metro Auto', role: 'member' },
-      ],
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: '3',
-      name: 'Sports Car Enthusiasts',
-      description: 'Group focused on sports and performance vehicles',
-      isPrivate: false,
-      adminId: 'dealer1',
-      members: [
-        { id: 'dealer1', name: 'John Smith', dealership: 'Premium Motors', role: 'admin' },
-        { id: 'dealer5', name: 'Lisa Garcia', dealership: 'Speed Motors', role: 'member' },
-        { id: 'dealer6', name: 'Tom Anderson', dealership: 'Performance Plus', role: 'member' },
-        { id: 'dealer7', name: 'Chris Lee', dealership: 'Turbo Cars', role: 'member' },
-      ],
-      createdAt: new Date().toISOString(),
-    },
-  ], []);
-
   useEffect(() => {
     loadGroups();
   }, []);
@@ -68,16 +25,13 @@ const DealerGroupsScreen: React.FC = () => {
   const loadGroups = useCallback(async () => {
     try {
       setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setGroups(mockGroups);
-        setLoading(false);
-      }, 1000);
+      setGroups([]);
+      setLoading(false);
     } catch (error) {
       console.error('Error loading groups:', error);
       setLoading(false);
     }
-  }, [mockGroups]);
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);

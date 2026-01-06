@@ -1,24 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  StatusBar,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   TextInput,
   Modal,
-  Alert,
-  Dimensions,
   FlatList,
   RefreshControl,
+  Image,
+  Linking,
 } from 'react-native';
-import { useAuth } from '../../context/AuthContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
-
-const { width, height } = Dimensions.get('window');
+import { useTheme } from '../../theme';
+import {
+  scaleSize,
+  getResponsiveSpacing,
+  getResponsiveTypography,
+  getResponsiveBorderRadius,
+} from '../../utils/responsiveEnhanced';
 
 interface Props {
   navigation: any;
@@ -46,150 +48,81 @@ interface Inquiry {
   tags: string[];
 }
 
-interface InquiryStats {
-  total: number;
-  new: number;
-  contacted: number;
-  interested: number;
-  converted: number;
-  conversionRate: number;
-}
-
 const FILTER_OPTIONS = [
   { key: 'all', label: 'All' },
   { key: 'new', label: 'New' },
   { key: 'contacted', label: 'Contacted' },
   { key: 'interested', label: 'Interested' },
-  { key: 'not_interested', label: 'Not Interested' },
   { key: 'sold', label: 'Sold' },
 ];
-
-const PRIORITY_COLORS = {
-  high: '#FF3B30',
-  medium: '#FF9800',
-  low: '#4CAF50',
-};
-
-const STATUS_COLORS = {
-  new: '#FF9800',
-  contacted: '#2196F3',
-  interested: '#4CAF50',
-  not_interested: '#9E9E9E',
-  sold: '#8BC34A',
-};
 
 const MOCK_INQUIRIES: Inquiry[] = [
   {
     id: '1',
-    carId: 'car1',
-    carTitle: 'BMW X3 2020',
-    carPrice: '₹35,00,000',
-    carImage: 'https://images.pexels.com/photos/358070/pexels-photo-358070.jpeg?auto=compress&w=400',
-    buyerName: 'Arjun Sharma',
-    buyerPhone: '+91 9876543210',
-    buyerEmail: 'arjun.sharma@email.com',
-    location: 'Mumbai',
-    message: 'Hi, I am interested in this car. Can we schedule a test drive? ',
+    carId: 'c1',
+    carTitle: '2022 Hyundai Creta SX',
+    carPrice: '₹14,50,000',
+    carImage: 'https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg?auto=compress&cs=tinysrgb&w=200',
+    buyerName: 'Rahul Sharma',
+    buyerPhone: '+91 98765 43210',
+    location: 'Mumbai, MH',
+    message: 'Is this car still available? I am interested in a test drive this weekend.',
     inquiryType: 'form',
     status: 'new',
     priority: 'high',
     leadScore: 85,
-    createdAt: '2024-01-15T10:30:00',
+    createdAt: new Date().toISOString(),
     notes: [],
-    tags: ['test-drive', 'financing'],
+    tags: ['First Buyer', 'Finance Needed'],
   },
   {
     id: '2',
-    carId: 'car2',
-    carTitle: 'Audi A4 2019',
-    carPrice: '₹28,50,000',
-    carImage: 'https://images.pexels.com/photos/170782/pexels-photo-170782.jpeg?auto=compress&w=400',
+    carId: 'c2',
+    carTitle: '2020 Maruti Swift ZXi',
+    carPrice: '₹6,25,000',
+    carImage: 'https://images.pexels.com/photos/112460/pexels-photo-112460.jpeg?auto=compress&cs=tinysrgb&w=200',
     buyerName: 'Priya Patel',
-    buyerPhone: '+91 9765432109',
-    location: 'Pune',
-    message: 'What is the final price? Is it negotiable? ',
-    inquiryType: 'phone',
+    buyerPhone: '+91 87654 32109',
+    location: 'Pune, MH',
+    message: 'What is the final price? Can we negotiate?',
+    inquiryType: 'whatsapp',
     status: 'contacted',
     priority: 'medium',
-    leadScore: 70,
-    createdAt: '2024-01-14T15:45:00',
-    lastContactAt: '2024-01-14T16:30:00',
-    nextFollowUpAt: '2024-01-16T10:00:00',
-    notes: ['Called back, interested in financing options'],
-    tags: ['negotiation', 'financing'],
+    leadScore: 60,
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+    notes: ['Called regarding price', 'Wants 5.8L'],
+    tags: ['Negotiating'],
   },
   {
     id: '3',
-    carId: 'car3',
-    carTitle: 'Mercedes C-Class 2021',
-    carPrice: '₹42,00,000',
-    carImage: 'https://images.pexels.com/photos/358070/pexels-photo-358070.jpeg?auto=compress&w=400',
-    buyerName: 'Rahul Kumar',
-    buyerPhone: '+91 9654321098',
-    buyerEmail: 'rahul.kumar@email.com',
-    location: 'Delhi',
-    message: 'Is this car still available? I want to buy it.',
-    inquiryType: 'whatsapp',
+    carId: 'c3',
+    carTitle: '2021 Tata Nexon XZ+',
+    carPrice: '₹9,80,000',
+    carImage: 'https://images.pexels.com/photos/707046/pexels-photo-707046.jpeg?auto=compress&cs=tinysrgb&w=200',
+    buyerName: 'Amit Kumar',
+    buyerPhone: '+91 76543 21098',
+    location: 'Thane, MH',
+    message: 'Looking for a family car.',
+    inquiryType: 'phone',
     status: 'interested',
     priority: 'high',
     leadScore: 90,
-    createdAt: '2024-01-13T09:15:00',
-    lastContactAt: '2024-01-13T14:20:00',
-    nextFollowUpAt: '2024-01-15T11:00:00',
-    notes: ['Very interested, ready to close deal', 'Arranged bank loan'],
-    tags: ['hot-lead', 'ready-to-buy'],
-  },
-  {
-    id: '4',
-    carId: 'car4',
-    carTitle: 'Honda Civic 2018',
-    carPrice: '₹15,80,000',
-    carImage: 'https://images.pexels.com/photos/170782/pexels-photo-170782.jpeg?auto=compress&w=400',
-    buyerName: 'Sneha Reddy',
-    buyerPhone: '+91 9543210987',
-    location: 'Bangalore',
-    message: 'Can you send more photos of the interior? ',
-    inquiryType: 'email',
-    status: 'not_interested',
-    priority: 'low',
-    leadScore: 30,
-    createdAt: '2024-01-12T11:20:00',
-    lastContactAt: '2024-01-12T16:45:00',
-    notes: ['Not satisfied with interior condition', 'Looking for newer model'],
-    tags: ['interior-concerns'],
+    createdAt: new Date(Date.now() - 172800000).toISOString(),
+    notes: ['Test drive scheduled'],
+    tags: ['Ready to Buy'],
   },
 ];
 
 const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
-  const isDark = false;
-  const colors = {
-    background: '#FAFBFC',
-    surface: '#FFFFFF',
-    text: '#1A202C',
-    textSecondary: '#4A5568',
-    primary: '#FFD700',
-    border: '#E2E8F0',
-    error: '#F56565',
-    success: '#48BB78',
-  };
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const { theme, isDark } = useTheme();
+  const { colors } = theme;
   const [refreshing, setRefreshing] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
-  const [showActionModal, setShowActionModal] = useState(false);
 
   const [inquiries, setInquiries] = useState<Inquiry[]>(MOCK_INQUIRIES);
-  const [inquiryStats, setInquiryStats] = useState<InquiryStats>({
-    total: 145,
-    new: 23,
-    contacted: 45,
-    interested: 32,
-    converted: 18,
-    conversionRate: 12.4,
-  });
 
   const filteredInquiries = inquiries.filter(inquiry => {
     const matchesFilter = selectedFilter === 'all' || inquiry.status === selectedFilter;
@@ -199,365 +132,201 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
     return matchesFilter && matchesSearch;
   });
 
-  const onRefresh = async () => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
     // Simulate API call
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1500);
+    setTimeout(() => setRefreshing(false), 1500);
+  }, []);
+
+  const handleCall = (phone: string) => {
+    Linking.openURL(`tel:${phone}`);
   };
 
-  const handleInquiryPress = (inquiry: Inquiry) => {
-    setSelectedInquiry(inquiry);
-    setShowInquiryModal(true);
-  };
-
-  const handleStatusUpdate = (inquiryId: string, newStatus: Inquiry['status']) => {
-    setInquiries(prev => prev.map(inquiry =>
-      inquiry.id === inquiryId
-        ? { ...inquiry, status: newStatus, lastContactAt: new Date().toISOString() }
-        : inquiry
-    ));
-    setShowActionModal(false);
-    Alert.alert('Success', 'Inquiry status updated successfully');
-  };
-
-  const handleCallBuyer = (phone: string) => {
-    Alert.alert('Call Buyer', `Call ${phone}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Call', onPress: () => console.log(`Calling ${phone}`) }
-    ]);
-  };
-
-  const handleWhatsAppBuyer = (phone: string) => {
-    Alert.alert('WhatsApp', `Send WhatsApp message to ${phone}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Send', onPress: () => console.log(`WhatsApp ${phone}`) }
-    ]);
-  };
-
-  const getStatusColor = (status: Inquiry['status']) => {
-    return STATUS_COLORS[status];
-  };
-
-  const getPriorityColor = (priority: Inquiry['priority']) => {
-    return PRIORITY_COLORS[priority];
+  const handleWhatsApp = (phone: string) => {
+    Linking.openURL(`whatsapp://send?phone=${phone}`);
   };
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
 
-    if (diffDays === 1) return 'Today';
-    if (diffDays === 2) return 'Yesterday';
-    if (diffDays <= 7) return `${diffDays} days ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
     return date.toLocaleDateString();
   };
 
-  const renderStatsCard = (title: string, value: string | number, subtitle: string, icon: string, color: string) => (
-    <View style={[styles.statsCard, { backgroundColor: colors.surface }]}>
-      <View style={[styles.statsIconContainer, { backgroundColor: `${color}15` }]}>
-        <Ionicons name={icon as any} size={20} color={color} />
-      </View>
-      <View style={styles.statsContent}>
-        <Text style={[styles.statsValue, { color: colors.text }]}>{value}</Text>
-        <Text style={[styles.statsTitle, { color: colors.text }]}>{title}</Text>
-        <Text style={[styles.statsSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
-      </View>
-    </View>
-  );
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'new': return '#3B82F6';
+      case 'contacted': return '#F59E0B';
+      case 'interested': return '#10B981';
+      case 'not_interested': return '#EF4444';
+      case 'sold': return '#8B5CF6';
+      default: return colors.textSecondary;
+    }
+  };
 
-  const renderInquiryItem = ({ item, index }: { item: Inquiry; index: number }) => (
-    <View>
-      <TouchableOpacity
-        style={[styles.inquiryCard, { backgroundColor: colors.surface }]}
-        onPress={() => handleInquiryPress(item)}
-      >
-        {/* Header */}
-        <View style={styles.inquiryHeader}>
-          <View style={styles.inquiryHeaderLeft}>
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'new': return 'flash-outline';
+      case 'contacted': return 'chatbubbles-outline';
+      case 'interested': return 'heart-outline';
+      case 'not_interested': return 'close-circle-outline';
+      case 'sold': return 'checkmark-circle-outline';
+      default: return 'help-circle-outline';
+    }
+  };
+
+  const renderInquiryCard = ({ item }: { item: Inquiry }) => (
+    <TouchableOpacity
+      style={[styles.inquiryCard, { backgroundColor: isDark ? colors.surface : '#FFFFFF', borderColor: colors.border }]}
+      onPress={() => {
+        setSelectedInquiry(item);
+        setShowInquiryModal(true);
+      }}
+    >
+      <View style={styles.cardHeader}>
+        <View style={styles.userInfo}>
+          <View style={[styles.avatarContainer, { backgroundColor: colors.primary }]}>
+            <Text style={styles.avatarText}>{item.buyerName[0]}</Text>
+          </View>
+          <View>
             <Text style={[styles.buyerName, { color: colors.text }]}>{item.buyerName}</Text>
-            <Text style={[styles.inquiryTime, { color: colors.textSecondary }]}>
-              {formatTime(item.createdAt)}
+            <Text style={[styles.timestamp, { color: colors.textSecondary }]}>
+              {formatTime(item.createdAt)} • {item.location}
             </Text>
           </View>
-          <View style={styles.inquiryHeaderRight}>
-            <View style={[styles.priorityBadge, { backgroundColor: `${getPriorityColor(item.priority)}15` }]}>
-              <Text style={[styles.priorityText, { color: getPriorityColor(item.priority) }]}>
-                {item.priority.toUpperCase()}
-              </Text>
-            </View>
-          </View>
         </View>
-
-        {/* Car Info */}
-        <View style={styles.carInfo}>
-          <View style={styles.carDetails}>
-            <Text style={[styles.carTitle, { color: colors.text }]}>{item.carTitle}</Text>
-            <Text style={[styles.carPrice, { color: colors.primary }]}>{item.carPrice}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-        </View>
-
-        {/* Message Preview */}
-        <Text style={[styles.messagePreview, { color: colors.textSecondary }]} numberOfLines={2}>
-          {item.message}
-        </Text>
-
-        {/* Status and Actions */}
-        <View style={styles.inquiryFooter}>
-          <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}15` }]}>
-            <Ionicons
-              name={item.status === 'new' ? 'new-releases' : item.status === 'contacted' ? 'phone' : item.status === 'interested' ? 'favorite' : item.status === 'not_interested' ? 'favorite-border' : 'check-circle'}
-              size={14}
-              color={getStatusColor(item.status)}
-            />
-            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-              {item.status.replace('_', ' ').toUpperCase()}
-            </Text>
-          </View>
-
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: '#4CAF5015' }]}
-              onPress={() => handleCallBuyer(item.buyerPhone)}
-            >
-              <Ionicons name="call" size={14} color="#4CAF50" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: '#FF980015' }]}
-              onPress={() => handleWhatsAppBuyer(item.buyerPhone)}
-            >
-              <Ionicons name="chat" size={14} color="#FF9800" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Lead Score */}
-        <View style={styles.leadScoreContainer}>
-          <Text style={[styles.leadScoreLabel, { color: colors.textSecondary }]}>Lead Score: </Text>
-          <View style={[styles.leadScoreBar, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}>
-            <View
-              style={[
-                styles.leadScoreFill,
-                {
-                  backgroundColor: item.leadScore >= 70 ? '#4CAF50' : item.leadScore >= 50 ? '#FF9800' : '#FF3B30',
-                  width: `${item.leadScore}%`
-                }
-              ]}
-            />
-          </View>
-          <Text style={[styles.leadScoreValue, { color: colors.text }]}>{item.leadScore}%</Text>
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderInquiryModal = () => (
-    <Modal visible={showInquiryModal} animationType="slide" presentationStyle="pageSheet">
-      {selectedInquiry && (
-        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
-          <View style={[styles.modalHeader, { backgroundColor: colors.surface }]}>
-            <TouchableOpacity onPress={() => setShowInquiryModal(false)}>
-              <Ionicons name="close" size={24} color={colors.text} />
-            </TouchableOpacity>
-            <Text style={[styles.modalHeaderTitle, { color: colors.text }]}>Inquiry Details</Text>
-            <TouchableOpacity onPress={() => setShowActionModal(true)}>
-              <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.modalContent}>
-            {/* Buyer Information */}
-            <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Buyer Information</Text>
-              <View style={styles.buyerInfoRow}>
-                <Ionicons name="person" size={20} color={colors.primary} />
-                <Text style={[styles.buyerInfoText, { color: colors.text }]}>{selectedInquiry.buyerName}</Text>
-              </View>
-              <View style={styles.buyerInfoRow}>
-                <Ionicons name="call" size={20} color={colors.primary} />
-                <Text style={[styles.buyerInfoText, { color: colors.text }]}>{selectedInquiry.buyerPhone}</Text>
-              </View>
-              {selectedInquiry.buyerEmail && (
-                <View style={styles.buyerInfoRow}>
-                  <Ionicons name="mail" size={20} color={colors.primary} />
-                  <Text style={[styles.buyerInfoText, { color: colors.text }]}>{selectedInquiry.buyerEmail}</Text>
-                </View>
-              )}
-              <View style={styles.buyerInfoRow}>
-                <Ionicons name="location" size={20} color={colors.primary} />
-                <Text style={[styles.buyerInfoText, { color: colors.text }]}>{selectedInquiry.location}</Text>
-              </View>
-            </View>
-
-            {/* Car Information */}
-            <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Car Details</Text>
-              <Text style={[styles.carModalTitle, { color: colors.text }]}>{selectedInquiry.carTitle}</Text>
-              <Text style={[styles.carModalPrice, { color: colors.primary }]}>{selectedInquiry.carPrice}</Text>
-            </View>
-
-            {/* Message */}
-            <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Message</Text>
-              <Text style={[styles.messageText, { color: colors.text }]}>{selectedInquiry.message}</Text>
-            </View>
-
-            {/* Notes */}
-            {selectedInquiry.notes.length > 0 && (
-              <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Notes</Text>
-                {selectedInquiry.notes.map((note, index) => (
-                  <Text key={index} style={[styles.noteText, { color: colors.textSecondary }]}>
-                    • {note}
-                  </Text>
-                ))}
-              </View>
-            )}
-
-            {/* Quick Actions */}
-            <View style={[styles.modalSection, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
-              <View style={styles.quickActions}>
-                <TouchableOpacity
-                  style={[styles.quickActionButton, { backgroundColor: '#4CAF5015' }]}
-                  onPress={() => handleCallBuyer(selectedInquiry.buyerPhone)}
-                >
-                  <Ionicons name="call" size={20} color="#4CAF50" />
-                  <Text style={[styles.quickActionText, { color: '#4CAF50' }]}>Call</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.quickActionButton, { backgroundColor: '#FF980015' }]}
-                  onPress={() => handleWhatsAppBuyer(selectedInquiry.buyerPhone)}
-                >
-                  <Ionicons name="chat" size={20} color="#FF9800" />
-                  <Text style={[styles.quickActionText, { color: '#FF9800' }]}>WhatsApp</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.quickActionButton, { backgroundColor: colors.primary + '15' }]}
-                  onPress={() => {
-                    setShowInquiryModal(false);
-                    navigation.navigate('CarDetails', { carId: selectedInquiry.carId });
-                  }}
-                >
-                  <Ionicons name="car" size={20} color={colors.primary} />
-                  <Text style={[styles.quickActionText, { color: colors.primary }]}>View Car</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      )}
-    </Modal>
-  );
-
-  const renderActionModal = () => (
-    <Modal visible={showActionModal} transparent animationType="fade">
-      <View style={styles.actionModalOverlay}>
-        <View style={[styles.actionModalContent, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.actionModalTitle, { color: colors.text }]}>Update Status</Text>
-
-          {[
-            { key: 'contacted', label: 'Mark as Contacted', icon: 'phone' },
-            { key: 'interested', label: 'Mark as Interested', icon: 'favorite' },
-            { key: 'not_interested', label: 'Mark as Not Interested', icon: 'favorite-border' },
-            { key: 'sold', label: 'Mark as Sold', icon: 'check-circle' },
-          ].map((action) => (
-            <TouchableOpacity
-              key={action.key}
-              style={styles.actionModalButton}
-              onPress={() => selectedInquiry && handleStatusUpdate(selectedInquiry.id, action.key as Inquiry['status'])}
-            >
-              <Ionicons name={action.icon as any} size={20} color={colors.text} />
-              <Text style={[styles.actionModalButtonText, { color: colors.text }]}>{action.label}</Text>
-            </TouchableOpacity>
-          ))}
-
-          <TouchableOpacity
-            style={[styles.actionModalButton, styles.cancelButton]}
-            onPress={() => setShowActionModal(false)}
-          >
-            <Text style={[styles.actionModalButtonText, { color: colors.textSecondary }]}>Cancel</Text>
-          </TouchableOpacity>
+        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
+          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+            {item.status.toUpperCase()}
+          </Text>
         </View>
       </View>
-    </Modal>
+
+      <View style={[styles.carInfoContainer, { backgroundColor: isDark ? colors.background : '#F3F4F6' }]}>
+        <Image source={{ uri: item.carImage }} style={styles.carThumbnail} />
+        <View style={styles.carDetails}>
+          <Text style={[styles.carTitle, { color: colors.text }]} numberOfLines={1}>{item.carTitle}</Text>
+          <Text style={[styles.carPrice, { color: colors.primary }]}>{item.carPrice}</Text>
+        </View>
+      </View>
+
+      <Text style={[styles.messagePreview, { color: colors.textSecondary }]} numberOfLines={2}>
+        "{item.message}"
+      </Text>
+
+      <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => handleCall(item.buyerPhone)}
+        >
+          <Ionicons name="call-outline" size={18} color={colors.primary} />
+          <Text style={[styles.actionText, { color: colors.text }]}>Call</Text>
+        </TouchableOpacity>
+
+        <View style={[styles.verticalDivider, { backgroundColor: colors.border }]} />
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => handleWhatsApp(item.buyerPhone)}
+        >
+          <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
+          <Text style={[styles.actionText, { color: colors.textSecondary }]}>WhatsApp</Text>
+        </TouchableOpacity>
+
+        <View style={[styles.verticalDivider, { backgroundColor: colors.border }]} />
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => {
+            setSelectedInquiry(item);
+            setShowInquiryModal(true);
+          }}
+        >
+          <Text style={[styles.actionText, { color: colors.primary, fontWeight: '600' }]}>View Details</Text>
+          <Ionicons name="arrow-forward" size={16} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-      />
-
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="left" size={24} color={colors.text} />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Inquiries</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('DealerInquiryAnalytics')}>
-          <Ionicons name="trending-up" size={24} color={colors.primary} />
-        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Lead Inquiries</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
-          />
-        }
-        showsVerticalScrollIndicator={false}
+      <View
+        style={[
+          styles.searchSection,
+          {
+            backgroundColor: isDark ? colors.background : '#F9FAFB',
+            borderBottomColor: colors.border,
+          },
+        ]}
       >
-        {/* Stats Section */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statsGrid}>
-            {renderStatsCard('New', inquiryStats.new, 'Uncontacted', 'new-releases', '#FF9800')}
-            {renderStatsCard('Contacted', inquiryStats.contacted, 'In progress', 'phone', '#2196F3')}
-            {renderStatsCard('Interested', inquiryStats.interested, 'Hot leads', 'favorite', '#4CAF50')}
-            {renderStatsCard('Conversion', `${inquiryStats.conversionRate}%`, `${inquiryStats.converted} sold`, 'trending-up', '#9C27B0')}
-          </View>
+        <View
+          style={[
+            styles.searchInputContainer,
+            {
+              backgroundColor: isDark ? colors.surface : '#FFFFFF',
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Ionicons name="search-outline" size={18} color={colors.textSecondary} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Search buyer or car"
+            placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            returnKeyType="search"
+          />
         </View>
 
-        {/* Search and Filters */}
-        <View style={styles.filtersContainer}>
-          <View style={[styles.searchContainer, { backgroundColor: colors.surface }]}>
-            <Ionicons name="search" size={20} color={colors.textSecondary} />
-            <TextInput
-              style={[styles.searchInput, { color: colors.text }]}
-              placeholder="Search inquiries..."
-              placeholderTextColor={colors.textSecondary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterButtons}>
-            {FILTER_OPTIONS.map((filter) => (
+        <View style={styles.filterContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterContent}
+          >
+            {FILTER_OPTIONS.map(filter => (
               <TouchableOpacity
                 key={filter.key}
                 style={[
-                  styles.filterButton,
-                  { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' },
-                  selectedFilter === filter.key && { backgroundColor: colors.primary },
+                  styles.filterChip,
+                  {
+                    backgroundColor:
+                      selectedFilter === filter.key
+                        ? colors.primary
+                        : isDark
+                        ? colors.surface
+                        : '#FFFFFF',
+                    borderColor:
+                      selectedFilter === filter.key ? colors.primary : colors.border,
+                  },
                 ]}
                 onPress={() => setSelectedFilter(filter.key)}
               >
                 <Text
                   style={[
-                    styles.filterButtonText,
-                    { color: colors.text },
-                    selectedFilter === filter.key && { color: '#111827' },
+                    styles.filterText,
+                    {
+                      color:
+                        selectedFilter === filter.key
+                          ? '#111827'
+                          : colors.textSecondary,
+                      fontWeight: selectedFilter === filter.key ? '600' : '400',
+                    },
                   ]}
                 >
                   {filter.label}
@@ -566,38 +335,113 @@ const DealerInquiriesScreen: React.FC<Props> = ({ navigation }) => {
             ))}
           </ScrollView>
         </View>
+      </View>
 
-        {/* Inquiries List */}
-        {filteredInquiries.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons
-              name="message"
-              size={64}
-              color={colors.textSecondary}
-            />
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>No inquiries found</Text>
-            <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
-              {searchQuery.trim()
-                ? `No inquiries match "${searchQuery}"`
-                : 'No inquiries in this category'
-              }
-            </Text>
+      <FlatList
+        data={filteredInquiries}
+        renderItem={renderInquiryCard}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Ionicons name="chatbubbles-outline" size={64} color={colors.textSecondary} />
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No inquiries found</Text>
           </View>
-        ) : (
-          <View style={styles.inquiriesList}>
-            <FlatList
-              data={filteredInquiries}
-              renderItem={renderInquiryItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-            />
+        }
+      />
+
+      {/* Detail Modal */}
+      <Modal
+        visible={showInquiryModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowInquiryModal(false)}
+      >
+        {selectedInquiry && (
+          <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Inquiry Details</Text>
+              <TouchableOpacity onPress={() => setShowInquiryModal(false)} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.modalScroll}>
+              {/* Status Section */}
+              <View style={[styles.statusSection, { backgroundColor: isDark ? colors.surface : '#FFFFFF' }]}>
+                <View style={[styles.largeStatusBadge, { backgroundColor: getStatusColor(selectedInquiry.status) + '20' }]}>
+                  <Ionicons name={getStatusIcon(selectedInquiry.status)} size={20} color={getStatusColor(selectedInquiry.status)} />
+                  <Text style={[styles.largeStatusText, { color: getStatusColor(selectedInquiry.status) }]}>
+                    {selectedInquiry.status.toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={[styles.leadScore, { color: colors.textSecondary }]}>
+                  Lead Score: <Text style={{ color: selectedInquiry.leadScore > 70 ? '#10B981' : '#F59E0B', fontWeight: '700' }}>{selectedInquiry.leadScore}/100</Text>
+                </Text>
+              </View>
+
+              {/* Buyer Info */}
+              <View style={[styles.sectionCard, { backgroundColor: isDark ? colors.surface : '#FFFFFF' }]}>
+                <Text style={[styles.sectionHeader, { color: colors.text }]}>Buyer Information</Text>
+                <View style={styles.infoRow}>
+                  <Ionicons name="person-outline" size={20} color={colors.textSecondary} />
+                  <Text style={[styles.infoText, { color: colors.text }]}>{selectedInquiry.buyerName}</Text>
+                </View>
+                <TouchableOpacity onPress={() => handleCall(selectedInquiry.buyerPhone)} style={styles.infoRow}>
+                  <Ionicons name="call-outline" size={20} color={colors.textSecondary} />
+                  <Text style={[styles.infoText, { color: colors.primary }]}>{selectedInquiry.buyerPhone}</Text>
+                </TouchableOpacity>
+                <View style={styles.infoRow}>
+                  <Ionicons name="location-outline" size={20} color={colors.textSecondary} />
+                  <Text style={[styles.infoText, { color: colors.text }]}>{selectedInquiry.location}</Text>
+                </View>
+              </View>
+
+              {/* Car Info */}
+              <View style={[styles.sectionCard, { backgroundColor: isDark ? colors.surface : '#FFFFFF' }]}>
+                <Text style={[styles.sectionHeader, { color: colors.text }]}>Interested Vehicle</Text>
+                <View style={styles.modalCarRow}>
+                  <Image source={{ uri: selectedInquiry.carImage }} style={styles.modalCarImage} />
+                  <View style={styles.modalCarDetails}>
+                    <Text style={[styles.modalCarTitle, { color: colors.text }]}>{selectedInquiry.carTitle}</Text>
+                    <Text style={[styles.modalCarPrice, { color: colors.primary }]}>{selectedInquiry.carPrice}</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Message */}
+              <View style={[styles.sectionCard, { backgroundColor: isDark ? colors.surface : '#FFFFFF' }]}>
+                <Text style={[styles.sectionHeader, { color: colors.text }]}>Message</Text>
+                <View style={[styles.messageBox, { backgroundColor: isDark ? colors.background : '#F9FAFB' }]}>
+                  <Text style={[styles.fullMessage, { color: colors.text }]}>{selectedInquiry.message}</Text>
+                </View>
+              </View>
+
+              {/* Quick Actions */}
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.modalActionButton, { backgroundColor: '#10B981' }]}
+                  onPress={() => handleCall(selectedInquiry.buyerPhone)}
+                >
+                  <Ionicons name="call" size={20} color="#FFFFFF" />
+                  <Text style={styles.modalActionText}>Call Buyer</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalActionButton, { backgroundColor: '#25D366' }]}
+                  onPress={() => handleWhatsApp(selectedInquiry.buyerPhone)}
+                >
+                  <Ionicons name="logo-whatsapp" size={20} color="#FFFFFF" />
+                  <Text style={styles.modalActionText}>WhatsApp</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
         )}
-      </ScrollView>
-
-      {renderInquiryModal()}
-      {renderActionModal()}
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -610,223 +454,172 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16,
-    elevation: 2,
-
+    paddingHorizontal: getResponsiveSpacing('lg'),
+    paddingVertical: getResponsiveSpacing('md'),
+    borderBottomWidth: 1,
+  },
+  backButton: {
+    padding: scaleSize(4),
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: getResponsiveTypography('lg'),
     fontWeight: '700',
   },
-  statsContainer: {
-    paddingHorizontal: 16,
-    marginTop: 16,
+  headerSpacer: {
+    width: scaleSize(24),
+    height: scaleSize(24),
   },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12,
+  searchSection: {
+    paddingHorizontal: getResponsiveSpacing('lg'),
+    paddingVertical: getResponsiveSpacing('md'),
+    borderBottomWidth: 1,
   },
-  statsCard: {
-    width: (width - 48) / 2,
-    padding: 16,
-    borderRadius: 12,
-    elevation: 2,
-
+  searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  statsIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  statsContent: {
-    flex: 1,
-  },
-  statsValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  statsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 1,
-  },
-  statsSubtitle: {
-    fontSize: 11,
-  },
-  filtersContainer: {
-    paddingHorizontal: 16,
-    marginTop: 20,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-    elevation: 1,
-
+    paddingHorizontal: getResponsiveSpacing('md'),
+    paddingVertical: scaleSize(6),
+    borderRadius: getResponsiveBorderRadius('full'),
+    borderWidth: 1,
+    marginBottom: getResponsiveSpacing('md'),
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
-    marginLeft: 12,
+    marginLeft: getResponsiveSpacing('sm'),
+    fontSize: getResponsiveTypography('sm'),
   },
-  filterButtons: {
-    flexDirection: 'row',
+  filterContainer: {
+    paddingBottom: getResponsiveSpacing('xs'),
   },
-  filterButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
+  filterContent: {
+    paddingHorizontal: 0,
+    gap: getResponsiveSpacing('sm'),
   },
-  filterButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+  filterChip: {
+    paddingHorizontal: getResponsiveSpacing('lg'),
+    paddingVertical: scaleSize(6),
+    borderRadius: getResponsiveBorderRadius('full'),
+    borderWidth: 1,
   },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 32,
+  filterText: {
+    fontSize: getResponsiveTypography('sm'),
   },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyMessage: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  inquiriesList: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+  listContent: {
+    padding: getResponsiveSpacing('lg'),
+    gap: getResponsiveSpacing('md'),
   },
   inquiryCard: {
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    borderRadius: getResponsiveBorderRadius('xl'),
+    padding: getResponsiveSpacing('md'),
+    borderWidth: 1,
     elevation: 2,
-
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
-  inquiryHeader: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: getResponsiveSpacing('md'),
   },
-  inquiryHeaderLeft: {
-    flex: 1,
-  },
-  inquiryHeaderRight: {
-    marginLeft: 12,
-  },
-  buyerName: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  inquiryTime: {
-    fontSize: 12,
-  },
-  priorityBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  priorityText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  carInfo: {
+  userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
+    flex: 1,
+  },
+  avatarContainer: {
+    width: scaleSize(40),
+    height: scaleSize(40),
+    borderRadius: getResponsiveBorderRadius('full'),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: getResponsiveSpacing('sm'),
+  },
+  avatarText: {
+    color: '#FFFFFF',
+    fontSize: getResponsiveTypography('lg'),
+    fontWeight: '700',
+  },
+  buyerName: {
+    fontSize: getResponsiveTypography('md'),
+    fontWeight: '600',
+  },
+  timestamp: {
+    fontSize: getResponsiveTypography('xs'),
+    marginTop: scaleSize(2),
+  },
+  statusBadge: {
+    paddingHorizontal: scaleSize(8),
+    paddingVertical: scaleSize(4),
+    borderRadius: getResponsiveBorderRadius('sm'),
+  },
+  statusText: {
+    fontSize: getResponsiveTypography('xs'),
+    fontWeight: '700',
+  },
+  carInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: getResponsiveSpacing('sm'),
+    borderRadius: getResponsiveBorderRadius('lg'),
+    marginBottom: getResponsiveSpacing('md'),
+  },
+  carThumbnail: {
+    width: scaleSize(48),
+    height: scaleSize(36),
+    borderRadius: getResponsiveBorderRadius('sm'),
+    marginRight: getResponsiveSpacing('sm'),
   },
   carDetails: {
     flex: 1,
   },
   carTitle: {
-    fontSize: 14,
+    fontSize: getResponsiveTypography('sm'),
     fontWeight: '600',
-    marginBottom: 2,
   },
   carPrice: {
-    fontSize: 16,
+    fontSize: getResponsiveTypography('xs'),
     fontWeight: '700',
+    marginTop: scaleSize(2),
   },
   messagePreview: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
+    fontSize: getResponsiveTypography('sm'),
+    fontStyle: 'italic',
+    marginBottom: getResponsiveSpacing('md'),
   },
-  inquiryFooter: {
+  divider: {
+    height: 1,
+    marginBottom: getResponsiveSpacing('sm'),
+  },
+  actionRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 8,
   },
   actionButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  leadScoreContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: scaleSize(4),
+    padding: scaleSize(4),
   },
-  leadScoreLabel: {
-    fontSize: 12,
-    marginRight: 8,
+  actionText: {
+    fontSize: getResponsiveTypography('sm'),
+    fontWeight: '500',
   },
-  leadScoreBar: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-    overflow: 'hidden',
+  verticalDivider: {
+    width: 1,
+    height: scaleSize(16),
   },
-  leadScoreFill: {
-    height: '100%',
-    borderRadius: 2,
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: scaleSize(100),
   },
-  leadScoreValue: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 8,
-    minWidth: 32,
-    textAlign: 'right',
+  emptyText: {
+    marginTop: getResponsiveSpacing('md'),
+    fontSize: getResponsiveTypography('md'),
   },
   modalContainer: {
     flex: 1,
@@ -835,111 +628,110 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16,
-
+    padding: getResponsiveSpacing('md'),
+    borderBottomWidth: 1,
   },
-  modalHeaderTitle: {
-    fontSize: 18,
+  modalTitle: {
+    fontSize: getResponsiveTypography('lg'),
     fontWeight: '700',
   },
-  modalContent: {
-    flex: 1,
-    padding: 16,
+  closeButton: {
+    padding: scaleSize(4),
   },
-  modalSection: {
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    elevation: 2,
-
+  modalScroll: {
+    padding: getResponsiveSpacing('lg'),
+    gap: getResponsiveSpacing('lg'),
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 12,
+  statusSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: getResponsiveSpacing('md'),
+    borderRadius: getResponsiveBorderRadius('lg'),
   },
-  buyerInfoRow: {
+  largeStatusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    gap: scaleSize(8),
+    paddingHorizontal: getResponsiveSpacing('md'),
+    paddingVertical: scaleSize(6),
+    borderRadius: getResponsiveBorderRadius('full'),
   },
-  buyerInfoText: {
-    fontSize: 14,
-    marginLeft: 12,
-  },
-  carModalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  carModalPrice: {
-    fontSize: 20,
+  largeStatusText: {
+    fontSize: getResponsiveTypography('sm'),
     fontWeight: '700',
   },
-  messageText: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  noteText: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  quickActionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  quickActionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
-  },
-  actionModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  actionModalContent: {
-    width: width * 0.8,
-    borderRadius: 12,
-    padding: 16,
-  },
-  actionModalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  actionModalButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  actionModalButtonText: {
-    fontSize: 16,
-    marginLeft: 12,
+  leadScore: {
+    fontSize: getResponsiveTypography('sm'),
     fontWeight: '500',
   },
-  cancelButton: {
-    marginTop: 8,
+  sectionCard: {
+    padding: getResponsiveSpacing('md'),
+    borderRadius: getResponsiveBorderRadius('xl'),
+  },
+  sectionHeader: {
+    fontSize: getResponsiveTypography('md'),
+    fontWeight: '700',
+    marginBottom: getResponsiveSpacing('md'),
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getResponsiveSpacing('sm'),
+    marginBottom: getResponsiveSpacing('sm'),
+  },
+  infoText: {
+    fontSize: getResponsiveTypography('md'),
+  },
+  modalCarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getResponsiveSpacing('md'),
+  },
+  modalCarImage: {
+    width: scaleSize(80),
+    height: scaleSize(60),
+    borderRadius: getResponsiveBorderRadius('lg'),
+  },
+  modalCarDetails: {
+    flex: 1,
+  },
+  modalCarTitle: {
+    fontSize: getResponsiveTypography('md'),
+    fontWeight: '600',
+    marginBottom: scaleSize(4),
+  },
+  modalCarPrice: {
+    fontSize: getResponsiveTypography('lg'),
+    fontWeight: '700',
+  },
+  messageBox: {
+    padding: getResponsiveSpacing('md'),
+    borderRadius: getResponsiveBorderRadius('lg'),
+  },
+  fullMessage: {
+    fontSize: getResponsiveTypography('md'),
+    lineHeight: scaleSize(24),
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: getResponsiveSpacing('md'),
+    marginBottom: getResponsiveSpacing('xl'),
+  },
+  modalActionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
+    gap: scaleSize(8),
+    paddingVertical: getResponsiveSpacing('md'),
+    borderRadius: getResponsiveBorderRadius('lg'),
+  },
+  modalActionText: {
+    color: '#FFFFFF',
+    fontSize: getResponsiveTypography('md'),
+    fontWeight: '600',
   },
 });
 
 export default DealerInquiriesScreen;
-
-

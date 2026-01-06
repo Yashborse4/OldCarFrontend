@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,97 +8,152 @@ import {
   Image,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { colors } from '../../design-system';
+import { useTheme } from '../../theme';
+import { useAuth } from '../../context/AuthContext';
+import { apiClient } from '../../services/ApiClient';
+import {
+  scaleSize,
+  getResponsiveSpacing,
+  getResponsiveTypography,
+  getResponsiveBorderRadius,
+} from '../../utils/responsiveEnhanced';
 
 interface Props {
   navigation: any;
 }
 
-interface DealerProfile {
-  id: string;
+interface ProfileData {
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  location: string;
   dealerName: string;
   showroomName: string;
-  ownerName: string;
-  email: string;
-  phone: string;
   address: string;
   city: string;
-  verificationStatus: 'pending' | 'verified' | 'rejected';
-  profileImage: string;
-  totalListings: number;
-  activeListings: number;
-  soldThisMonth: number;
+  dealerStatus: string;
+  profileImageUrl: string;
 }
 
-
 const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
-  const insets = useSafeAreaInsets();
-  const colors = {
-    success: '#48BB78',
-    warning: '#ED8936',
-    error: '#F56565',
-    textSecondary: '#4A5568',
-    text: '#1A202C',
-    primary: '#FFD700',
-    background: '#FAFBFC',
-    border: '#E2E8F0',
-  };
-  const [editMode, setEditMode] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const { theme, isDark } = useTheme();
+  const { colors } = theme;
+  const { user, refreshUserData } = useAuth();
 
-  const [profile, setProfile] = useState<DealerProfile>({
-    id: '1',
-    dealerName: 'Premium Auto Sales',
-    showroomName: 'Premium Auto Hub',
-    ownerName: 'Rajesh Kumar',
-    email: 'rajesh@premiumauto.com',
-    phone: '+91 9876543210',
-    address: 'Shop No. 15, Sector 18, Auto Market',
-    city: 'Mumbai',
-    verificationStatus: 'verified',
-    profileImage: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=200',
-    totalListings: 47,
-    activeListings: 42,
-    soldThisMonth: 23,
+  const [editMode, setEditMode] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [profile, setProfile] = useState<ProfileData>({
+    username: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneNumber: '',
+    location: '',
+    dealerName: '',
+    showroomName: '',
+    address: '',
+    city: '',
+    dealerStatus: '',
+    profileImageUrl: '',
   });
 
-  const [tempProfile, setTempProfile] = useState<DealerProfile>(profile);
+  const [tempProfile, setTempProfile] = useState<ProfileData>(profile);
+
+  // Load profile data
+  const loadProfile = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('/api/user/profile');
+      const data = response.data as any;
+
+      const profileData: ProfileData = {
+        username: data.username || '',
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        email: data.email || '',
+        phoneNumber: data.phoneNumber || '',
+        location: data.location || '',
+        dealerName: data.dealerName || '',
+        showroomName: data.showroomName || '',
+        address: data.address || '',
+        city: data.city || '',
+        dealerStatus: data.dealerStatus || 'UNVERIFIED',
+        profileImageUrl: data.profileImageUrl || '',
+      };
+
+      setProfile(profileData);
+      setTempProfile(profileData);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      Alert.alert('Error', 'Failed to load profile data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
 
   const getVerificationIcon = () => {
-    switch (profile.verificationStatus) {
-      case 'verified':
-        return <Ionicons name="checkmark-circle" size={20} color={colors.success} />;
-      case 'pending':
-        return <Ionicons name="time" size={20} color={colors.warning} />;
-      case 'rejected':
-        return <Ionicons name="alert-circle" size={20} color={colors.error} />;
+    switch (profile.dealerStatus) {
+      case 'VERIFIED':
+        return <Ionicons name="shield-checkmark" size={20} color="#10B981" />;
+      case 'UNVERIFIED':
+        return <Ionicons name="time-outline" size={20} color="#F59E0B" />;
+      case 'SUSPENDED':
+      case 'REJECTED':
+        return <Ionicons name="alert-circle" size={20} color="#EF4444" />;
       default:
-        return <Ionicons name="help-circle" size={20} color={colors.textSecondary} />;
+        return <Ionicons name="help-circle-outline" size={20} color={colors.textSecondary} />;
     }
   };
 
   const getVerificationText = () => {
-    switch (profile.verificationStatus) {
-      case 'verified': return 'Verified Dealer';
-      case 'pending': return 'Verification Pending';
-      case 'rejected': return 'Verification Rejected';
+    switch (profile.dealerStatus) {
+      case 'VERIFIED': return 'Verified Dealer';
+      case 'UNVERIFIED': return 'Verification Pending';
+      case 'SUSPENDED': return 'Account Suspended';
+      case 'REJECTED': return 'Verification Rejected';
       default: return 'Not Verified';
     }
   };
 
-  const handleSave = () => {
-    setLoading(true);
-    setTimeout(() => {
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+
+      const updateData = {
+        username: tempProfile.username,
+        firstName: tempProfile.firstName,
+        lastName: tempProfile.lastName,
+        location: tempProfile.location,
+        dealerName: tempProfile.dealerName,
+        showroomName: tempProfile.showroomName,
+        address: tempProfile.address,
+        city: tempProfile.city,
+      };
+
+      await apiClient.put('/api/user/profile', updateData);
+
       setProfile(tempProfile);
       setEditMode(false);
-      setLoading(false);
+      await refreshUserData?.();
       Alert.alert('Success', 'Profile updated successfully!');
-    }, 1000);
+    } catch (error: any) {
+      console.error('Error saving profile:', error);
+      Alert.alert('Error', error.message || 'Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -106,68 +161,111 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
     setEditMode(false);
   };
 
-  return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <Card style={styles.headerCard}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Dealer Profile</Text>
-          <TouchableOpacity
-            onPress={() => editMode ? handleSave() : setEditMode(true)}
-            disabled={loading}
-          >
-            <Ionicons
-              name={editMode ? 'check' : 'edit'}
-              size={24}
-              color={loading ? colors.textSecondary : colors.primary }
-            />
-          </TouchableOpacity>
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading profile...</Text>
         </View>
-      </Card>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
+      {/* Header */}
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Dealer Profile</Text>
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => editMode ? handleSave() : setEditMode(true)}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Ionicons
+              name={editMode ? 'checkmark' : 'create-outline'}
+              size={24}
+              color={colors.primary}
+            />
+          )}
+        </TouchableOpacity>
+      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Profile Header */}
-        <Card style={styles.profileCard}>
-          <View style={styles.profileHeader}>
-            <Image source={{ uri: profile.profileImage }} style={styles.profileImage} />
-            <View style={styles.profileInfo}>
-              <View style={styles.nameRow}>
-                <Text style={styles.dealerName}>{profile.dealerName}</Text>
-                {getVerificationIcon()}
-              </View>
-              <Text style={styles.ownerName}>{profile.ownerName}</Text>
-              <Text style={styles.verificationText}>{getVerificationText()}</Text>
-            </View>
+        <View style={[styles.profileHeader, { backgroundColor: isDark ? colors.surface : '#FFFFFF' }]}>
+          <View style={[styles.avatarContainer, { backgroundColor: colors.primary }]}>
+            {profile.profileImageUrl ? (
+              <Image source={{ uri: profile.profileImageUrl }} style={styles.avatar} />
+            ) : (
+              <Text style={styles.avatarText}>
+                {profile.dealerName?.[0]?.toUpperCase() || profile.username?.[0]?.toUpperCase() || 'D'}
+              </Text>
+            )}
           </View>
-        </Card>
-
-        {/* Stats */}
-        <View style={styles.statsContainer}>
-          <Card style={styles.statCard}>
-            <Text style={styles.statValue}>{profile.totalListings}</Text>
-            <Text style={styles.statLabel}>Total Listings</Text>
-          </Card>
-          <Card style={styles.statCard}>
-            <Text style={styles.statValue}>{profile.activeListings}</Text>
-            <Text style={styles.statLabel}>Active</Text>
-          </Card>
-          <Card style={styles.statCard}>
-            <Text style={styles.statValue}>{profile.soldThisMonth}</Text>
-            <Text style={styles.statLabel}>Sold This Month</Text>
-          </Card>
+          <View style={styles.profileInfo}>
+            <View style={styles.nameRow}>
+              <Text style={[styles.dealerName, { color: colors.text }]}>
+                {profile.dealerName || profile.username}
+              </Text>
+              {getVerificationIcon()}
+            </View>
+            <Text style={[styles.showroomName, { color: colors.textSecondary }]}>
+              {profile.showroomName || 'No showroom name set'}
+            </Text>
+            <Text style={[styles.verificationText, { color: colors.textSecondary }]}>
+              {getVerificationText()}
+            </Text>
+            {(profile.city || profile.location || profile.address) && (
+              <View style={styles.shopLocationRow}>
+                <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
+                <Text
+                  style={[styles.shopLocationText, { color: colors.textSecondary }]}
+                  numberOfLines={1}
+                >
+                  {profile.showroomName
+                    ? `${profile.showroomName} • ${profile.city || profile.location}`
+                    : profile.address || profile.city || profile.location}
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
 
-        {/* Profile Information */}
-        <Card style={styles.infoCard}>
-          <Text style={styles.sectionTitle}>Profile Information</Text>
-          
+        {/* Editable Fields Section */}
+        <View style={[styles.section, { backgroundColor: isDark ? colors.surface : '#FFFFFF' }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Profile Information</Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+            You can edit these fields
+          </Text>
+
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Dealer Name</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Username</Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                { backgroundColor: isDark ? colors.background : '#F3F4F6', color: colors.text, borderColor: colors.border }
+              ]}
+              value={tempProfile.username}
+              onChangeText={(text) => setTempProfile({ ...tempProfile, username: text })}
+              editable={editMode}
+              placeholder="Enter username"
+              placeholderTextColor={colors.textSecondary}
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Dealer Name</Text>
+            <TextInput
+              style={[
+                styles.input,
+                { backgroundColor: isDark ? colors.background : '#F3F4F6', color: colors.text, borderColor: colors.border }
+              ]}
               value={tempProfile.dealerName}
               onChangeText={(text) => setTempProfile({ ...tempProfile, dealerName: text })}
               editable={editMode}
@@ -177,9 +275,12 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Showroom Name</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Showroom Name</Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                { backgroundColor: isDark ? colors.background : '#F3F4F6', color: colors.text, borderColor: colors.border }
+              ]}
               value={tempProfile.showroomName}
               onChangeText={(text) => setTempProfile({ ...tempProfile, showroomName: text })}
               editable={editMode}
@@ -188,225 +289,319 @@ const DealerProfileScreen: React.FC<Props> = ({ navigation }) => {
             />
           </View>
 
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Owner Name</Text>
-            <TextInput
-              style={styles.input}
-              value={tempProfile.ownerName}
-              onChangeText={(text) => setTempProfile({ ...tempProfile, ownerName: text })}
-              editable={editMode}
-              placeholder="Enter owner name"
-              placeholderTextColor={colors.textSecondary}
-            />
+          <View style={styles.formRow}>
+            <View style={[styles.formGroup, { flex: 1 }]}>
+              <Text style={[styles.label, { color: colors.text }]}>First Name</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  { backgroundColor: isDark ? colors.background : '#F3F4F6', color: colors.text, borderColor: colors.border }
+                ]}
+                value={tempProfile.firstName}
+                onChangeText={(text) => setTempProfile({ ...tempProfile, firstName: text })}
+                editable={editMode}
+                placeholder="First name"
+                placeholderTextColor={colors.textSecondary}
+              />
+            </View>
+            <View style={[styles.formGroup, { flex: 1, marginLeft: getResponsiveSpacing('sm') }]}>
+              <Text style={[styles.label, { color: colors.text }]}>Last Name</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  { backgroundColor: isDark ? colors.background : '#F3F4F6', color: colors.text, borderColor: colors.border }
+                ]}
+                value={tempProfile.lastName}
+                onChangeText={(text) => setTempProfile({ ...tempProfile, lastName: text })}
+                editable={editMode}
+                placeholder="Last name"
+                placeholderTextColor={colors.textSecondary}
+              />
+            </View>
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Address</Text>
             <TextInput
-              style={styles.input}
-              value={tempProfile.email}
-              onChangeText={(text) => setTempProfile({ ...tempProfile, email: text })}
-              editable={editMode}
-              placeholder="Enter email address"
-              placeholderTextColor={colors.textSecondary}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Phone</Text>
-            <TextInput
-              style={styles.input}
-              value={tempProfile.phone}
-              onChangeText={(text) => setTempProfile({ ...tempProfile, phone: text })}
-              editable={editMode}
-              placeholder="Enter phone number"
-              placeholderTextColor={colors.textSecondary}
-              keyboardType="phone-pad"
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Address</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[
+                styles.input,
+                styles.textArea,
+                { backgroundColor: isDark ? colors.background : '#F3F4F6', color: colors.text, borderColor: colors.border }
+              ]}
               value={tempProfile.address}
               onChangeText={(text) => setTempProfile({ ...tempProfile, address: text })}
               editable={editMode}
-              placeholder="Enter complete address"
+              placeholder="Enter address"
               placeholderTextColor={colors.textSecondary}
               multiline
               numberOfLines={3}
             />
           </View>
 
+          <View style={styles.formRow}>
+            <View style={[styles.formGroup, { flex: 1 }]}>
+              <Text style={[styles.label, { color: colors.text }]}>City</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  { backgroundColor: isDark ? colors.background : '#F3F4F6', color: colors.text, borderColor: colors.border }
+                ]}
+                value={tempProfile.city}
+                onChangeText={(text) => setTempProfile({ ...tempProfile, city: text })}
+                editable={editMode}
+                placeholder="City"
+                placeholderTextColor={colors.textSecondary}
+              />
+            </View>
+            <View style={[styles.formGroup, { flex: 1, marginLeft: getResponsiveSpacing('sm') }]}>
+              <Text style={[styles.label, { color: colors.text }]}>Location</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  { backgroundColor: isDark ? colors.background : '#F3F4F6', color: colors.text, borderColor: colors.border }
+                ]}
+                value={tempProfile.location}
+                onChangeText={(text) => setTempProfile({ ...tempProfile, location: text })}
+                editable={editMode}
+                placeholder="Location"
+                placeholderTextColor={colors.textSecondary}
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Non-Editable Fields Section */}
+        <View style={[styles.section, { backgroundColor: isDark ? colors.surface : '#FFFFFF' }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Account Information</Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+            These fields cannot be changed
+          </Text>
+
           <View style={styles.formGroup}>
-            <Text style={styles.label}>City</Text>
+            <View style={styles.labelRow}>
+              <Text style={[styles.label, { color: colors.text }]}>Email</Text>
+              <Ionicons name="lock-closed" size={14} color={colors.textSecondary} />
+            </View>
             <TextInput
-              style={styles.input}
-              value={tempProfile.city}
-              onChangeText={(text) => setTempProfile({ ...tempProfile, city: text })}
-              editable={editMode}
-              placeholder="Enter city"
-              placeholderTextColor={colors.textSecondary}
+              style={[
+                styles.input,
+                styles.disabledInput,
+                { backgroundColor: isDark ? colors.background : '#E5E7EB', color: colors.textSecondary, borderColor: colors.border }
+              ]}
+              value={profile.email}
+              editable={false}
             />
           </View>
-        </Card>
+
+          <View style={styles.formGroup}>
+            <View style={styles.labelRow}>
+              <Text style={[styles.label, { color: colors.text }]}>Phone Number</Text>
+              <Ionicons name="lock-closed" size={14} color={colors.textSecondary} />
+            </View>
+            <TextInput
+              style={[
+                styles.input,
+                styles.disabledInput,
+                { backgroundColor: isDark ? colors.background : '#E5E7EB', color: colors.textSecondary, borderColor: colors.border }
+              ]}
+              value={profile.phoneNumber || 'Not set'}
+              editable={false}
+            />
+          </View>
+        </View>
 
         {/* Action Buttons */}
         {editMode && (
           <View style={styles.actionContainer}>
-            <Button
-              title="Cancel"
+            <TouchableOpacity
+              style={[styles.cancelButton, { borderColor: colors.border }]}
               onPress={handleCancel}
-              variant="outline"
-              style={styles.cancelButton}
-            />
-            <Button
-              title={loading ? 'Saving...' : 'Save Changes'}
+            >
+              <Text style={[styles.cancelButtonText, { color: colors.text }]}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.saveButton, { backgroundColor: colors.primary }]}
               onPress={handleSave}
-              disabled={loading}
-              style={styles.saveButton}
-            />
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.saveButtonText}>Save Changes</Text>
+              )}
+            </TouchableOpacity>
           </View>
         )}
+
+        {/* Spacer */}
+        <View style={{ height: getResponsiveSpacing('xxl') }} />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#FAFBFC'
   },
-  headerCard: {
-    marginHorizontal: 0,
-    borderRadius: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0'
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: getResponsiveSpacing('md'),
+    fontSize: getResponsiveTypography('sm'),
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: getResponsiveSpacing('lg'),
+    paddingVertical: getResponsiveSpacing('md'),
+    borderBottomWidth: 1,
+  },
+  backButton: {
+    padding: scaleSize(4),
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1A202C'
+    fontSize: getResponsiveTypography('lg'),
+    fontWeight: '700',
+  },
+  editButton: {
+    padding: scaleSize(4),
   },
   content: {
     flex: 1,
-    paddingHorizontal: 16,
-  },
-  profileCard: {
-    marginTop: 16,
+    paddingHorizontal: getResponsiveSpacing('lg'),
   },
   profileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
+    padding: getResponsiveSpacing('lg'),
+    marginTop: getResponsiveSpacing('md'),
+    borderRadius: getResponsiveBorderRadius('xl'),
   },
-  profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: 16,
+  avatarContainer: {
+    width: scaleSize(80),
+    height: scaleSize(80),
+    borderRadius: getResponsiveBorderRadius('full'),
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  avatar: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarText: {
+    color: '#FFFFFF',
+    fontSize: getResponsiveTypography('xxl'),
+    fontWeight: '700',
   },
   profileInfo: {
     flex: 1,
+    marginLeft: getResponsiveSpacing('md'),
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    gap: scaleSize(8),
   },
   dealerName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: colors.text,
-          marginRight: 8,
+    fontSize: getResponsiveTypography('xl'),
+    fontWeight: '700',
   },
-  ownerName: {
-    fontSize: 16,
-    color: colors.textSecondary,
-          marginBottom: 4,
+  showroomName: {
+    fontSize: getResponsiveTypography('sm'),
+    marginTop: scaleSize(2),
   },
   verificationText: {
-    fontSize: 14,
-    color: colors.textSecondary
+    fontSize: getResponsiveTypography('xs'),
+    marginTop: scaleSize(4),
   },
-  statsContainer: {
+  shopLocationRow: {
     flexDirection: 'row',
-    marginTop: 16,
-    gap: 8,
-  },
-  statCard: {
-    flex: 1,
     alignItems: 'center',
-    paddingVertical: 16,
+    marginTop: scaleSize(6),
   },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.primary,
-          marginBottom: 4,
+  shopLocationText: {
+    marginLeft: scaleSize(4),
+    fontSize: getResponsiveTypography('xs'),
   },
-  statLabel: {
-    fontSize: 12,
-    color: colors.textSecondary,
-          textAlign: 'center',
-  },
-  infoCard: {
-    marginTop: 16,
-    marginBottom: 20,
+  section: {
+    marginTop: getResponsiveSpacing('md'),
+    padding: getResponsiveSpacing('lg'),
+    borderRadius: getResponsiveBorderRadius('xl'),
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.text,
-          marginBottom: 16,
+    fontSize: getResponsiveTypography('lg'),
+    fontWeight: '700',
+    marginBottom: scaleSize(4),
+  },
+  sectionSubtitle: {
+    fontSize: getResponsiveTypography('xs'),
+    marginBottom: getResponsiveSpacing('md'),
   },
   formGroup: {
-    marginBottom: 16,
+    marginBottom: getResponsiveSpacing('md'),
+  },
+  formRow: {
+    flexDirection: 'row',
   },
   label: {
-    fontSize: 14,
+    fontSize: getResponsiveTypography('sm'),
     fontWeight: '600',
-    color: colors.text,
-          marginBottom: 8,
+    marginBottom: scaleSize(6),
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: scaleSize(6),
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
-          borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: colors.text,
-          backgroundColor: colors.background
+    borderRadius: getResponsiveBorderRadius('lg'),
+    paddingHorizontal: getResponsiveSpacing('md'),
+    paddingVertical: getResponsiveSpacing('sm'),
+    fontSize: getResponsiveTypography('md'),
   },
   textArea: {
-    height: 80,
+    height: scaleSize(80),
     textAlignVertical: 'top',
+    paddingTop: getResponsiveSpacing('sm'),
+  },
+  disabledInput: {
+    opacity: 0.7,
   },
   actionContainer: {
     flexDirection: 'row',
-    marginTop: 20,
-    marginBottom: 30,
-    gap: 12,
+    marginTop: getResponsiveSpacing('lg'),
+    gap: getResponsiveSpacing('md'),
   },
   cancelButton: {
     flex: 1,
+    paddingVertical: getResponsiveSpacing('md'),
+    borderRadius: getResponsiveBorderRadius('lg'),
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: getResponsiveTypography('md'),
+    fontWeight: '600',
   },
   saveButton: {
     flex: 1,
+    paddingVertical: getResponsiveSpacing('md'),
+    borderRadius: getResponsiveBorderRadius('lg'),
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: getResponsiveTypography('md'),
+    fontWeight: '600',
   },
 });
 
 export default DealerProfileScreen;
-
