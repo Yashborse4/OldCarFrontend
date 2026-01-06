@@ -111,7 +111,7 @@ dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
     
-    implementation "com.truecaller.android.sdk:truecaller-sdk:2.6.0"
+
     // Add AppCompat dependency explicitly
     implementation "androidx.appcompat:appcompat:1.6.1"
     
