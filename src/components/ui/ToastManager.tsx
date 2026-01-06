@@ -92,6 +92,9 @@ export const useToastActions = () => {
     showInfo: (title: string, message?: string, options?: Partial<ToastConfig>) =>
       showToast({ type: 'info', title, message, ...options }),
 
+    showNeutral: (title: string, message?: string, options?: Partial<ToastConfig>) =>
+      showToast({ type: 'neutral', title, message, ...options }),
+
     hideToast,
     hideAllToasts,
   };
@@ -120,7 +123,7 @@ export const useNotifications = () => {
       ),
 
     notifyLogout: () =>
-      actions.showInfo('Logged Out', 'See you next time!', { duration: 2000 }),
+      actions.showNeutral('Logged Out', 'See you next time!', { duration: 2000 }),
 
     // Car-related notifications
     notifyCarSaved: (carName?: string) =>
@@ -131,7 +134,7 @@ export const useNotifications = () => {
       ),
 
     notifyCarRemoved: (carName?: string) =>
-      actions.showInfo(
+      actions.showNeutral(
         'Car Removed',
         carName ? `${carName} removed from favorites` : 'Removed from favorites',
         { duration: 2000 }

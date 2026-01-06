@@ -12,22 +12,20 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { spacing, borderRadius, typography } from '../../design-system/tokens';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { BlurView } from '@react-native-community/blur';
-
 import { useTheme } from '../../theme';
+import { getResponsiveSpacing, getResponsiveTypography, getResponsiveBorderRadius } from '../../utils/responsiveEnhanced';
 
 export interface ModernInputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
   error?: string;
   hint?: string;
-  leftIcon?: string; // Ionicons name
-  rightIcon?: string; // Ionicons name
+  leftIcon?: string;
+  rightIcon?: string;
   onRightIconPress?: () => void;
-  variant?: 'default' | 'outline' | 'filled' | 'glass' | 'minimal';
+  variant?: 'outline' | 'filled' | 'glass' | 'minimal';
   size?: 'sm' | 'md' | 'lg';
-  radius?: keyof typeof borderRadius;
   containerStyle?: ViewStyle;
   inputStyle?: TextStyle;
   showCharacterCount?: boolean;
@@ -37,9 +35,7 @@ export interface ModernInputProps extends Omit<TextInputProps, 'style'> {
   disabled?: boolean;
   success?: boolean;
   loading?: boolean;
-  animationDelay?: number;
   testID?: string;
-  textColor?: string;
 }
 
 export const ModernInput = forwardRef<TextInput, ModernInputProps>(
@@ -51,9 +47,8 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
       leftIcon,
       rightIcon,
       onRightIconPress,
-      variant = 'default',
+      variant = 'outline',
       size = 'md',
-      radius = 'lg',
       containerStyle,
       inputStyle,
       showCharacterCount = false,
@@ -63,13 +58,12 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
       disabled = false,
       success = false,
       loading = false,
-      animationDelay = 0,
       testID,
       value = '',
       onFocus,
       onBlur,
+      onChangeText,
       secureTextEntry,
-      textColor,
       ...props
     },
     ref
@@ -82,22 +76,20 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
 
     // Animation values
     const labelAnimation = useRef(new Animated.Value(value ? 1 : 0)).current;
-    const focusAnimation = useRef(new Animated.Value(0)).current;
     const shakeAnimation = useRef(new Animated.Value(0)).current;
 
-    // Handle password visibility for password inputs
     const isPasswordInput = secureTextEntry && !isPasswordVisible;
     const finalRightIcon = secureTextEntry
       ? (isPasswordVisible ? 'eye-off-outline' : 'eye-outline')
       : rightIcon;
 
-    // Shake animation for errors
     useEffect(() => {
       if (error) {
         Animated.sequence([
-          Animated.timing(shakeAnimation, { toValue: -8, duration: 50, useNativeDriver: true }),
-          Animated.timing(shakeAnimation, { toValue: 8, duration: 50, useNativeDriver: true }),
-          Animated.timing(shakeAnimation, { toValue: -4, duration: 50, useNativeDriver: true }),
+          Animated.timing(shakeAnimation, { toValue: -6, duration: 50, useNativeDriver: true }),
+          Animated.timing(shakeAnimation, { toValue: 6, duration: 50, useNativeDriver: true }),
+          Animated.timing(shakeAnimation, { toValue: -3, duration: 50, useNativeDriver: true }),
+          Animated.timing(shakeAnimation, { toValue: 3, duration: 50, useNativeDriver: true }),
           Animated.timing(shakeAnimation, { toValue: 0, duration: 50, useNativeDriver: true }),
         ]).start();
       }
@@ -105,52 +97,33 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
 
     const handleFocus = useCallback((e: any) => {
       if (disabled) return;
-
       setIsFocused(true);
-
-      // Animate label and focus indicator
-      if (floatingLabel && label) {
-        Animated.timing(labelAnimation, {
+      if (floatingLabel) {
+        Animated.spring(labelAnimation, {
           toValue: 1,
-          duration: 200,
           useNativeDriver: false,
+          bounciness: 0,
         }).start();
       }
-
-      Animated.timing(focusAnimation, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: false,
-      }).start();
-
       onFocus?.(e);
-    }, [disabled, floatingLabel, label, labelAnimation, focusAnimation, onFocus]);
+    }, [disabled, floatingLabel, labelAnimation, onFocus]);
 
     const handleBlur = useCallback((e: any) => {
       setIsFocused(false);
-
-      // Animate label back if no value
-      if (floatingLabel && label && !value) {
-        Animated.timing(labelAnimation, {
+      if (floatingLabel && !value) {
+        Animated.spring(labelAnimation, {
           toValue: 0,
-          duration: 200,
           useNativeDriver: false,
+          bounciness: 0,
         }).start();
       }
-
-      Animated.timing(focusAnimation, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: false,
-      }).start();
-
       onBlur?.(e);
-    }, [floatingLabel, label, value, labelAnimation, focusAnimation, onBlur]);
+    }, [floatingLabel, value, labelAnimation, onBlur]);
 
     const handleChangeText = useCallback((text: string) => {
       setCharacterCount(text.length);
-      props.onChangeText?.(text);
-    }, [props.onChangeText]);
+      onChangeText?.(text);
+    }, [onChangeText]);
 
     const handleRightIconPress = useCallback(() => {
       if (secureTextEntry) {
@@ -160,195 +133,100 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
       }
     }, [secureTextEntry, isPasswordVisible, onRightIconPress]);
 
-    // Get border color based on state
-    const getBorderColor = useCallback(() => {
-      if (error) return colors.error;
-      if (success) return colors.success;
+    const getBorderColor = () => {
+      if (error) return '#EF4444';
+      if (success) return '#10B981';
       if (isFocused) return colors.primary;
-      return isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-    }, [error, success, isFocused, colors.error, colors.success, colors.primary, isDark]);
+      return isDark ? 'rgba(255, 255, 255, 0.2)' : '#E5E7EB';
+    };
 
-    // Styles (cleaned up: fix malformed blocks and ensure theme usage)
+    const getHeight = () => {
+      switch (size) {
+        case 'sm': return 40;
+        case 'lg': return 56;
+        default: return 50;
+      }
+    };
+
     const styles = StyleSheet.create({
       container: {
-        marginBottom: spacing.lg,
+        marginBottom: getResponsiveSpacing('md'),
         ...containerStyle,
       },
-      staticLabel: {
-        fontSize: typography.fontSizes.sm,
-        fontWeight: typography.fontWeights.semibold,
-        color: colors.textSecondary,
-        marginBottom: spacing.sm,
-      },
-      required: {
-        color: colors.error,
-        fontSize: typography.fontSizes.sm,
-      },
-      inputContainer: {
+      inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        position: 'relative',
-        borderRadius: variant === 'minimal' ? 0 : borderRadius[radius],
-        opacity: disabled ? 0.6 : 1,
-        ...(size === 'sm'
-          ? { minHeight: 44, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }
-          : size === 'md'
-            ? { minHeight: 52, paddingHorizontal: spacing.lg, paddingVertical: spacing.md }
-            : { minHeight: 60, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg }),
-        ...(variant === 'default'
-          ? { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: getBorderColor() }
-          : variant === 'outline'
-            ? { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: getBorderColor() }
-            : variant === 'filled'
-              ? { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)', borderWidth: 0 }
-              : variant === 'glass'
-                ? { backgroundColor: 'transparent', borderWidth: 1, borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)', overflow: 'hidden' }
-                : { backgroundColor: 'transparent', borderWidth: 0, borderBottomWidth: 2, borderBottomColor: getBorderColor(), borderRadius: 0, paddingHorizontal: 0 }),
-      },
-      glassBackground: {
-        ...StyleSheet.absoluteFillObject,
-        borderRadius: borderRadius[radius],
-      },
-      leftIconContainer: {
-        marginRight: spacing.sm,
-        alignItems: 'center',
-        justifyContent: 'center',
+        borderRadius: getResponsiveBorderRadius('lg'),
+        borderWidth: variant === 'outline' || variant === 'glass' ? 1.5 : 0,
+        borderColor: getBorderColor(),
+        backgroundColor: variant === 'filled'
+          ? (isDark ? 'rgba(255,255,255,0.05)' : '#F3F4F6')
+          : (variant === 'glass' ? 'transparent' : (isDark ? colors.surface : '#FFFFFF')),
+        height: getHeight(),
+        paddingHorizontal: getResponsiveSpacing('md'),
+        overflow: 'hidden',
       },
       input: {
         flex: 1,
-        fontSize:
-          size === 'sm'
-            ? typography.fontSizes.sm
-            : size === 'md'
-              ? typography.fontSizes.base
-              : typography.fontSizes.lg,
-        lineHeight:
-          size === 'sm'
-            ? typography.fontSizes.sm * 1.4
-            : size === 'md'
-              ? typography.fontSizes.base * 1.4
-              : typography.fontSizes.lg * 1.4,
-        color: textColor || colors.text,
-        fontWeight: typography.fontWeights.medium,
+        fontSize: size === 'sm' ? getResponsiveTypography('xs') : getResponsiveTypography('sm'),
+        color: colors.text,
         paddingVertical: 0,
+        paddingHorizontal: getResponsiveSpacing('sm'),
+        height: '100%',
+        marginTop: floatingLabel ? 12 : 0, // Space for label
         ...inputStyle,
       },
-      rightIconContainer: {
-        marginLeft: spacing.sm,
-        alignItems: 'center',
+      iconContainer: {
         justifyContent: 'center',
-        padding: spacing.xs,
+        alignItems: 'center',
+        width: 24,
       },
-      floatingLabel: {
+      label: {
         position: 'absolute',
-        left: leftIcon ? spacing.xl + spacing.md : spacing.lg,
-        backgroundColor:
-          variant === 'minimal' || variant === 'outline' ? 'transparent' : colors.background,
-        paddingHorizontal: variant === 'minimal' || variant === 'outline' ? 0 : spacing.xs,
-        color: error
-          ? colors.error
-          : success
-            ? colors.success
-            : isFocused
-              ? colors.primary
-              : colors.textSecondary,
-        fontWeight: isFocused ? typography.fontWeights.semibold : typography.fontWeights.medium,
-        zIndex: 1,
+        left: leftIcon ? 44 : 16,
+        color: error ? '#EF4444' : isFocused ? colors.primary : colors.textSecondary,
+        fontSize: getResponsiveTypography('sm'),
+        fontWeight: '500',
       },
-      errorText: {
-        fontSize: typography.fontSizes.sm,
-        color: colors.error,
-        marginTop: spacing.xs,
-        fontWeight: typography.fontWeights.medium,
+      supportText: {
+        fontSize: getResponsiveTypography('xs'),
+        marginTop: 4,
+        marginLeft: 4,
       },
-      hintText: {
-        fontSize: typography.fontSizes.sm,
-        color: colors.textSecondary,
-        marginTop: spacing.xs,
-      },
-      successText: {
-        fontSize: typography.fontSizes.sm,
-        color: colors.success,
-        marginTop: spacing.xs,
-        fontWeight: typography.fontWeights.medium,
-      },
-      characterCount: {
-        fontSize: typography.fontSizes.xs,
-        color: characterCount === maxLength ? colors.warning : colors.textSecondary,
-        textAlign: 'right',
-        marginTop: spacing.xs,
-      },
-      focusIndicator: {
-        position: 'absolute',
-        bottom: variant === 'minimal' ? -2 : 0,
-        left: 0,
-        right: 0,
-        height: variant === 'minimal' ? 2 : 1,
-        backgroundColor: colors.primary,
-      },
+      glass: {
+        ...StyleSheet.absoluteFillObject,
+      }
+    });
+
+    // Interpolate label position
+    const labelTop = labelAnimation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [getHeight() / 2 - 10, 6]
+    });
+
+    const labelSize = labelAnimation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [getResponsiveTypography('sm'), getResponsiveTypography('xs')]
     });
 
     return (
       <View style={styles.container}>
-        {/* Static label */}
-        {!floatingLabel && label && (
-          <Text style={styles.staticLabel}>
-            {label}
-            {required && <Text style={styles.required}> *</Text>}
-          </Text>
-        )}
-
-        {/* Input container with shake animation */}
-        <Animated.View
-          style={[
-            styles.inputContainer,
-            {
-              transform: [{ translateX: shakeAnimation }],
-            },
-          ]}
-        >
-          {/* Glass background effect */}
+        <Animated.View style={[styles.inputWrapper, { transform: [{ translateX: shakeAnimation }] }]}>
           {variant === 'glass' && (
             <BlurView
-              style={styles.glassBackground}
-              blurType={isDark ? 'dark' : 'light'}
-              blurAmount={5}
-              reducedTransparencyFallbackColor={colors.surface}
+              style={styles.glass}
+              blurType={isDark ? "dark" : "light"}
+              blurAmount={10}
+              reducedTransparencyFallbackColor="white"
             />
           )}
 
-          {/* Focus indicator */}
-          {(isFocused || error || success) && (
-            <Animated.View
-              style={[
-                styles.focusIndicator,
-                {
-                  backgroundColor: error ? colors.error : success ? colors.success : colors.primary,
-                  transform: [
-                    {
-                      scaleX: focusAnimation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 1],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            />
-          )}
-
-          {/* Left icon */}
           {leftIcon && (
-            <View style={styles.leftIconContainer}>
-              <Ionicons
-                name={leftIcon as any}
-                size={size === 'lg' ? 24 : 20}
-                color={isFocused ? colors.primary : colors.textSecondary}
-              />
+            <View style={styles.iconContainer}>
+              <Ionicons name={leftIcon as any} size={20} color={isFocused ? colors.primary : colors.textSecondary} />
             </View>
           )}
 
-          {/* Text input */}
           <TextInput
             ref={ref}
             {...props}
@@ -357,92 +235,47 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
             onFocus={handleFocus}
             onBlur={handleBlur}
             onChangeText={handleChangeText}
-            placeholder={floatingLabel ? undefined : props.placeholder}
-            placeholderTextColor={isDark ? 'rgba(255, 255, 255, 0.5)' : colors.textSecondary}
+            placeholder={floatingLabel && !isFocused && !value ? '' : (props.placeholder || label)}
+            placeholderTextColor={colors.textSecondary}
             maxLength={maxLength}
             editable={!disabled && !loading}
             secureTextEntry={isPasswordInput}
             testID={testID}
-            accessibilityLabel={label}
-            accessibilityHint={hint}
-            accessibilityState={{
-              disabled: disabled || loading,
-            }}
           />
 
-          {/* Right icon or loading indicator */}
           {loading ? (
-            <View style={styles.rightIconContainer}>
-              <ActivityIndicator
-                size="small"
-                color={colors.primary}
-              />
+            <View style={styles.iconContainer}>
+              <ActivityIndicator size="small" color={colors.primary} />
             </View>
           ) : finalRightIcon ? (
-            <TouchableOpacity
-              onPress={handleRightIconPress}
-              style={styles.rightIconContainer}
-              disabled={!secureTextEntry && !onRightIconPress}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name={finalRightIcon as any}
-                size={size === 'lg' ? 24 : 20}
-                color={isFocused ? colors.primary : colors.textSecondary}
-              />
+            <TouchableOpacity onPress={handleRightIconPress} style={styles.iconContainer} disabled={!secureTextEntry && !onRightIconPress}>
+              <Ionicons name={finalRightIcon as any} size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           ) : null}
 
-          {/* Floating label */}
           {floatingLabel && label && (
-            <Animated.Text
-              style={[
-                styles.floatingLabel,
-                {
-                  fontSize: labelAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [typography.fontSizes.base, typography.fontSizes.sm],
-                  }),
-                  top: labelAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [
-                      size === 'lg' ? 18 : size === 'md' ? 15 : 12,
-                      variant === 'minimal' ? -2 : -10
-                    ],
-                  }),
-                },
-              ]}
-            >
+            <Animated.Text style={[styles.label, { top: labelTop, fontSize: labelSize }]} pointerEvents="none">
               {label}
-              {required && <Text style={styles.required}> *</Text>}
+              {required && <Text style={{ color: '#EF4444' }}> *</Text>}
             </Animated.Text>
           )}
         </Animated.View>
 
-        {/* Error message */}
-        {error && (
-          <Text style={styles.errorText}>
-            {error}
-          </Text>
-        )}
-
-        {/* Success message */}
-        {success && !error && (
-          <Text style={styles.successText}>
-            ✓ Looks good!
-          </Text>
-        )}
-
-        {/* Hint text */}
-        {hint && !error && (
-          <Text style={styles.hintText}>{hint}</Text>
-        )}
-
-        {/* Character count */}
-        {showCharacterCount && maxLength && (
-          <Text style={styles.characterCount}>
-            {characterCount}/{maxLength}
-          </Text>
+        {(error || hint || (showCharacterCount && maxLength)) && (
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              {error ? (
+                <Text style={[styles.supportText, { color: '#EF4444' }]}>{error}</Text>
+              ) : hint ? (
+                <Text style={[styles.supportText, { color: colors.textSecondary }]}>{hint}</Text>
+              ) : null}
+            </View>
+            {showCharacterCount && maxLength && (
+              <Text style={[styles.supportText, { color: colors.textSecondary }]}>
+                {characterCount}/{maxLength}
+              </Text>
+            )}
+          </View>
         )}
       </View>
     );
@@ -451,7 +284,5 @@ export const ModernInput = forwardRef<TextInput, ModernInputProps>(
 
 ModernInput.displayName = 'ModernInput';
 
-export { ModernInput as Input };
-export default ModernInput;
-
-
+export default ModernInput; // Default export
+export { ModernInput as Input }; // Alias

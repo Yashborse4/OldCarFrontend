@@ -1,9 +1,11 @@
-import React, { memo } from 'react';
-import { View, ViewStyle, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { memo, useRef } from 'react';
+import { View, ViewStyle, TouchableWithoutFeedback, StyleSheet, Animated } from 'react-native';
+import { useTheme } from '../../theme';
+import { getResponsiveBorderRadius, getResponsiveSpacing } from '../../utils/responsiveEnhanced';
 
 export interface CardProps {
   children: React.ReactNode;
-  variant?: 'default' | 'elevated' | 'outlined';
+  variant?: 'elevated' | 'outlined' | 'flat' | 'floating';
   padding?: 'none' | 'sm' | 'md' | 'lg';
   onPress?: () => void;
   disabled?: boolean;
@@ -13,96 +15,136 @@ export interface CardProps {
 
 export const Card: React.FC<CardProps> = memo(({
   children,
-  variant = 'default',
+  variant = 'elevated',
   padding = 'md',
   onPress,
   disabled = false,
   style,
   testID,
 }) => {
-  // Hardcoded 
-  const colors = {
-    surface: '#FFFFFF',
-    border: '#E5E5E7',
+  const { theme, isDark } = useTheme();
+  const colors = theme.colors;
+  const scaleValue = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    if (onPress && !disabled) {
+      Animated.spring(scaleValue, {
+        toValue: 0.98,
+        useNativeDriver: true,
+        speed: 20,
+      }).start();
+    }
   };
 
-  const styles = StyleSheet.create({
-    card: {
-      borderRadius: 12,
-      opacity: disabled ? 0.6 : 1,
-      ...getVariantStyles(variant, colors),
-      ...getPaddingStyles(padding),
-      ...style,
-    },
-  });
+  const handlePressOut = () => {
+    if (onPress && !disabled) {
+      Animated.spring(scaleValue, {
+        toValue: 1,
+        useNativeDriver: true,
+        speed: 20,
+      }).start();
+    }
+  };
+
+  const getVariantStyles = (variant: string) => {
+    switch (variant) {
+      case 'elevated':
+        return {
+          backgroundColor: isDark ? colors.surface : '#FFFFFF',
+          ...PlatformSelect({
+            ios: {
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.08,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 4,
+            },
+          }),
+          borderWidth: isDark ? 1 : 0,
+          borderColor: colors.border,
+        };
+      case 'outlined':
+        return {
+          backgroundColor: isDark ? colors.surface : '#FFFFFF',
+          borderWidth: 1,
+          borderColor: colors.border,
+        };
+      case 'flat':
+        return {
+          backgroundColor: isDark ? '#27272A' : '#F4F4F5', // Zinc 800/100
+        };
+      case 'floating':
+        return {
+          backgroundColor: isDark ? colors.surface : '#FFFFFF',
+          ...PlatformSelect({
+            ios: {
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.15,
+              shadowRadius: 16,
+            },
+            android: {
+              elevation: 10,
+            },
+          }),
+        };
+      default:
+        return {};
+    }
+  };
+
+  const getPadding = (padding: string) => {
+    switch (padding) {
+      case 'none': return 0;
+      case 'sm': return getResponsiveSpacing('sm');
+      case 'lg': return getResponsiveSpacing('lg');
+      default: return getResponsiveSpacing('md');
+    }
+  };
+
+  const cardStyle = {
+    borderRadius: getResponsiveBorderRadius('xl'),
+    padding: getPadding(padding),
+    opacity: disabled ? 0.6 : 1,
+    overflow: 'hidden' as const, // For gradient backgrounds if any
+    ...getVariantStyles(variant),
+    ...style,
+  };
 
   if (onPress && !disabled) {
     return (
-      <TouchableOpacity
-        style={styles.card}
+      <TouchableWithoutFeedback
         onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         disabled={disabled}
         testID={testID}
-        activeOpacity={0.8}
       >
-        {children}
-      </TouchableOpacity>
+        <Animated.View style={[cardStyle, { transform: [{ scale: scaleValue }] }]}>
+          {children}
+        </Animated.View>
+      </TouchableWithoutFeedback>
     );
   }
 
   return (
-    <View style={styles.card} testID={testID}>
+    <View style={cardStyle} testID={testID}>
       {children}
     </View>
   );
 });
 
-// Helper functions
-const getVariantStyles = (variant: string, colors: any) => {
-  switch (variant) {
-    case 'default':
-      return {
-        backgroundColor: colors.surface,
-        elevation: 2,
-
-      };
-    case 'elevated':
-      return {
-        backgroundColor: colors.surface,
-        elevation: 6,
-
-      };
-    case 'outlined':
-      return {
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border
-      };
-    default:
-      return {
-        backgroundColor: colors.surface,
-        elevation: 2,
-
-      };
-  }
+// Helper for platform specific styles that aren't StyleSheet.create
+const PlatformSelect = (styles: { ios: any; android: any }) => {
+  // @ts-ignore
+  return styles[Platform.OS] || {};
 };
 
-const getPaddingStyles = (padding: string) => {
-  switch (padding) {
-    case 'none':
-      return { padding: 0 };
-    case 'sm':
-      return { padding: 12 };
-    case 'md':
-      return { padding: 16 };
-    case 'lg':
-      return { padding: 20 };
-    default:
-      return { padding: 16 };
-  }
-};
+// Need access to Platform inside the function
+import { Platform } from 'react-native';
 
 Card.displayName = 'Card';
 
 export default Card;
-

@@ -165,7 +165,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         )}
       </TouchableOpacity>
     );
-  }, [activeRoute, handlePress]);
+  }, [activeRoute, handlePress, colors.primary, colors.textSecondary, colors.error]);
 
   return (
     <View
