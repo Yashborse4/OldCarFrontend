@@ -11,9 +11,13 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
+import { launchImageLibrary, Asset } from 'react-native-image-picker';
+import { carApi } from '../../services/CarApi';
+import { apiClient } from '../../services/ApiClient';
 
 const SellCarScreen = ({ navigation }: { navigation: any }) => {
   const isDark = false; // Hardcoded to false (light theme)
@@ -24,6 +28,7 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
     textSecondary: '#4A5568',
     primary: '#FFD700',
     border: '#E2E8F0',
+    error: '#EF4444',
   };
 
   const [formData, setFormData] = useState({
@@ -34,9 +39,14 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
     kilometers: '',
     fuelType: '',
     transmission: '',
-    ownerNumber: '',
+    ownerNumber: '1',
     description: '',
+    vin: '',
+    color: '',
   });
+
+  const [selectedImages, setSelectedImages] = useState<Asset[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [selectedFuelType, setSelectedFuelType] = useState('');
   const [selectedTransmission, setSelectedTransmission] = useState('');
@@ -51,10 +61,114 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
     });
   };
 
-  const handleSubmit = () => {
-    // In a real app, this would submit the form data to an API
-    console.log('Form submitted:', formData);
-    navigation.goBack();
+  const handlePickImages = async () => {
+    try {
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 10,
+        quality: 0.8,
+      });
+
+      if (result.assets) {
+        setSelectedImages(prev => [...prev, ...result.assets!]);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick images');
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSetBanner = (index: number) => {
+    // Move selected image to index 0
+    if (index === 0) return;
+
+    const newImages = [...selectedImages];
+    const item = newImages.splice(index, 1)[0];
+    newImages.unshift(item);
+    setSelectedImages(newImages);
+  };
+
+  const uploadImages = async (): Promise<string[]> => {
+    if (selectedImages.length === 0) return [];
+
+    const uploadPromises = selectedImages.map(async (image) => {
+      const formData = new FormData();
+      formData.append('file', {
+        uri: Platform.OS === 'ios' ? image.uri?.replace('file://', '') : image.uri,
+        type: image.type || 'image/jpeg',
+        name: image.fileName || `image_${Date.now()}.jpg`,
+      });
+      formData.append('folder', 'cars/temp'); // Ideally use actual car ID after creation, or temp folder
+
+      try {
+        const response = await apiClient.post<{ fileUrl: string }>('/api/files/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return response.data.fileUrl;
+      } catch (error) {
+        console.error('Image upload failed', error);
+        throw new Error('Failed to upload one or more images');
+      }
+    });
+
+    return await Promise.all(uploadPromises);
+  };
+
+  const handleSubmit = async () => {
+    // Validation
+    if (!formData.make || !formData.model || !formData.price || !formData.year) {
+      Alert.alert('Missing Fields', 'Please fill in all required fields (Make, Model, Year, Price)');
+      return;
+    }
+
+    if (selectedImages.length === 0) {
+      Alert.alert('No Images', 'Please add at least one image of your car');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // 1. Upload Images
+      const imageUrls = await uploadImages();
+
+      // 2. Create Car
+      // Note: imageUrls[0] is automatically the banner because we sorted selectedImages
+      const carData: any = {
+        make: formData.make,
+        model: formData.model,
+        year: parseInt(formData.year),
+        price: parseFloat(formData.price),
+        mileage: parseInt(formData.kilometers) || 0,
+        fuelType: formData.fuelType,
+        transmission: formData.transmission,
+        numberOfOwners: parseInt(formData.ownerNumber) || 1,
+        description: formData.description,
+        color: formData.color,
+        vin: formData.vin,
+
+        // These are the key fields for images
+        imageUrl: imageUrls[0], // Explicitly set banner
+        images: imageUrls,      // Full list
+      };
+
+      await carApi.createVehicle(carData);
+
+      Alert.alert('Success', 'Your car has been listed successfully!', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
+
+    } catch (error: any) {
+      console.error('Submission error:', error);
+      Alert.alert('Error', error.message || 'Failed to list your car. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -80,6 +194,51 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
         >
           {/* Form Container */}
           <View style={[styles.formContainer, { backgroundColor: colors.surface }]}>
+
+            {/* Photo Upload Section */}
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Photos</Text>
+              <Text style={[styles.helperText, { color: colors.textSecondary }]}>
+                Tap image to set correctly as banner (Cover)
+              </Text>
+            </View>
+
+            <View style={styles.photoContainer}>
+              {selectedImages.map((img, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.imageWrapper,
+                    index === 0 && { borderColor: colors.primary, borderWidth: 3 }
+                  ]}
+                  onPress={() => handleSetBanner(index)}
+                >
+                  <Image source={{ uri: img.uri }} style={styles.imageThumbnail} />
+                  {index === 0 && (
+                    <View style={[styles.bannerBadge, { backgroundColor: colors.primary }]}>
+                      <Text style={styles.bannerText}>Banner</Text>
+                    </View>
+                  )}
+                  <TouchableOpacity
+                    style={styles.removeImageButton}
+                    onPress={() => handleRemoveImage(index)}
+                  >
+                    <Ionicons name="close-circle" size={20} color="#EF4444" />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              ))}
+
+              <TouchableOpacity
+                style={[styles.addPhotoButton, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}
+                onPress={handlePickImages}
+              >
+                <Ionicons name="camera-outline" size={32} color={colors.primary} />
+                <Text style={[styles.addPhotoText, { color: colors.text }]}>Add Photos</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.divider} />
+
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Car Details</Text>
 
             {/* Make & Model */}
@@ -166,7 +325,7 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
                       style={[
                         styles.optionText,
                         { color: colors.text },
-                        selectedFuelType === type && { color: isDark ? '#111827' : '#111827' }
+                        selectedFuelType === type && { color: '#111827', fontWeight: 'bold' }
                       ]}
                     >
                       {type}
@@ -197,7 +356,7 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
                       style={[
                         styles.optionText,
                         { color: colors.text },
-                        selectedTransmission === type && { color: isDark ? '#111827' : '#111827' }
+                        selectedTransmission === type && { color: '#111827', fontWeight: 'bold' }
                       ]}
                     >
                       {type}
@@ -225,13 +384,39 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
                       style={[
                         styles.optionText,
                         { color: colors.text },
-                        formData.ownerNumber === num.toString() && { color: isDark ? '#111827' : '#111827' }
+                        formData.ownerNumber === num.toString() && { color: '#111827', fontWeight: 'bold' }
                       ]}
                     >
                       {num === 1 ? '1st' : num === 2 ? '2nd' : num === 3 ? '3rd' : '4th+'}
                     </Text>
                   </TouchableOpacity>
                 ))}
+              </View>
+            </View>
+
+            {/* Color & VIN */}
+            <View style={styles.rowContainer}>
+              <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
+                <Text style={[styles.label, { color: colors.text }]}>Color</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+                  placeholder="e.g. White"
+                  placeholderTextColor={colors.textSecondary}
+                  value={formData.color}
+                  onChangeText={(text) => handleInputChange('color', text)}
+                />
+              </View>
+
+              <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
+                <Text style={[styles.label, { color: colors.text }]}>VIN (Optional)</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA', color: colors.text }]}
+                  placeholder="17 chars"
+                  placeholderTextColor={colors.textSecondary}
+                  maxLength={17}
+                  value={formData.vin}
+                  onChangeText={(text) => handleInputChange('vin', text)}
+                />
               </View>
             </View>
 
@@ -254,27 +439,23 @@ const SellCarScreen = ({ navigation }: { navigation: any }) => {
               />
             </View>
 
-            {/* Photo Upload Section */}
-            <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Photos</Text>
-              <View style={styles.photoContainer}>
-                <TouchableOpacity
-                  style={[styles.addPhotoButton, { backgroundColor: isDark ? '#2C2C2C' : '#F5F7FA' }]}
-                >
-                  <Ionicons name="plus" size={24} color={colors.primary} />
-                  <Text style={[styles.addPhotoText, { color: colors.text }]}>Add Photos</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
 
       {/* Submit Button */}
       <View style={[styles.bottomContainer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+        <TouchableOpacity
+          style={[styles.submitButton, isSubmitting && { opacity: 0.7 }]}
+          onPress={handleSubmit}
+          disabled={isSubmitting}
+        >
           <View style={styles.submitButtonGradient}>
-            <Text style={styles.submitButtonText}>List Your Car</Text>
+            {isSubmitting ? (
+              <ActivityIndicator color="#111827" />
+            ) : (
+              <Text style={styles.submitButtonText}>List Your Car</Text>
+            )}
           </View>
         </TouchableOpacity>
       </View>
@@ -310,13 +491,23 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     margin: 16,
-
     elevation: 4,
+  },
+  sectionHeader: {
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 4,
+  },
+  helperText: {
+    fontSize: 12,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    marginVertical: 20,
   },
   formGroup: {
     marginBottom: 16,
@@ -359,6 +550,38 @@ const styles = StyleSheet.create({
   photoContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 10,
+  },
+  imageWrapper: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  imageThumbnail: {
+    width: '100%',
+    height: '100%',
+  },
+  bannerBadge: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingVertical: 2,
+    alignItems: 'center',
+  },
+  bannerText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: 'white',
+    borderRadius: 10,
   },
   addPhotoButton: {
     width: 100,
@@ -366,10 +589,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderStyle: 'dashed',
   },
   addPhotoText: {
     marginTop: 8,
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: '500',
   },
   bottomContainer: {
     padding: 16,

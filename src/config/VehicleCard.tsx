@@ -8,10 +8,15 @@ import {
   Dimensions,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
+import { useTheme } from '../theme';
 import { Vehicle } from '../services/CarApi';
-
-const { width } = Dimensions.get('window');
+import {
+  scaleSize,
+  getResponsiveSpacing,
+  getResponsiveTypography,
+  getResponsiveBorderRadius,
+  wp,
+} from '../utils/responsiveEnhanced';
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -30,8 +35,8 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
   onBookmark,
   isBookmarked = false,
 }) => {
-  const colors = { text: '#1A202C', textSecondary: '#4A5568', primary: '#FFD700', surface: '#FFFFFF' };
-  const spacing = { sm: 8, md: 16 };
+  const { theme, isDark } = useTheme();
+  const { colors } = theme;
   const [imageError, setImageError] = useState(false);
 
   const formatPrice = (price: number) => {
@@ -54,148 +59,186 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
   const getStatusColor = (status: Vehicle['status']) => {
     switch (status) {
       case 'Available':
-        return '#4CAF50';
+        return '#10B981'; // Green
       case 'Sold':
-        return '#F44336';
+        return '#EF4444'; // Red
       case 'Reserved':
-        return '#FF9800';
+        return '#F59E0B'; // Amber
       case 'Archived':
-        return '#9E9E9E';
+        return '#6B7280'; // Gray
       default:
-        return '#4CAF50';
+        return '#10B981';
+    }
+  };
+
+  const getStatusIcon = (status: Vehicle['status']) => {
+    switch (status) {
+      case 'Available': return 'checkmark-circle';
+      case 'Sold': return 'close-circle';
+      case 'Reserved': return 'time';
+      case 'Archived': return 'archive';
+      default: return 'checkmark-circle';
     }
   };
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
-      <View style={styles.card}>
-        {/* Image Container */}
-        <View style={styles.imageContainer}>
-          {!imageError && vehicle.images && vehicle.images.length > 0 ? (
-            <Image
-              source={{ uri: vehicle.images[0] }}
-              style={styles.image}
-              resizeMode="cover"
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <View style={styles.placeholderImage}>
-              <Ionicons name="car" size={40} color="#ccc" />
-            </View>
-          )}
+    <TouchableOpacity
+      style={[
+        styles.container,
+        {
+          backgroundColor: isDark ? colors.surface : '#FFFFFF',
+          borderColor: colors.border,
+          shadowColor: isDark ? '#000' : '#ccc',
+        }
+      ]}
+      onPress={onPress}
+      activeOpacity={0.9}
+    >
+      {/* Image Section */}
+      <View style={styles.imageContainer}>
+        {!imageError && vehicle.images && vehicle.images.length > 0 ? (
+          <Image
+            source={{ uri: vehicle.images[0] }}
+            style={styles.image}
+            resizeMode="cover"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <View style={[styles.placeholderImage, { backgroundColor: isDark ? '#2C2C2C' : '#F3F4F6' }]}>
+            <Ionicons name="car-sport" size={64} color={colors.textSecondary} />
+          </View>
+        )}
 
-          {/* Badges */}
-          <View style={styles.badges}>
+        {/* Top Badges */}
+        <View style={styles.topOverlay}>
+          <View style={styles.leftBadges}>
             {vehicle.featured && (
-              <View style={styles.featuredBadge}>
-                <Ionicons name="star" size={12} color="#fff" />
-                <Text style={styles.featuredText}>Featured</Text>
+              <View style={[styles.badge, { backgroundColor: colors.primary }]}>
+                <Ionicons name="star" size={12} color="#111827" />
+                <Text style={[styles.badgeText, { color: '#111827' }]}>Featured</Text>
               </View>
             )}
-
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(vehicle.status) }]}>
-              <Text style={styles.statusText}>{vehicle.status}</Text>
+            <View style={[styles.badge, { backgroundColor: getStatusColor(vehicle.status) }]}>
+              <Ionicons name={getStatusIcon(vehicle.status) as any} size={12} color="#FFFFFF" />
+              <Text style={[styles.badgeText, { color: '#FFFFFF' }]}>{vehicle.status}</Text>
             </View>
           </View>
 
-          {/* Bookmark Button */}
           {onBookmark && (
             <TouchableOpacity
               style={styles.bookmarkButton}
               onPress={onBookmark}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <Ionicons
-                name={isBookmarked ? 'bookmark' : 'bookmark-border'}
-                size={20}
-                color={isBookmarked ? colors.primary : '#fff'}
+                name={isBookmarked ? 'bookmark' : 'bookmark-outline'}
+                size={22}
+                color={isBookmarked ? colors.primary : '#FFFFFF'}
               />
             </TouchableOpacity>
           )}
-
-          {/* Image Count */}
-          {vehicle.images && vehicle.images.length > 1 && (
-            <View style={styles.imageCount}>
-              <Ionicons name="photo-library" size={14} color="#fff" />
-              <Text style={styles.imageCountText}>{vehicle.images.length}</Text>
-            </View>
-          )}
         </View>
 
-        {/* Content */}
-        <View style={styles.content}>
-          {/* Title and Year */}
-          <View style={styles.titleRow}>
-            <Text style={styles.title} numberOfLines={1}>
+        {/* Bottom Overlay - Image Count */}
+        {vehicle.images && vehicle.images.length > 1 && (
+          <View style={styles.imageCountBadge}>
+            <Ionicons name="images-outline" size={12} color="#FFFFFF" />
+            <Text style={styles.imageCountText}>{vehicle.images.length}</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Content Section */}
+      <View style={styles.content}>
+        <View style={styles.headerRow}>
+          <View style={styles.titleContainer}>
+            <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
               {vehicle.year} {vehicle.make} {vehicle.model}
             </Text>
-            {vehicle.isCoListed && (
-              <View style={styles.coListedBadge}>
-                <Ionicons name="share" size={12} color={colors.primary} />
-              </View>
-            )}
+            <Text style={[styles.variant, { color: colors.textSecondary }]} numberOfLines={1}>
+              {vehicle.variant}
+            </Text>
+          </View>
+          <Text style={[styles.price, { color: colors.primary }]}>
+            {formatPrice(vehicle.price)}
+          </Text>
+        </View>
+
+        {/* Specs Grid */}
+        <View style={[styles.specsGrid, { backgroundColor: isDark ? colors.background : '#F9FAFB' }]}>
+          <View style={styles.specItem}>
+            <Ionicons name="speedometer-outline" size={16} color={colors.textSecondary} />
+            <Text style={[styles.specText, { color: colors.textSecondary }]}>
+              {formatMileage(vehicle.mileage)}
+            </Text>
+          </View>
+          <View style={styles.verticalDivider} />
+          <View style={styles.specItem}>
+            <Ionicons name="filter-outline" size={16} color={colors.textSecondary} />
+            <Text style={[styles.specText, { color: colors.textSecondary }]}>
+              {vehicle.fuelType}
+            </Text>
+          </View>
+          <View style={styles.verticalDivider} />
+          <View style={styles.specItem}>
+            <Ionicons name="hardware-chip-outline" size={16} color={colors.textSecondary} />
+            <Text style={[styles.specText, { color: colors.textSecondary }]}>
+              {vehicle.transmission}
+            </Text>
+          </View>
+        </View>
+
+        {/* Location & Dealer */}
+        <View style={styles.footerRow}>
+          <View style={styles.locationContainer}>
+            <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
+            <Text style={[styles.locationText, { color: colors.textSecondary }]} numberOfLines={1}>
+              {vehicle.location}
+            </Text>
           </View>
 
-          {/* Price */}
-          <Text style={styles.price}>{formatPrice(vehicle.price)}</Text>
-
-          {/* Details Row */}
-          <View style={styles.detailsRow}>
-            <View style={styles.detailItem}>
-              <Ionicons name="speedometer" size={16} color="#666" />
-              <Text style={styles.detailText}>{formatMileage(vehicle.mileage)}</Text>
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Ionicons name="eye-outline" size={14} color={colors.textSecondary} />
+              <Text style={[styles.statValue, { color: colors.textSecondary }]}>{vehicle.views}</Text>
             </View>
-
-            <View style={styles.detailItem}>
-              <Ionicons name="location" size={16} color="#666" />
-              <Text style={styles.detailText}>{vehicle.location}</Text>
-            </View>
-
-            <View style={styles.detailItem}>
-              <Ionicons name="build" size={16} color="#666" />
-              <Text style={styles.detailText}>{vehicle.condition}</Text>
+            <View style={styles.statItem}>
+              <Ionicons name="chatbubble-outline" size={14} color={colors.textSecondary} />
+              <Text style={[styles.statValue, { color: colors.textSecondary }]}>{vehicle.inquiries}</Text>
             </View>
           </View>
+        </View>
 
-          {/* Dealer Info */}
-          <View style={styles.dealerRow}>
-            <View style={styles.dealerInfo}>
-              <Ionicons name="storefront" size={14} color="#666" />
-              <Text style={styles.dealerText}>{vehicle.dealerName}</Text>
-            </View>
+        {/* Buttons */}
+        <View style={[styles.actionButtons, { borderTopColor: colors.border }]}>
+          <TouchableOpacity
+            style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+            onPress={onPress}
+          >
+            <Text style={styles.primaryButtonText}>View Details</Text>
+            <Ionicons name="arrow-forward" size={16} color="#111827" />
+          </TouchableOpacity>
 
-            {/* Stats */}
-            <View style={styles.stats}>
-              <View style={styles.statItem}>
-                <Ionicons name="eye" size={12} color="#666" />
-                <Text style={styles.statText}>{vehicle.views}</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Ionicons name="message" size={12} color="#666" />
-                <Text style={styles.statText}>{vehicle.inquiries}</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Action Buttons */}
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.contactButton} onPress={onPress}>
-              <Ionicons name="call" size={16} color={colors.primary} />
-              <Text style={styles.contactText}>Contact</Text>
+          {showCoListButton && onCoList && (
+            <TouchableOpacity
+              style={[
+                styles.iconButton,
+                { backgroundColor: isDark ? '#374151' : '#F3F4F6' }
+              ]}
+              onPress={onCoList}
+            >
+              <Ionicons name="share-social-outline" size={20} color={colors.text} />
             </TouchableOpacity>
+          )}
 
-            {showCoListButton && onCoList && (
-              <TouchableOpacity style={styles.coListButton} onPress={onCoList}>
-                <Ionicons name="share" size={16} color={colors.primary} />
-                <Text style={styles.coListText}>Co-List</Text>
-              </TouchableOpacity>
-            )}
-
-            <TouchableOpacity style={styles.viewButton} onPress={onPress}>
-              <Text style={styles.viewText}>View Details</Text>
-              <Ionicons name="chevron-forward" size={16} color="#fff" />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={[
+              styles.iconButton,
+              { backgroundColor: isDark ? '#374151' : '#F3F4F6' }
+            ]}
+            onPress={onPress} // Default call/chat action
+          >
+            <Ionicons name="call-outline" size={20} color={colors.text} />
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
@@ -204,18 +247,19 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: getResponsiveBorderRadius('xl'),
+    marginBottom: getResponsiveSpacing('lg'),
+    borderWidth: 1,
     overflow: 'hidden',
-
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   imageContainer: {
-    height: 200,
+    height: scaleSize(180),
     position: 'relative',
+    backgroundColor: '#E5E7EB',
   },
   image: {
     width: '100%',
@@ -224,201 +268,161 @@ const styles = StyleSheet.create({
   placeholderImage: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#f0f0f0',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badges: {
+  topOverlay: {
     position: 'absolute',
-    top: 12,
-    left: 12,
+    top: getResponsiveSpacing('sm'),
+    left: getResponsiveSpacing('sm'),
+    right: getResponsiveSpacing('sm'),
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    zIndex: 10,
   },
-  featuredBadge: {
+  leftBadges: {
+    flexDirection: 'row',
+    gap: scaleSize(6),
+  },
+  badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 6,
-    backgroundColor: '#FFD700',
+    gap: scaleSize(4),
+    paddingHorizontal: scaleSize(8),
+    paddingVertical: scaleSize(4),
+    borderRadius: getResponsiveBorderRadius('full'),
   },
-  featuredText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginLeft: 2,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#fff',
+  badgeText: {
+    fontSize: getResponsiveTypography('xs'),
+    fontWeight: '700',
   },
   bookmarkButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    width: scaleSize(36),
+    height: scaleSize(36),
+    borderRadius: getResponsiveBorderRadius('full'),
+    backgroundColor: 'rgba(0,0,0,0.4)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  imageCount: {
+  imageCountBadge: {
     position: 'absolute',
-    bottom: 12,
-    right: 12,
+    bottom: getResponsiveSpacing('sm'),
+    right: getResponsiveSpacing('sm'),
     flexDirection: 'row',
     alignItems: 'center',
+    gap: scaleSize(4),
     backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 10,
+    paddingHorizontal: scaleSize(8),
+    paddingVertical: scaleSize(4),
+    borderRadius: getResponsiveBorderRadius('md'),
   },
   imageCountText: {
-    fontSize: 11,
-    color: '#fff',
-    marginLeft: 2,
-    fontWeight: '500',
+    color: '#FFFFFF',
+    fontSize: getResponsiveTypography('xs'),
+    fontWeight: '600',
   },
   content: {
-    padding: 16,
+    padding: getResponsiveSpacing('md'),
   },
-  titleRow: {
+  headerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'flex-start',
+    marginBottom: getResponsiveSpacing('md'),
+  },
+  titleContainer: {
+    flex: 1,
+    marginRight: getResponsiveSpacing('sm'),
   },
   title: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+    fontSize: getResponsiveTypography('lg'),
+    fontWeight: '700',
+    marginBottom: scaleSize(2),
   },
-  coListedBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(78, 205, 196, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  variant: {
+    fontSize: getResponsiveTypography('sm'),
   },
   price: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2E7D32',
-    marginBottom: 12,
+    fontSize: getResponsiveTypography('lg'),
+    fontWeight: '800',
   },
-  detailsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 16,
-    flex: 1,
-  },
-  detailText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
-    fontWeight: '500',
-  },
-  dealerRow: {
+  specsGrid: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    padding: getResponsiveSpacing('sm'),
+    borderRadius: getResponsiveBorderRadius('lg'),
+    marginBottom: getResponsiveSpacing('md'),
   },
-  dealerInfo: {
+  specItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    gap: scaleSize(4),
   },
-  dealerText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
+  specText: {
+    fontSize: getResponsiveTypography('xs'),
     fontWeight: '500',
   },
-  stats: {
+  verticalDivider: {
+    width: 1,
+    height: scaleSize(12),
+    backgroundColor: '#D1D5DB',
+  },
+  footerRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: getResponsiveSpacing('md'),
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scaleSize(4),
+    flex: 1,
+  },
+  locationText: {
+    fontSize: getResponsiveTypography('sm'),
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    gap: getResponsiveSpacing('md'),
   },
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 12,
+    gap: scaleSize(4),
   },
-  statText: {
-    fontSize: 11,
-    color: '#666',
-    marginLeft: 2,
+  statValue: {
+    fontSize: getResponsiveTypography('xs'),
     fontWeight: '500',
   },
-  actionRow: {
+  actionButtons: {
     flexDirection: 'row',
-    alignItems: 'center',
+    gap: getResponsiveSpacing('sm'),
+    paddingTop: getResponsiveSpacing('md'),
+    borderTopWidth: 1,
   },
-  contactButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(78, 205, 196, 0.1)',
-    marginRight: 8,
-  },
-  contactText: {
-    fontSize: 12,
-    color: '#4ECDC4',
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  coListButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(78, 205, 196, 0.1)',
-    marginRight: 8,
-  },
-  coListText: {
-    fontSize: 12,
-    color: '#4ECDC4',
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  viewButton: {
+  primaryButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    backgroundColor: '#4ECDC4',
-    borderRadius: 8,
-    marginLeft: 8,
+    gap: scaleSize(6),
+    paddingVertical: scaleSize(10),
+    borderRadius: getResponsiveBorderRadius('lg'),
   },
-  viewText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+  primaryButtonText: {
+    fontSize: getResponsiveTypography('sm'),
+    fontWeight: '700',
+    color: '#111827',
+  },
+  iconButton: {
+    width: scaleSize(40),
+    height: scaleSize(40),
+    borderRadius: getResponsiveBorderRadius('lg'),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 
 export default VehicleCard;
-
-
-

@@ -16,7 +16,8 @@ import {
   Switch,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
+import { carApi, Vehicle } from '../../services/CarApi';
+import { useTheme } from '../../theme/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -52,113 +53,53 @@ interface Car {
   isFeatured: boolean;
 }
 
-// Mock data
-const MOCK_USER_CARS: Car[] = [
-  {
-    id: '1',
-    title: 'Maruti Swift VXI',
-    brand: 'Maruti',
-    model: 'Swift',
-    year: 2020,
-    price: '₹6,50,000',
-    originalPrice: '₹7,20,000',
-    images: [
-      'https://images.pexels.com/photos/358070/pexels-photo-358070.jpeg?auto=compress&w=400',
-      'https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg?auto=compress&w=400',
-    ],
-    location: 'Mumbai, Maharashtra',
-    mileage: '45,000 km',
-    fuelType: 'Petrol',
-    transmission: 'Manual',
-    bodyType: 'Hatchback',
-    color: 'White',
-    owners: 1,
-    features: ['ABS', 'Airbags', 'Power Steering', 'AC'],
-    description: 'Well maintained car with full service history.',
-    status: 'active',
-    views: 245,
-    inquiries: 12,
-    createdAt: '2024-01-15',
-    updatedAt: '2024-01-20',
-    isPromoted: true,
-    isFeatured: false,
-  },
-  {
-    id: '2',
-    title: 'Honda City ZX',
-    brand: 'Honda',
-    model: 'City',
-    year: 2019,
-    price: '₹9,80,000',
-    images: [
-      'https://images.pexels.com/photos/170782/pexels-photo-170782.jpeg?auto=compress&w=400',
-    ],
-    location: 'Pune, Maharashtra',
-    mileage: '32,000 km',
-    fuelType: 'Petrol',
-    transmission: 'CVT',
-    bodyType: 'Sedan',
-    color: 'Silver',
-    owners: 1,
-    features: ['ABS', 'Airbags', 'Sunroof', 'Alloy Wheels'],
-    description: 'Excellent condition with premium features.',
-    status: 'inactive',
-    views: 189,
-    inquiries: 8,
-    createdAt: '2024-01-10',
-    updatedAt: '2024-01-18',
-    isPromoted: false,
-    isFeatured: true,
-  },
-  {
-    id: '3',
-    title: 'Hyundai Creta SX',
-    brand: 'Hyundai',
-    model: 'Creta',
-    year: 2021,
-    price: '₹14,50,000',
-    images: [
-      'https://images.pexels.com/photos/112460/pexels-photo-112460.jpeg?auto=compress&w=400',
-    ],
-    location: 'Delhi, NCR',
-    mileage: '18,000 km',
-    fuelType: 'Diesel',
-    transmission: 'Manual',
-    bodyType: 'SUV',
-    color: 'Red',
-    owners: 1,
-    features: ['ABS', 'Airbags', 'Sunroof', 'Touchscreen'],
-    description: 'Like new condition with warranty remaining.',
-    status: 'sold',
-    views: 356,
-    inquiries: 28,
-    createdAt: '2023-12-01',
-    updatedAt: '2024-01-25',
-    isPromoted: false,
-    isFeatured: false,
-  },
-];
-
-// Mock API functions
-const fetchUserCars = async (): Promise<Car[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(MOCK_USER_CARS), 1000);
-  });
+const mapVehicleStatusToLocal = (status: string): Car['status'] => {
+  const normalized = status.toUpperCase();
+  if (normalized === 'SOLD') {
+    return 'sold';
+  }
+  if (normalized === 'AVAILABLE' || normalized === 'ACTIVE') {
+    return 'active';
+  }
+  return 'inactive';
 };
 
-const updateCarStatus = async (carId: string, status: Car['status']) => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve({ success: true }), 800);
-  });
+const formatPrice = (price: number): string => {
+  try {
+    return `₹${price.toLocaleString('en-IN')}`;
+  } catch {
+    return `₹${price}`;
+  }
 };
 
-const deleteCar = async (carId: string) => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve({ success: true }), 600);
-  });
+const mapVehicleToCar = (vehicle: Vehicle): Car => {
+  return {
+    id: vehicle.id,
+    title: `${vehicle.make} ${vehicle.model}`,
+    brand: vehicle.make,
+    model: vehicle.model,
+    year: vehicle.year,
+    price: formatPrice(vehicle.price),
+    originalPrice: undefined,
+    images: vehicle.images && vehicle.images.length > 0 ? vehicle.images : ['https://via.placeholder.com/400x300'],
+    location: vehicle.location,
+    mileage: `${vehicle.mileage} km`,
+    fuelType: vehicle.specifications?.fuelType || 'N/A',
+    transmission: vehicle.specifications?.transmission || 'N/A',
+    bodyType: (vehicle.specifications as any)?.bodyType || 'N/A',
+    color: vehicle.specifications?.color || 'N/A',
+    owners: 1,
+    features: [],
+    description: '',
+    status: mapVehicleStatusToLocal(vehicle.status),
+    views: vehicle.views,
+    inquiries: vehicle.inquiries,
+    createdAt: vehicle.createdAt,
+    updatedAt: vehicle.updatedAt,
+    isPromoted: vehicle.featured,
+    isFeatured: vehicle.featured,
+  };
 };
-
-import { useTheme } from '../../theme/ThemeContext';
 
 const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
   const { theme, isDark } = useTheme();
@@ -173,8 +114,9 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
 
   const loadCars = useCallback(async () => {
     try {
-      const userCars = await fetchUserCars();
-      setCars(userCars);
+      const result = await carApi.getMyCarListings(0, 50);
+      const mapped = result.content.map(mapVehicleToCar);
+      setCars(mapped);
     } catch (error) {
       Alert.alert('Error', 'Failed to load cars');
     } finally {
@@ -222,7 +164,14 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleStatusChange = async (carId: string, newStatus: Car['status']) => {
     try {
-      await updateCarStatus(carId, newStatus);
+      let backendStatus = 'AVAILABLE';
+      if (newStatus === 'sold') {
+        backendStatus = 'SOLD';
+      } else if (newStatus === 'inactive' || newStatus === 'draft') {
+        backendStatus = 'INACTIVE';
+      }
+
+      await carApi.updateVehicleStatus(carId, backendStatus as any);
       setCars(prev => prev.map(car =>
         car.id === carId ? { ...car, status: newStatus, updatedAt: new Date().toISOString().split('T')[0] } : car
       ));
@@ -243,7 +192,7 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteCar(carId);
+              await carApi.deleteVehicle(carId, false);
               setCars(prev => prev.filter(car => car.id !== carId));
               Alert.alert('Success', 'Car deleted successfully');
             } catch (error) {

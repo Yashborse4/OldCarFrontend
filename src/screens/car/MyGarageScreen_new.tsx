@@ -171,10 +171,6 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
   const [sortBy, setSortBy] = useState<'date' | 'price' | 'views' | 'inquiries'>('date');
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    loadCars();
-  }, [loadCars]);
-
   const loadCars = useCallback(async () => {
     try {
       const userCars = await fetchUserCars();
@@ -185,6 +181,10 @@ const MyGarageScreen: React.FC<Props> = ({ navigation }) => {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    loadCars();
+  }, [loadCars]);
 
   const onRefresh = async () => {
     setRefreshing(true);

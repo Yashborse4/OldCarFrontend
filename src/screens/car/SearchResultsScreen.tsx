@@ -23,6 +23,7 @@ import { VehicleCard } from '../../config/VehicleCard';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
+import { AnalyticsService } from '../../services/AnalyticsService';
 
 const { width } = Dimensions.get('window');
 
@@ -59,8 +60,9 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
   // Filter state
   const [tempFilters, setTempFilters] = useState<VehicleSearchFilters>(filters);
 
-  // Auto-focus search input on mount
+  // Track screen and auto-focus
   useEffect(() => {
+    AnalyticsService.trackScreen('SearchResults');
     setTimeout(() => searchInputRef.current?.focus(), 100);
   }, []);
 
@@ -116,6 +118,11 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
 
       setTotalResults(response.totalElements);
       setTotalPages(response.totalPages);
+
+      // Analytics: Track search
+      if (reset && searchQuery) {
+        AnalyticsService.trackSearch(searchQuery, response.totalElements);
+      }
     } catch (error) {
       console.error('Error searching vehicles:', error);
       Alert.alert('Search Error', 'Failed to search vehicles. Please try again.');
@@ -141,6 +148,8 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
   const applyFilters = () => {
     setFilters(tempFilters);
     setShowFilters(false);
+    // Analytics: Track filter apply
+    AnalyticsService.trackFilter(tempFilters);
   };
 
   const clearFilters = () => {
@@ -148,16 +157,24 @@ const SearchResultsScreen: React.FC<SearchResultsScreenProps> = () => {
     setTempFilters(clearedFilters);
     setFilters(clearedFilters);
     setShowFilters(false);
+    // Analytics: Track filter clear
+    AnalyticsService.track('SEARCH_FILTER_CLEAR', 'SEARCH');
   };
 
   const handleSortChange = (newSortBy: string) => {
     setSortBy(newSortBy);
   };
 
+  const handleVehiclePress = (item: Vehicle) => {
+    // Analytics: Track result click
+    AnalyticsService.track('SEARCH_RESULT_CLICK', 'CAR', item.id, { query: searchQuery });
+    navigation.navigate('VehicleDetail', { vehicleId: item.id });
+  };
+
   const renderVehicleItem = ({ item }: { item: Vehicle }) => (
     <VehicleCard
       vehicle={item}
-      onPress={() => navigation.navigate('VehicleDetail', { vehicleId: item.id })}
+      onPress={() => handleVehiclePress(item)}
       showCoListButton
       onCoList={() => navigation.navigate('CoListVehicle', { vehicleId: item.id })}
     />
@@ -752,4 +769,4 @@ export default SearchResultsScreen;
 
 
 
- 
+

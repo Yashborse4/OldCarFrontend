@@ -16,7 +16,6 @@ import { useAuth } from '../../context/AuthContext';
 import { PermissionGate, usePermissions } from '../../config/PermissionGate';
 import { Permission } from '../../utils/permissions';
 import { carApi, Vehicle } from '../../services/CarApi';
-import { ErrorHandler } from '../../components/ErrorHandler';
 import { VehicleCard } from '../../config/VehicleCard';
 import { RootStackParamList } from '../../navigation/types';
 
@@ -49,11 +48,20 @@ const CarListScreen: React.FC = () => {
         setLoadingMore(true);
       }
 
-      const response = await carApi.getAllVehicles(page, PAGE_SIZE, 'createdAt,desc');
+      const response = await carApi.getPublicVehicles(page, PAGE_SIZE, 'createdAt,desc');
+      const mappedContent = (response.content || []).map((item: any) => ({
+        ...item,
+        images: item.images ?? (item.imageUrl ? [item.imageUrl] : []),
+        location: item.location ?? item.city ?? '',
+        status: item.status ?? 'Available',
+        featured: item.featured ?? false,
+        views: item.views ?? 0,
+        inquiries: item.inquiries ?? 0,
+      }));
       if (refresh || page === 0) {
-        setVehicles(response.content || []);
+        setVehicles(mappedContent);
       } else {
-        setVehicles(prev => [...prev, ...(response.content || [])]);
+        setVehicles(prev => [...prev, ...mappedContent]);
       }
 
       setCurrentPage(response.number || page);
@@ -199,12 +207,17 @@ const CarListScreen: React.FC = () => {
         </PermissionGate>
       </View>
 
-      {/* Error Handler */}
-      <ErrorHandler
-        error={error}
-        onRetry={retryFetch}
-        onDismiss={() => setError(null)}
-      />
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorTitle}>Unable to load vehicles</Text>
+          <Text style={styles.errorMessage}>
+            {error.message || 'Something went wrong. Please try again.'}
+          </Text>
+          <TouchableOpacity style={styles.errorRetryButton} onPress={retryFetch}>
+            <Text style={styles.errorRetryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Vehicle List */}
       <FlatList
@@ -279,6 +292,38 @@ const styles = StyleSheet.create({
     padding: 16,
     flexGrow: 1,
   },
+  errorContainer: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: '#FFE5E5',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FFB3B3',
+  },
+  errorTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#B00020',
+    marginBottom: 4,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: '#B00020',
+    marginBottom: 8,
+  },
+  errorRetryButton: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#B00020',
+    borderRadius: 4,
+  },
+  errorRetryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
   footerLoader: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -330,5 +375,3 @@ const styles = StyleSheet.create({
 });
 
 export default CarListScreen;
-
-

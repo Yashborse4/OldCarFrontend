@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,7 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Alert,  
+  Alert,
   FlatList,
   Modal,
   Image,
@@ -102,24 +102,14 @@ const CoListVehicleScreen: React.FC = () => {
     { id: 'dealer7', name: 'Chris Lee', dealership: 'Turbo Cars', role: 'member' },
   ], []);
 
-  useEffect(() => {
-    loadVehicleAndOptions();
-  }, []);
-
-  useEffect(() => {
-    filterOptions();
-  }, [searchText, coListingOptions]);
-
-  const loadVehicleAndOptions = useCallback(async () => {
+  async function loadVehicleAndOptions() {
     try {
       setLoading(true);
-      
-      // Simulate API calls
+
       setTimeout(() => {
         setVehicle(mockVehicleMemo);
-        
+
         const options: CoListingOption[] = [
-          // Groups
           ...mockGroupsMemo.map(group => ({
             id: `group_${group.id}`,
             type: 'group' as const,
@@ -129,7 +119,6 @@ const CoListVehicleScreen: React.FC = () => {
             isPrivate: group.isPrivate,
             selected: false,
           })),
-          // Individual dealers
           ...mockDealersMemo.map(dealer => ({
             id: `dealer_${dealer.id}`,
             type: 'dealer' as const,
@@ -138,7 +127,7 @@ const CoListVehicleScreen: React.FC = () => {
             selected: false,
           })),
         ];
-        
+
         setCoListingOptions(options);
         setLoading(false);
       }, 1000);
@@ -146,9 +135,9 @@ const CoListVehicleScreen: React.FC = () => {
       console.error('Error loading vehicle and options:', error);
       setLoading(false);
     }
-  }, [mockVehicleMemo, mockGroupsMemo, mockDealersMemo]);
+  }
 
-  const filterOptions = useCallback(() => {
+  function filterOptions() {
     if (!searchText.trim()) {
       setFilteredOptions(coListingOptions);
       return;
@@ -159,6 +148,14 @@ const CoListVehicleScreen: React.FC = () => {
       (option.subtitle && option.subtitle.toLowerCase().includes(searchText.toLowerCase()))
     );
     setFilteredOptions(filtered);
+  }
+
+  useEffect(() => {
+    loadVehicleAndOptions();
+  }, [mockVehicleMemo, mockGroupsMemo, mockDealersMemo]);
+
+  useEffect(() => {
+    filterOptions();
   }, [searchText, coListingOptions]);
 
   const toggleOption = (option: CoListingOption) => {
@@ -166,7 +163,7 @@ const CoListVehicleScreen: React.FC = () => {
       opt.id === option.id ? { ...opt, selected: !opt.selected } : opt
     );
     setCoListingOptions(updatedOptions);
-    
+
     // Update selected options
     const selected = updatedOptions.filter(opt => opt.selected);
     setSelectedOptions(selected);
@@ -224,12 +221,12 @@ const CoListVehicleScreen: React.FC = () => {
     >
       <View style={styles.optionIcon}>
         <Ionicons
-          name={item.type === 'group' ? 'groups' : 'person'}
+          name={item.type === 'group' ? 'people' : 'person'}
           size={24}
           color={item.selected ? '#fff' : '#4ECDC4'}
         />
       </View>
-      
+
       <View style={styles.optionInfo}>
         <Text style={[styles.optionName, item.selected && styles.selectedOptionText]}>
           {item.name}
@@ -237,7 +234,7 @@ const CoListVehicleScreen: React.FC = () => {
         <Text style={[styles.optionSubtitle, item.selected && styles.selectedOptionSubtext]}>
           {item.subtitle}
         </Text>
-        
+
         {item.type === 'group' && (
           <View style={styles.groupMeta}>
             <View style={styles.memberCountBadge}>
@@ -254,7 +251,7 @@ const CoListVehicleScreen: React.FC = () => {
           </View>
         )}
       </View>
-      
+
       <View style={[styles.checkbox, item.selected && styles.checkedBox]}>
         {item.selected && (
           <Ionicons name="checkmark" size={16} color="#fff" />
@@ -294,14 +291,14 @@ const CoListVehicleScreen: React.FC = () => {
               </View>
             )}
           </View>
-          
+
           <View style={styles.vehicleInfo}>
             <Text style={styles.vehicleTitle}>
               {vehicle.year} {vehicle.make} {vehicle.model}
             </Text>
             <Text style={styles.vehiclePrice}>${vehicle.price.toLocaleString()}</Text>
             <Text style={styles.vehicleDetails}>
-              {vehicle.mileage.toLocaleString()} miles â€¢ {vehicle.location}
+              {vehicle.mileage.toLocaleString()} miles • {vehicle.location}
             </Text>
           </View>
         </View>
@@ -312,7 +309,7 @@ const CoListVehicleScreen: React.FC = () => {
           value={searchText}
           onChangeText={setSearchText}
           placeholder="Search groups or dealers..."
-          
+
         />
       </View>
 
@@ -341,7 +338,7 @@ const CoListVehicleScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Ionicons name="search-off" size={60} color="#ddd" />
+            <Ionicons name="search" size={60} color="#ddd" />
             <Text style={styles.emptyStateText}>
               {searchText ? 'No results found' : 'No groups or dealers available'}
             </Text>
@@ -375,12 +372,12 @@ const CoListVehicleScreen: React.FC = () => {
             <Text style={styles.confirmMessage}>
               Are you sure you want to co-list this vehicle with the selected recipients?
             </Text>
-            
+
             <View style={styles.selectedList}>
               {selectedOptions.map((option, index) => (
                 <View key={option.id} style={styles.selectedItem}>
                   <Ionicons
-                    name={option.type === 'group' ? 'groups' : 'person'}
+                    name={option.type === 'group' ? 'people' : 'person'}
                     size={16}
                     color="#666"
                   />
@@ -715,6 +712,3 @@ const styles = StyleSheet.create({
 });
 
 export default CoListVehicleScreen;
-
-
-

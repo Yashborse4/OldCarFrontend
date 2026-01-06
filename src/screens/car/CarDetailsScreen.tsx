@@ -18,6 +18,7 @@ import { useNotifications } from '../../components/ui/ToastManager';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import chatApi from '../../services/ChatApi';
 
 import { BlurView } from '@react-native-community/blur';
 import { borderRadius, spacing, typography } from '../../config';
@@ -161,10 +162,27 @@ const CarDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     console.log('Calling seller:', car.seller.phone);
   }, [car.seller.phone]);
 
-  const handleSendMessage = useCallback(() => {
-    console.log('Sending message to:', car.seller.name);
-    notifyMessageSent();
-  }, [car.seller.name, notifyMessageSent]);
+  const handleSendMessage = useCallback(async () => {
+    try {
+      const numericCarId = Number(car.id);
+      const initialMessage = `Hi, I'm interested in ${car.title}. Is it still available?`;
+
+      const chatRoom = await chatApi.createCarInquiryChat(numericCarId, initialMessage);
+
+      notifyMessageSent();
+
+      navigation.navigate('ChatConversation', {
+        conversation: chatRoom,
+        participantId: 'dealer',
+        participantName: car.seller.name,
+        participantType: 'dealer',
+        relatedCarId: String(car.id),
+        relatedCarTitle: car.title
+      });
+    } catch (error) {
+      console.error('Failed to start chat with dealer:', error);
+    }
+  }, [car.id, car.title, car.seller.name, navigation, notifyMessageSent]);
 
   // Header opacity based on scroll
   const headerOpacity = scrollY.interpolate({

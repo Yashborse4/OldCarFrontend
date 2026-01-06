@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,14 @@ import {
   Alert,
   Linking,
   FlatList,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-
+import chatApi from '../../services/ChatApi';
+import { AnalyticsService } from '../../services/AnalyticsService';
 
 const { width } = Dimensions.get('window');
 
@@ -27,8 +29,8 @@ interface Props {
 
 const VEHICLE_DATA = {
   title: 'Tesla Model S Plaid',
-  price: '?75,00,000',
-  originalPrice: '?85,00,000',
+  price: '₹75,00,000',
+  originalPrice: '₹85,00,000',
   location: 'Mumbai, India',
   dealer: 'Premium Auto Cars',
   phone: '+91 9876543210',
@@ -38,10 +40,10 @@ const VEHICLE_DATA = {
     'https://images.pexels.com/photos/1402787/pexels-photo-1402787.jpeg?auto=compress&cs=tinysrgb&w=800',
   ],
   specs: [
-    { icon: 'event', label: 'Year', value: '2023' },
-    { icon: 'speed', label: 'Mileage', value: '1,200 km' },
-    { icon: 'local-gas-station', label: 'Fuel', value: 'Electric' },
-    { icon: 'settings', label: 'Transmission', value: 'Automatic' },
+    { icon: 'calendar-outline', label: 'Year', value: '2023' },
+    { icon: 'speedometer-outline', label: 'Mileage', value: '1,200 km' },
+    { icon: 'flash-outline', label: 'Fuel', value: 'Electric' },
+    { icon: 'settings-outline', label: 'Transmission', value: 'Automatic' },
   ],
   overview: 'The Tesla Model S Plaid is the quickest accelerating car in production today. Perfect combination of performance, safety, and efficiency.',
   features: ['ABS with EBD', '6 Airbags', 'GPS Navigation', 'Climate Control', 'Parking Sensors', 'Reverse Camera'],
@@ -51,12 +53,57 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const colors = {
     primary: '#FFD700',
     text: '#1A202C',
-    color: '#4A5568',
     textSecondary: '#718096',
   };
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isBookmarked, setIsBookmarked] = useState(false);
-  
+  const carIdFromRoute = route?.params?.carId || 'unknown';
+
+  // Analytics: Track view start time
+  const viewStartTime = useRef<number>(Date.now());
+
+  // Analytics: Track car view on mount, duration on unmount
+  useEffect(() => {
+    AnalyticsService.trackScreen('VehicleDetail');
+    AnalyticsService.trackCarView(String(carIdFromRoute));
+    viewStartTime.current = Date.now();
+
+    return () => {
+      const durationSeconds = Math.floor((Date.now() - viewStartTime.current) / 1000);
+      AnalyticsService.trackCarViewDuration(String(carIdFromRoute), durationSeconds);
+    };
+  }, [carIdFromRoute]);
+
+  const handleSendMessage = async () => {
+    if (!carIdFromRoute || carIdFromRoute === 'unknown') {
+      Alert.alert('Unavailable', 'Cannot start chat for this vehicle');
+      return;
+    }
+
+    // Analytics: Track chat open
+    AnalyticsService.trackCarContact(String(carIdFromRoute), 'chat');
+
+    try {
+      const numericCarId = Number(carIdFromRoute);
+      const initialMessage = `Hi, I'm interested in ${VEHICLE_DATA.title}. Is it still available?`;
+
+      const chatRoom = await chatApi.createCarInquiryChat(numericCarId, initialMessage);
+
+      navigation.navigate('ChatConversation', {
+        conversation: chatRoom,
+        participantId: 'dealer',
+        participantName: VEHICLE_DATA.dealer,
+        participantType: 'dealer',
+        relatedCarId: String(carIdFromRoute),
+        relatedCarTitle: VEHICLE_DATA.title,
+      });
+    } catch (error) {
+      console.error('Failed to start chat:', error);
+      Alert.alert('Error', 'Failed to start chat with seller');
+    }
+  };
+
   const handleContactSeller = () => {
     Alert.alert(
       'Contact Seller',
@@ -64,11 +111,23 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       [
         {
           text: 'Call Now',
-          onPress: () => Linking.openURL(`tel:${VEHICLE_DATA.phone}`),
+          onPress: () => {
+            // Analytics: Track call
+            AnalyticsService.trackCarContact(String(carIdFromRoute), 'call');
+            Linking.openURL(`tel:${VEHICLE_DATA.phone}`);
+          },
         },
         {
-          text: 'Send Message',
-          onPress: () => Alert.alert('Coming Soon', 'Messaging feature will be available soon.'),
+          text: 'WhatsApp',
+          onPress: () => {
+            // Analytics: Track WhatsApp
+            AnalyticsService.trackCarContact(String(carIdFromRoute), 'whatsapp');
+            Linking.openURL(`whatsapp://send?phone=${VEHICLE_DATA.phone.replace(/\D/g, '')}`);
+          },
+        },
+        {
+          text: 'Chat',
+          onPress: handleSendMessage,
         },
         {
           text: 'Cancel',
@@ -79,41 +138,66 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
+    const newBookmarkState = !isBookmarked;
+    setIsBookmarked(newBookmarkState);
+
+    // Analytics: Track save/unsave
+    AnalyticsService.trackCarSave(String(carIdFromRoute), newBookmarkState);
+
     Alert.alert(
-      isBookmarked ? 'Removed from Saved' : 'Added to Saved',
-      isBookmarked ? 'Vehicle removed from saved cars' : 'Vehicle saved successfully'
+      newBookmarkState ? 'Added to Saved' : 'Removed from Saved',
+      newBookmarkState ? 'Vehicle saved successfully' : 'Vehicle removed from saved cars'
     );
   };
 
-  const renderImageItem = ({ item, index }: { item: string; index: number }) => (
-    <Image source={{ uri: item }} style={styles.carouselImage} />
-  );
+  const handleShare = async () => {
+    try {
+      const result = await Share.share({
+        message: `Check out this ${VEHICLE_DATA.title} for ${VEHICLE_DATA.price}!`,
+        title: VEHICLE_DATA.title,
+      });
 
-  const renderSpecItem = ({ item }: { item: typeof VEHICLE_DATA.specs[0] }) => (
-    <View style={styles.specItem}>
-      <Ionicons name={item.icon as any} size={24} color={colors.primary} />
-      <Text style={styles.specLabel}>{item.label}</Text>
-      <Text style={styles.specValue}>{item.value}</Text>
-    </View>
+      if (result.action === Share.sharedAction) {
+        const platform = result.activityType || 'native';
+        AnalyticsService.trackCarShare(String(carIdFromRoute), platform);
+      }
+    } catch (error) {
+      console.error('Share error:', error);
+    }
+  };
+
+  const handleImageSwipe = (index: number) => {
+    if (index !== currentImageIndex) {
+      setCurrentImageIndex(index);
+      AnalyticsService.track('CAR_IMAGES_SWIPE', 'CAR', String(carIdFromRoute), { imageIndex: index });
+    }
+  };
+
+  const renderImageItem = ({ item }: { item: string }) => (
+    <Image source={{ uri: item }} style={styles.carouselImage} />
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="default" />
-      
+      <StatusBar barStyle="dark-content" />
+
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.shareButton} onPress={handleBookmark}>
-          <Ionicons 
-            name={isBookmarked ? "favorite" : "favorite-border"} 
-            size={24} 
-            color={isBookmarked ? '#FF6B6B' : colors.textSecondary}
-          />
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.headerButton} onPress={handleShare}>
+            <Ionicons name="share-outline" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerButton} onPress={handleBookmark}>
+            <Ionicons
+              name={isBookmarked ? 'heart' : 'heart-outline'}
+              size={24}
+              color={isBookmarked ? '#FF6B6B' : colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -127,18 +211,15 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={(event) => {
               const index = Math.round(event.nativeEvent.contentOffset.x / width);
-              setCurrentImageIndex(index);
+              handleImageSwipe(index);
             }}
-            style={styles.carousel}
+            keyExtractor={(_, index) => index.toString()}
           />
           <View style={styles.imageIndicators}>
             {VEHICLE_DATA.images.map((_, index) => (
               <View
                 key={index}
-                style={[
-                  styles.indicator,
-                  index === currentImageIndex && styles.indicatorActive,
-                ]}
+                style={[styles.indicator, index === currentImageIndex && styles.indicatorActive]}
               />
             ))}
           </View>
@@ -153,11 +234,11 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
               <Text style={styles.originalPrice}>{VEHICLE_DATA.originalPrice}</Text>
             </View>
             <View style={styles.locationRow}>
-              <Ionicons name="location" size={16} color={colors.textSecondary} />
+              <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
               <Text style={styles.location}>{VEHICLE_DATA.location}</Text>
             </View>
             <View style={styles.dealerRow}>
-              <Ionicons name="storefront" size={16} color={colors.textSecondary} />
+              <Ionicons name="storefront-outline" size={16} color={colors.textSecondary} />
               <Text style={styles.dealer}>{VEHICLE_DATA.dealer}</Text>
             </View>
           </Card>
@@ -203,7 +284,7 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           title="Contact Seller"
           onPress={handleContactSeller}
           fullWidth
-          icon="phone"
+          icon="call-outline"
         />
       </View>
     </SafeAreaView>
@@ -213,44 +294,42 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    color: '#FAFAFA',
+    backgroundColor: '#FAFAFA',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(250, 250, 250, 0.95)',
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     zIndex: 10,
-    backgroundColor: 'rgba(250, 250, 250, 0.9)',
   },
-  backButton: {
+  headerButton: {
     padding: 8,
     borderRadius: 20,
-    color: '#FFFFFF',
+    backgroundColor: '#FFFFFF',
     elevation: 2,
-
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  shareButton: {
-    padding: 8,
-    borderRadius: 20,
-    color: '#FFFFFF',
-    elevation: 2,
-
+  headerRight: {
+    flexDirection: 'row',
+    gap: 12,
   },
   scrollView: {
     flex: 1,
+    marginTop: 60,
   },
   imageSection: {
     height: width * 0.7,
     position: 'relative',
-  },
-  carousel: {
-    height: width * 0.7,
   },
   carouselImage: {
     width: width,
@@ -275,17 +354,20 @@ const styles = StyleSheet.create({
   },
   indicatorActive: {
     backgroundColor: '#FFFFFF',
+    width: 24,
   },
   content: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingBottom: 120,
   },
   mainCard: {
     marginTop: -20,
     marginBottom: 16,
+    padding: 20,
   },
   card: {
     marginBottom: 16,
+    padding: 20,
   },
   title: {
     fontSize: 24,
@@ -340,10 +422,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   specItem: {
-    width: (width - 60) / 2 - 6,
+    width: (width - 76) / 2,
     alignItems: 'center',
     padding: 16,
-    color: '#F7FAFC',
+    backgroundColor: '#F7FAFC',
     borderRadius: 12,
   },
   specLabel: {
@@ -359,7 +441,7 @@ const styles = StyleSheet.create({
   },
   overview: {
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 22,
     color: '#718096',
   },
   featuresGrid: {
@@ -380,9 +462,10 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 20,
-    color: '#FFFFFF',
+    padding: 16,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
   },
 });
 
