@@ -33,7 +33,9 @@
 		<true/>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs location access to share your location in chats.</string>
+	<string>This app needs your location to share in chats and verify your showroom address for dealer verification.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs your location to verify your showroom address for dealer verification.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to take photos for sharing in chats.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

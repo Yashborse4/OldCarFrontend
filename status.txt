@@ -1,67 +1,21 @@
-On branch main
-Your branch is up to date with 'origin/main'.
-
-Changes not staged for commit:
-  (use "git add/rm <file>..." to update what will be committed)
-  (use "git restore <file>..." to discard changes in working directory)
-	modified:   README.md
-	modified:   android/app/build.gradle
-	modified:   package-lock.json
-	modified:   package.json
-	modified:   src/AppWithNetworking.tsx
-	modified:   src/components/chat/ChatInput.tsx
-	modified:   src/components/chat/TypingIndicator.tsx
-	modified:   src/components/dashboard/CarListingsGrid.tsx
-	modified:   src/components/dashboard/FilterSystem.tsx
-	modified:   src/components/dashboard/StatisticsCard.tsx
-	modified:   src/components/ui/BottomNavigation.tsx
-	modified:   src/components/ui/Button.tsx
-	modified:   src/components/ui/InputModern.tsx
-	modified:   src/components/ui/Toast.tsx
-	modified:   src/config/Form.tsx
-	modified:   src/config/List.tsx
-	modified:   src/config/Modal.tsx
-	modified:   src/config/Navigation.tsx
-	modified:   src/config/NetworkError.tsx
-	modified:   src/config/Notification.tsx
-	modified:   src/config/VehicleCard.tsx
-	modified:   src/context/AuthContext.tsx
-	modified:   src/navigation/AppNavigator.tsx
-	modified:   src/screens/auth/ForgotPasswordScreen.tsx
-	modified:   src/screens/auth/LoginScreen.tsx
-	modified:   src/screens/auth/RegisterUser.tsx
-	modified:   src/screens/car/CarDetailsScreen.tsx
-	modified:   src/screens/car/CoListVehicleScreen.tsx
-	modified:   src/screens/car/ManageCarScreen.tsx
-	modified:   src/screens/car/MyGarageScreen.tsx
-	modified:   src/screens/car/MyGarageScreen_new.tsx
-	modified:   src/screens/car/SearchResultsScreen.tsx
-	modified:   src/screens/car/SellCarScreen.tsx
-	modified:   src/screens/car/VehicleAnalyticsScreen.tsx
-	modified:   src/screens/car/VehicleDetailScreen.tsx
-	modified:   src/screens/car/VehicleSearchScreen.tsx
-	modified:   src/screens/chat/ChatScreen.tsx
-	modified:   src/screens/chat/CreateGroupScreen.tsx
-	modified:   src/screens/chat/GroupDetailsScreen.tsx
-	modified:   src/screens/chat/MessagesScreen.tsx
-	modified:   src/screens/dealer/DealerAddCarScreen.tsx
-	modified:   src/screens/dealer/DealerDashboardScreen.tsx
-	modified:   src/screens/dealer/DealerGroupsScreen.tsx
-	modified:   src/screens/dealer/DealerInquiriesScreen.tsx
-	modified:   src/screens/dealer/DealerNetworkChatScreen.tsx
-	modified:   src/screens/dealer/DealerProfileScreen.tsx
-	modified:   src/screens/main/DashboardScreenModern.tsx
-	modified:   src/screens/main/NotificationsScreen.tsx
-	modified:   src/screens/main/ProfileScreen.tsx
-	modified:   src/screens/main/SettingsScreen.tsx
-	modified:   src/services/ApiClient.ts
-	modified:   src/services/auth.ts
-	deleted:    src/services/authService.ts
-
-Untracked files:
-  (use "git add <file>..." to include in what will be committed)
-	bun.lock
-	react-native.config.js
-	status.txt
-
-no changes added to commit (use "git add" and/or "git commit -a")
+ M App.tsx
+ M package-lock.json
+ M package.json
+ M src/components/ui/BottomNavigation.tsx
+ M src/context/AuthContext.tsx
+ M src/context/ChatContext.tsx
+ M src/navigation/AppNavigator.tsx
+ M src/screens/auth/ForgotPasswordScreen.tsx
+ M src/screens/auth/LoginScreen.tsx
+ M src/screens/auth/RegisterUser.tsx
+ M src/screens/car/SearchResultsScreen.tsx
+ M src/screens/car/VehicleSearchScreen.tsx
+ M src/screens/main/DashboardScreenModern.tsx
+ M src/screens/main/ProfileScreen.tsx
+ M src/services/ApiClient.ts
+ M src/services/auth.ts
+ M src/utils/permissions.ts
+ M status.txt
+?? src/screens/auth/EmailVerificationScreen.tsx
+?? src/services/graphql.ts
+?? src/services/queries.ts
