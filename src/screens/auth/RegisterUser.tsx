@@ -8,15 +8,14 @@ import {
   KeyboardAvoidingView,
   StyleSheet,
   ScrollView,
-  NativeModules,
+
+
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gradient } from '../../components/ui/Gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useAuth } from '../../context/AuthContext';
-import { validateRegistrationForm } from '../../utils/validation';
 import { useTheme } from '../../theme/ThemeContext';
-import { getRoleName } from '../../utils/permissions';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useNotifications } from '../../components/ui/ToastManager';
@@ -36,65 +35,65 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'USER' | 'DEALER'>('USER');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const handleRegister = async () => {
-    // Clear previous errors
     setError(null);
 
-    // Basic validation
-    if (!email || !password) {
-      showError(
-        'Required Fields',
-        'Please enter your email and password'
-      );
+    const trimmedEmail = email.trim().toLowerCase();
+
+    if (!trimmedEmail) {
+      showError('Required Fields', 'Please enter your email address');
       return;
     }
 
-    // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      showError(
-        'Invalid Email',
-        'Please enter a valid email address'
-      );
+    if (!emailRegex.test(trimmedEmail)) {
+      showError('Invalid Email', 'Please enter a valid email address');
       return;
     }
 
-    // Password length validation
-    if (password.length < 8) {
-      showWarning(
-        'Weak Password',
-        'Password must be at least 8 characters'
-      );
+    if (password && password.length > 0 && password.length < 8) {
+      showWarning('Weak Password', 'Password must be at least 8 characters');
       return;
     }
 
     setIsLoading(true);
     try {
-      // Use email as username
-      await register({
-        username: email,
-        email,
-        password,
-      });
+      const payload: {
+        username: string;
+        email: string;
+        role?: string;
+        password?: string;
+      } = {
+        username: trimmedEmail,
+        email: trimmedEmail,
+      };
 
-      // After registration, email is not verified yet – guide user to verification screen
+      if (role) {
+        payload.role = role;
+      }
+
+      if (password && password.trim().length > 0) {
+        payload.password = password;
+      }
+
+      await register(payload);
+
       showSuccess(
         'Account Created!',
-        'Please verify your email to start using the app.'
+        'We have sent a verification code to your email. Please verify to continue.'
       );
-      navigation.replace('EmailVerificationScreen', { email });
+      navigation.replace('EmailVerificationScreen', { email: trimmedEmail });
     } catch (error: any) {
       setError(error);
       console.error('Registration error:', error);
 
-      // Show detailed error message
       let errorMessage = 'Registration failed. Please try again.';
 
       if (error instanceof ApiError) {
-        // Handle 409 Conflict specifically
         if (error.status === 409 || error.message?.toLowerCase().includes('already exists')) {
           errorMessage = 'User with this email already exists. Please sign in instead.';
         } else if (error.fieldErrors) {
@@ -117,11 +116,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
         }
       }
 
-      showError(
-        'Registration Failed',
-        errorMessage,
-        { duration: 5000 }
-      );
+      showError('Registration Failed', errorMessage, { duration: 5000 });
     } finally {
       setIsLoading(false);
     }
@@ -132,35 +127,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
     handleRegister();
   };
 
-  const { TruecallerAuthModule } = NativeModules;
 
-  const handleTruecallerVerification = async () => {
-    try {
-      setIsLoading(true);
-      if (TruecallerAuthModule) {
-        const result = await TruecallerAuthModule.authenticate();
-        console.log('Truecaller Result:', result);
-
-        if (result.successful) {
-          // Pre-fill form or auto-register logic would go here
-          if (result.email) setEmail(result.email);
-          if (result.firstName) {
-            // If we had name fields, we would set them
-          }
-          showSuccess('Truecaller Verified', `Welcome ${result.firstName || 'User'}! Please complete your password.`);
-        } else if (result.error) {
-          showWarning('Truecaller Verification Failed', `Error: ${result.error}`);
-        }
-      } else {
-        showError('Error', 'Truecaller SDK not available');
-      }
-    } catch (e: any) {
-      console.error(e);
-      showError('Verification Error', e.message || 'Unknown error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const dismissError = () => {
     setError(null);
@@ -259,7 +226,6 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
     },
     inputSection: {
       marginBottom: 15,
-
     },
     row: {
       flexDirection: 'row',
@@ -327,6 +293,13 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
       fontWeight: '500',
       textAlign: 'center',
     },
+    helperText: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 4,
+      marginLeft: 4,
+      marginBottom: 2,
+    },
     signInAccent: {
       fontWeight: '700',
       color: colors.primary,
@@ -348,7 +321,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
           <SafeAreaView edges={['top']} style={styles.headerSafe}>
             <View style={styles.header}>
               <Text style={styles.title}>Create Account</Text>
-              <Text style={styles.subtitle}>Join in seconds - it's quick and easy!</Text>
+              <Text style={styles.subtitle}>Sign up with your email and a quick verification code.</Text>
             </View>
           </SafeAreaView>
         </Gradient>
@@ -375,13 +348,7 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                 </View>
 
                 {/* Truecaller Option */}
-                <Button
-                  title="Verify with Truecaller"
-                  onPress={handleTruecallerVerification}
-                  variant="outline"
-                  icon="shield-checkmark"
-                  style={{ marginBottom: 25 }}
-                />
+
 
                 <View style={styles.inputSection}>
                   <Input
@@ -395,22 +362,69 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
                     returnKeyType="next"
                     required
                   />
+                  <Text style={styles.helperText}>
+                    We will send a 6-digit verification code to this email.
+                  </Text>
                 </View>
 
-
-
-                {/* Role selection removed: backend always assigns USER role on registration */}
-
+                <View style={[styles.inputSection, styles.rolePicker]}>
+                  <Text style={styles.roleLabel}>Select Role</Text>
+                  <View style={styles.row}>
+                    <View style={styles.halfWidth}>
+                      <TouchableOpacity
+                        style={[
+                          styles.roleButton,
+                          {
+                            borderColor:
+                              role === 'USER'
+                                ? colors.primary
+                                : isDark
+                                ? colors.border
+                                : '#E5E7EB',
+                          },
+                        ]}
+                        onPress={() => setRole('USER')}
+                        activeOpacity={0.8}
+                      >
+                        <View style={styles.roleIconContainer}>
+                          <Ionicons name="person-outline" size={20} color={colors.primary} />
+                        </View>
+                        <Text style={styles.roleText}>User</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <View style={styles.halfWidth}>
+                      <TouchableOpacity
+                        style={[
+                          styles.roleButton,
+                          {
+                            borderColor:
+                              role === 'DEALER'
+                                ? colors.primary
+                                : isDark
+                                ? colors.border
+                                : '#E5E7EB',
+                          },
+                        ]}
+                        onPress={() => setRole('DEALER')}
+                        activeOpacity={0.8}
+                      >
+                        <View style={styles.roleIconContainer}>
+                          <Ionicons name="briefcase-outline" size={20} color={colors.primary} />
+                        </View>
+                        <Text style={styles.roleText}>Dealer</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
                 <View style={styles.inputSection}>
                   <Input
-                    label="Password"
+                    label="Password (optional)"
                     value={password}
                     onChangeText={setPassword}
                     leftIcon="lock-closed-outline"
-                    placeholder="Create a password (min 8 chars, strong)"
+                    placeholder="Set a password for faster login (optional)"
                     secureTextEntry
                     returnKeyType="done"
-                    required
                   />
                 </View>
 
@@ -447,4 +461,4 @@ const RegisterUser: React.FC<Props> = ({ navigation }) => {
 
 export default RegisterUser;
 
- 
+

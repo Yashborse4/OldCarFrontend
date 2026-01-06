@@ -32,21 +32,28 @@ interface Props {
   navigation: any;
 }
 
+type LoginMode = 'OTP' | 'PASSWORD';
+
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { theme, isDark } = useTheme();
   const { colors } = theme;
-  const { login } = useAuth();
-  const { notifyLoginSuccess, notifyLoginError } = useNotifications();
+  const { login, refreshUserData } = useAuth();
+  const { notifyLoginSuccess, notifyLoginError, notifySuccess, notifyError } = useNotifications();
 
   // State management
+  const [loginMode, setLoginMode] = useState<LoginMode>('OTP');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    otp: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [otpTimer, setOtpTimer] = useState(0);
   const [errors, setErrors] = useState({
     email: '',
     password: '',
+    otp: '',
   });
 
   // Email validation
@@ -65,13 +72,76 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [errors]);
 
-  const handleLogin = useCallback(async () => {
+  const handleSendOtp = useCallback(async () => {
+    setErrors(prev => ({ ...prev, email: '' }));
+
+    if (!formData.email.trim()) {
+      setErrors(prev => ({ ...prev, email: 'Email is required' }));
+      return;
+    } else if (!validateEmail(formData.email)) {
+      setErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      if (apiClient && apiClient.sendOtp) {
+        await apiClient.sendOtp(formData.email.trim(), 'LOGIN');
+        setIsOtpSent(true);
+        if (notifySuccess) notifySuccess('OTP sent successfully');
+        setOtpTimer(60);
+      } else {
+        throw new Error('API Client not initialized');
+      }
+    } catch (error: any) {
+      console.error('Send OTP error:', error);
+      const errorMessage = error.message || 'Failed to send OTP';
+      if (notifyError) notifyError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [formData.email, validateEmail, notifySuccess, notifyError]);
+
+  const handleVerifyOtpAndLogin = useCallback(async () => {
+    setErrors(prev => ({ ...prev, otp: '' }));
+
+    if (!formData.otp.trim()) {
+      setErrors(prev => ({ ...prev, otp: 'OTP is required' }));
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await apiClient.verifyOtp(formData.email.trim(), formData.otp.trim(), 'LOGIN');
+
+      // Refresh user data to update context
+      if (refreshUserData) {
+        await refreshUserData();
+      }
+
+      if (notifyLoginSuccess) notifyLoginSuccess('Welcome back! 🎉');
+
+      if (navigation && navigation.replace) {
+        navigation.replace('Dashboard');
+      } else {
+        console.warn('Navigation not available');
+      }
+    } catch (error: any) {
+      console.error('Verify OTP error:', error);
+      const errorMessage = error.message || 'Invalid OTP';
+      if (notifyLoginError) notifyLoginError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [formData.email, formData.otp, refreshUserData, navigation, notifyLoginSuccess, notifyLoginError]);
+
+  const handlePasswordLogin = useCallback(async () => {
     // Clear previous errors
-    setErrors({ email: '', password: '' });
+    setErrors({ email: '', password: '', otp: '' });
 
     // Validation
     let hasErrors = false;
-    const newErrors = { email: '', password: '' };
+    const newErrors = { email: '', password: '', otp: '' };
 
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
@@ -96,58 +166,47 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
     try {
       setIsLoading(true);
-      await login({
-        usernameOrEmail: formData.email.trim(),
-        password: formData.password.trim()
-      });
+      if (login) {
+        await login({
+          usernameOrEmail: formData.email.trim(),
+          password: formData.password.trim()
+        });
 
-      await setSkipLogin(false);
+        await setSkipLogin(false);
+        if (notifyLoginSuccess) notifyLoginSuccess('Welcome back! 🎉');
 
-      // Decide next screen based on email verification flag
-      // If email not verified, send user to verification screen and block main app
-      // We need to fetch the fresh user state after login, but we can't call a hook here.
-      // The login function in AuthContext should ideally return the user or we should rely on the updated context.
-      // However, since we just logged in, we can trust the response or just check the token.
-      // For now, let's assume if login succeeds, we are good. The AuthContext will update 'user'.
-
-      // We can't easily check 'user.emailVerified' immediately here because 'user' from useAuth 
-      // is from the render cycle *before* login completed. 
-      // But standard practice is to let the AuthProvider handle the redirect or check it here if login returns it.
-
-      // Assuming 'login' returns the auth response which contains the user
-      // Note: The previous code was trying to re-import and call hook which is illegal.
-
-      // Let's rely on the fact that if we are here, login succeeded. 
-      notifyLoginSuccess('Welcome back! 🎉');
-      navigation.replace('Dashboard');
+        if (navigation && navigation.replace) {
+          navigation.replace('Dashboard');
+        }
+      } else {
+        throw new Error('Login function not available');
+      }
     } catch (error: any) {
       console.error('Login error:', error);
 
       const errorMessage = error.message || 'Login failed';
       const errorDetails = error.details || '';
 
-      console.log('DEBUG: Login Error Message:', errorMessage);
-      console.log('DEBUG: Login Error Details:', errorDetails);
-      console.log('DEBUG: Full Error Object:', JSON.stringify(error, null, 2));
-
       // Check if error is related to unverified email
       if (errorMessage.toLowerCase().includes('verified') || errorDetails.toLowerCase().includes('verified')) {
-        notifyLoginError('Email not verified. Sending verification code...');
+        if (notifyLoginError) notifyLoginError('Email not verified. Sending verification code...');
 
         try {
-          // Send OTP and navigate to verification screen
           await apiClient.sendOtp(formData.email.trim(), 'EMAIL_VERIFICATION');
-          navigation.navigate('EmailVerificationScreen', { email: formData.email.trim() });
+          if (navigation && navigation.navigate) {
+            navigation.navigate('EmailVerificationScreen', { email: formData.email.trim() });
+          }
           return;
         } catch (otpError: any) {
           console.error('Failed to send OTP:', otpError);
-          // Still navigate so they can try to resend
-          navigation.navigate('EmailVerificationScreen', { email: formData.email.trim() });
+          if (navigation && navigation.navigate) {
+            navigation.navigate('EmailVerificationScreen', { email: formData.email.trim() });
+          }
           return;
         }
       }
 
-      notifyLoginError(errorMessage);
+      if (notifyLoginError) notifyLoginError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -157,7 +216,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       setIsLoading(true);
       await setSkipLogin(true);
-      navigation.replace('Dashboard');
+      if (navigation && navigation.replace) {
+        navigation.replace('Dashboard');
+      }
     } catch (error) {
       console.error('Skip login error:', error);
     } finally {
@@ -165,11 +226,15 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [navigation]);
 
-  // Memoize form validation
+  // Memoize functionality based on mode
   const isFormValid = useMemo(() => {
+    if (loginMode === 'OTP') {
+      if (!isOtpSent) return validateEmail(formData.email);
+      return validateEmail(formData.email) && formData.otp.length > 0;
+    }
     return formData.email.length > 0 && formData.password.length > 0 &&
       !errors.email && !errors.password;
-  }, [formData.email, formData.password, errors.email, errors.password]);
+  }, [loginMode, formData, errors, isOtpSent, validateEmail]);
 
   // Memoize styles to prevent recreation on every render
   const styles = useMemo(() => StyleSheet.create({
@@ -229,8 +294,38 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       fontWeight: '500',
       letterSpacing: 0.3,
     },
+    tabContainer: {
+      flexDirection: 'row',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+      borderRadius: getResponsiveBorderRadius('lg'),
+      padding: scaleSize(4),
+      marginBottom: getResponsiveSpacing('lg'),
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: scaleSize(10),
+      alignItems: 'center',
+      borderRadius: getResponsiveBorderRadius('md'),
+    },
+    activeTab: {
+      backgroundColor: colors.surface,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    tabText: {
+      fontSize: getResponsiveTypography('sm'),
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    activeTabText: {
+      color: colors.text,
+      fontWeight: '700',
+    },
     form: {
-      marginTop: getResponsiveSpacing('xl'),
+      marginTop: getResponsiveSpacing('sm'),
       backgroundColor: colors.surface,
       borderRadius: getResponsiveBorderRadius('xxl'),
       padding: getResponsiveSpacing('xl'),
@@ -301,6 +396,16 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       color: colors.textSecondary,
       fontWeight: '600',
     },
+    resentContainer: {
+      alignItems: 'flex-end',
+      marginTop: -getResponsiveSpacing('sm'),
+      marginBottom: getResponsiveSpacing('md'),
+    },
+    resendText: {
+      fontSize: getResponsiveTypography('xs'),
+      color: colors.primary,
+      fontWeight: '600',
+    },
   }), [colors, isDark]);
 
   return (
@@ -338,6 +443,21 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <View style={styles.form}>
+              <View style={styles.tabContainer}>
+                <TouchableOpacity
+                  style={[styles.tab, loginMode === 'OTP' && styles.activeTab]}
+                  onPress={() => setLoginMode('OTP')}
+                >
+                  <Text style={[styles.tabText, loginMode === 'OTP' && styles.activeTabText]}>OTP Login</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.tab, loginMode === 'PASSWORD' && styles.activeTab]}
+                  onPress={() => setLoginMode('PASSWORD')}
+                >
+                  <Text style={[styles.tabText, loginMode === 'PASSWORD' && styles.activeTabText]}>Password Login</Text>
+                </TouchableOpacity>
+              </View>
+
               <View style={styles.inputContainer}>
                 <Input
                   label="Email Address"
@@ -352,45 +472,78 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                   variant="filled"
                   accessibilityLabel="Email address input"
                   accessibilityHint="Enter your email address"
+                  editable={!isOtpSent || loginMode === 'PASSWORD'}
                 />
               </View>
 
-              <View style={styles.inputContainer}>
-                <Input
-                  label="Password"
-                  value={formData.password}
-                  onChangeText={(value) => handleInputChange('password', value)}
-                  placeholder="••••••••"
-                  secureTextEntry
-                  error={errors.password}
-                  leftIcon="lock-closed-outline"
-                  variant="filled"
-                  accessibilityLabel="Password input"
-                  accessibilityHint="Enter your password"
-                  textContentType="password"
-                />
-              </View>
+              {loginMode === 'PASSWORD' && (
+                <View style={styles.inputContainer}>
+                  <Input
+                    label="Password"
+                    value={formData.password}
+                    onChangeText={(value) => handleInputChange('password', value)}
+                    placeholder="••••••••"
+                    secureTextEntry
+                    error={errors.password}
+                    leftIcon="lock-closed-outline"
+                    variant="filled"
+                    accessibilityLabel="Password input"
+                    accessibilityHint="Enter your password"
+                    textContentType="password"
+                  />
+                </View>
+              )}
 
-              <TouchableOpacity
-                style={styles.forgotPassword}
-                onPress={() => navigation.navigate('ForgotPasswordScreen')}
-                activeOpacity={0.7}
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel="Forgot Password"
-              >
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-              </TouchableOpacity>
+              {loginMode === 'OTP' && isOtpSent && (
+                <View style={styles.inputContainer}>
+                  <Input
+                    label="Verification Code"
+                    value={formData.otp}
+                    onChangeText={(value) => handleInputChange('otp', value)}
+                    placeholder="123456"
+                    keyboardType="number-pad"
+                    error={errors.otp}
+                    leftIcon="shield-checkmark-outline"
+                    variant="filled"
+                    maxLength={6}
+                  />
+                  <TouchableOpacity onPress={handleSendOtp} style={styles.resentContainer}>
+                    <Text style={styles.resendText}>Resend OTP</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {loginMode === 'PASSWORD' && (
+                <TouchableOpacity
+                  style={styles.forgotPassword}
+                  onPress={() => navigation.navigate('ForgotPasswordScreen')}
+                  activeOpacity={0.7}
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel="Forgot Password"
+                >
+                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                </TouchableOpacity>
+              )}
 
               <Button
-                title={isLoading ? "Signing in..." : "Sign In"}
-                onPress={handleLogin}
+                title={
+                  isLoading ? "Please wait..." :
+                    loginMode === 'OTP'
+                      ? (isOtpSent ? "Verify & Sign In" : "Send OTP")
+                      : "Sign In"
+                }
+                onPress={
+                  loginMode === 'OTP'
+                    ? (isOtpSent ? handleVerifyOtpAndLogin : handleSendOtp)
+                    : handlePasswordLogin
+                }
                 variant="primary"
                 size="lg"
                 loading={isLoading}
                 disabled={isLoading || !isFormValid}
                 style={styles.loginButton}
-                icon="log-in-outline"
+                icon={loginMode === 'OTP' && !isOtpSent ? "mail-outline" : "log-in-outline"}
               />
             </View>
           </View>

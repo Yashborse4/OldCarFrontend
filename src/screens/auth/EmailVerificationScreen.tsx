@@ -19,6 +19,8 @@ import { Button } from '../../components/ui/Button';
 import { apiClient } from '../../services/ApiClient';
 import { useNotifications } from '../../components/ui/ToastManager';
 
+import { useAuth } from '../../context/AuthContext';
+
 interface Props {
   navigation: any;
   route: any;
@@ -30,6 +32,7 @@ const EmailVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
   const { theme, isDark } = useTheme();
   const { colors } = theme;
   const { notifySuccess, notifyError } = useNotifications();
+  const { refreshUserData } = useAuth();
   const { width } = useWindowDimensions();
 
   // Get email from route params or fallback to empty
@@ -79,22 +82,30 @@ const EmailVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
       setIsLoading(true);
       Keyboard.dismiss();
 
-      const isValid = await apiClient.verifyOtp(email, otp, 'EMAIL_VERIFICATION');
+      // Expecting AuthTokens object now, not boolean
+      const authTokens = await apiClient.verifyOtp(email, otp, 'EMAIL_VERIFICATION');
 
-      if (isValid) {
-        notifySuccess('Email verified successfully! You can now log in.');
-        navigation.replace('LoginScreen');
+      if (authTokens && authTokens.accessToken) {
+        notifySuccess('Email verified successfully! Logging you in...');
+
+        // Refresh context to update user state
+        await refreshUserData();
+
+        // Navigate to Dashboard
+        navigation.replace('Dashboard');
       } else {
-        notifyError('Invalid OTP. Please try again.');
-        // Clear inputs on invalid otp? Optional.
+        // Fallback if structure is different for some reason
+        notifySuccess('Email verified successfully!');
+        navigation.replace('LoginScreen');
       }
     } catch (error: any) {
       console.error('Verification error:', error);
       notifyError(error.message || 'Verification failed');
+      // If error is invalid OTP, we stay here.
     } finally {
       setIsLoading(false);
     }
-  }, [email, otpValues, navigation, notifySuccess, notifyError]);
+  }, [email, otpValues, navigation, notifySuccess, notifyError, refreshUserData]);
 
   const handleResendOtp = useCallback(async () => {
     if (countdown > 0) return;
