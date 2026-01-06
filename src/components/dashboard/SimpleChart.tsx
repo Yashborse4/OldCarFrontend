@@ -37,8 +37,9 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
     surface: '#FFFFFF',
   };
 
-  const maxValue = Math.max(...data.map(item => item.value));
-  const totalValue = data.reduce((sum, item) => sum + item.value, 0);
+  const hasData = data && data.length > 0;
+  const maxValue = hasData ? Math.max(...data.map(item => item.value)) : 0;
+  const totalValue = hasData ? data.reduce((sum, item) => sum + item.value, 0) : 0;
 
   const defaultColors = [
     '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
@@ -46,6 +47,16 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
   ];
 
   const renderBarChart = () => {
+    if (!hasData || maxValue <= 0) {
+      return (
+        <View style={styles.noDataContainer}>
+          <Text style={[styles.noDataText, { color: colors.textSecondary }]}>
+            No data available yet
+          </Text>
+        </View>
+      );
+    }
+
     const barWidth = (width - 80) / data.length - 8;
 
     return (
@@ -86,6 +97,16 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
   };
 
   const renderLineChart = () => {
+    if (!hasData || maxValue <= 0 || data.length < 2) {
+      return (
+        <View style={styles.noDataContainer}>
+          <Text style={[styles.noDataText, { color: colors.textSecondary }]}>
+            No data available yet
+          </Text>
+        </View>
+      );
+    }
+
     const chartWidth = width - 80;
     const chartHeight = height - 80;
     const stepX = chartWidth / (data.length - 1);
@@ -192,6 +213,16 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
   };
 
   const renderPieChart = () => {
+    if (!hasData || totalValue <= 0) {
+      return (
+        <View style={styles.noDataContainer}>
+          <Text style={[styles.noDataText, { color: colors.textSecondary }]}>
+            No data available yet
+          </Text>
+        </View>
+      );
+    }
+
     const centerX = (width - 80) / 2;
     const centerY = (height - 80) / 2;
     const radius = Math.min(centerX, centerY) - 20;
@@ -456,6 +487,14 @@ const styles = StyleSheet.create({
   },
   legendLabel: {
     fontSize: 10,
+  },
+  noDataContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+  },
+  noDataText: {
+    fontSize: 12,
   },
 });
 

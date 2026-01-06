@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, useWindowDimensions, TouchableOpacity } from 'react-native';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { scaleSize, getResponsiveSpacing, getResponsiveBorderRadius, getResponsiveTypography } from '../../utils/responsiveEnhanced';
@@ -19,18 +19,22 @@ export interface StatisticData {
   iconType?: 'AntDesign' | 'Ionicons';
   gradient: string[];
   backgroundColor?: string;
+  navigateTo?: string; // Screen name to navigate to when pressed
+  filterParam?: string; // Optional filter value to pass (e.g., 'active', 'all')
 }
 
 interface StatisticsCardProps {
   data: StatisticData;
   index: number;
   variant?: 'default' | 'gradient' | 'glass';
+  onPress?: (data: StatisticData) => void; // Callback when card is pressed
 }
 
 export const StatisticsCard: React.FC<StatisticsCardProps> = ({
   data,
   index,
-  variant = 'gradient'
+  variant = 'gradient',
+  onPress,
 }) => {
   const { width } = useWindowDimensions();
   const { theme } = useTheme();
@@ -131,14 +135,19 @@ export const StatisticsCard: React.FC<StatisticsCardProps> = ({
   };
 
   if (variant === 'gradient') {
+    const CardWrapper = onPress ? TouchableOpacity : View;
     return (
-      <View style={{ width: cardWidth, marginBottom: gap }}>
+      <CardWrapper
+        style={{ width: cardWidth, marginBottom: gap }}
+        onPress={onPress ? () => onPress(data) : undefined}
+        activeOpacity={0.8}
+      >
         <View
           style={[styles.cardBase, { width: '100%', backgroundColor: data.gradient[0] }]}
         >
           {renderCardContent()}
         </View>
-      </View>
+      </CardWrapper>
     );
   }
 
