@@ -40,6 +40,11 @@ import DealerDashboardScreen from '../screens/dealer/DealerDashboardScreen';
 import DealerInquiriesScreen from '../screens/dealer/DealerInquiriesScreen';
 import DealerNetworkChatScreen from '../screens/dealer/DealerNetworkChatScreen';
 import DealerProfileScreen from '../screens/dealer/DealerProfileScreen';
+import DealerCarsListScreen from '../screens/dealer/DealerCarsListScreen';
+import DealerVerificationScreen from '../screens/dealer/DealerVerificationScreen';
+
+// Admin Screens
+import AdminDealerVerificationScreen from '../screens/admin/AdminDealerVerificationScreen';
 
 import { RootStackParamList } from './types';
 
@@ -92,29 +97,29 @@ const defaultScreenOptions = {
 
 const AppNavigator = ({ initialRouteName }: { initialRouteName: keyof RootStackParamList }) => {
   return (
-    <Stack.Navigator 
+    <Stack.Navigator
       initialRouteName={initialRouteName}
       screenOptions={defaultScreenOptions}
     >
       {/* Authentication Screens */}
-      <Stack.Screen 
-        name="Login" 
-        component={LoginScreen} 
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
         options={{
           ...TransitionPresets.ModalSlideFromBottomIOS,
           animationTypeForReplace: 'push'
-        }} 
+        }}
       />
       <Stack.Screen name="RegisterUser" component={RegisterUser} />
       <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
       <Stack.Screen name="EmailVerificationScreen" component={EmailVerificationScreen} />
-      
+
       {/* Main App Screens */}
       <Stack.Screen name="Dashboard" component={DashboardScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
-      
+
       {/* Car-related Screens */}
       <Stack.Screen name="CarDetails" component={CarDetailsScreen} />
       <Stack.Screen name="SellCar" component={SellCarScreen} />
@@ -125,13 +130,13 @@ const AppNavigator = ({ initialRouteName }: { initialRouteName: keyof RootStackP
       <Stack.Screen name="VehicleAnalytics" component={VehicleAnalyticsScreen} />
       <Stack.Screen name="ManageCar" component={ManageCarScreen} />
       <Stack.Screen name="MyGarage" component={MyGarageScreen} />
-      
+
       {/* Chat/Messaging Screens */}
       <Stack.Screen name="Messages" component={MessagesScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="ChatList" component={ChatListScreen} />
       <Stack.Screen name="ChatConversation" component={ChatConversationScreen} />
-      
+
       {/* Dealer Networking Screens */}
       <Stack.Screen name="DealerGroups" component={DealerGroupsScreen} />
       <Stack.Screen name="DealerAddCar" component={DealerAddCarScreen} />
@@ -139,10 +144,13 @@ const AppNavigator = ({ initialRouteName }: { initialRouteName: keyof RootStackP
       <Stack.Screen name="DealerInquiries" component={DealerInquiriesScreen} />
       <Stack.Screen name="DealerNetworkChat" component={DealerNetworkChatScreen} />
       <Stack.Screen name="DealerProfile" component={DealerProfileScreen} />
+      <Stack.Screen name="DealerCarsList" component={DealerCarsListScreen} />
+      <Stack.Screen name="DealerVerification" component={DealerVerificationScreen} />
+
+      {/* Admin Screens */}
+      <Stack.Screen name="AdminDealerVerification" component={AdminDealerVerificationScreen} />
     </Stack.Navigator>
   );
 };
 
 export default AppNavigator;
-
-

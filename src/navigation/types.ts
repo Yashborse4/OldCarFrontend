@@ -80,7 +80,7 @@ export type RootStackParamList = {
 
   // Chat/Messaging
   Messages: undefined;
-  Chat: { dealerId: string; dealerName: string };
+  Chat: { dealerId: string; dealerName: string; carId?: string; carTitle?: string };
   ChatList: undefined;
   ChatConversation: { conversationId: string };
   CreateGroup: undefined;
@@ -93,8 +93,13 @@ export type RootStackParamList = {
   DealerInquiries: undefined;
   DealerNetworkChat: { networkId: string };
   DealerProfile: { dealerId: string };
+  DealerCarsList: { filter?: string; title?: string };
+  DealerVerification: undefined;
 
-  // Future screens (commented out in navigator)
+  // Admin Screens
+  AdminDealerVerification: undefined;
+
+  // Future screens
   GroupMembers?: { groupId: string };
   InviteMembers?: { groupId: string };
   CoListedVehicles?: undefined;

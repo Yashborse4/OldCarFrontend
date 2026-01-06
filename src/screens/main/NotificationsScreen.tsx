@@ -73,7 +73,7 @@ const NotificationsScreen: React.FC = () => {
   });
 
   // Mock notifications data
-  const mockNotifications: Notification[] = [
+  const mockNotifications = React.useMemo<Notification[]>(() => [
     {
       id: '1',
       type: 'inquiry',
@@ -144,7 +144,7 @@ const NotificationsScreen: React.FC = () => {
       data: { version: '2.1.0' },
       actionable: false,
     },
-  ];
+  ], []);
 
   const loadNotifications = useCallback(async () => {
     try {
@@ -158,7 +158,7 @@ const NotificationsScreen: React.FC = () => {
       console.error('Error loading notifications:', error);
       setLoading(false);
     }
-  }, []);
+  }, [mockNotifications]);
 
   const filterNotifications = useCallback(() => {
     let filtered = notifications;
