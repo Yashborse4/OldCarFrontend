@@ -562,5 +562,39 @@ export const setSkipLogin = async (value: boolean): Promise<void> => {
     }
 };
 
+/**
+ * Get authentication status with user role for routing decisions
+ * Returns whether user is authorized and their role (user/dealer/admin)
+ */
+export interface AuthStatusWithRole {
+    isAuthorized: boolean;
+    role: 'user' | 'dealer' | 'admin' | null;
+    user: User | null;
+}
 
+export const getAuthStatusWithRole = async (): Promise<AuthStatusWithRole> => {
+    try {
+        const isAuthorized = await authService.isUserAuthorized();
 
+        if (!isAuthorized) {
+            return { isAuthorized: false, role: null, user: null };
+        }
+
+        const user = await authService.getCurrentUser();
+
+        if (!user) {
+            return { isAuthorized: false, role: null, user: null };
+        }
+
+        return {
+            isAuthorized: true,
+            role: (user.role?.toLowerCase() || 'user') as 'user' | 'dealer' | 'admin',
+            user,
+        };
+    } catch (error) {
+        if (__DEV__) {
+            console.error('Auth status check failed:', error);
+        }
+        return { isAuthorized: false, role: null, user: null };
+    }
+};

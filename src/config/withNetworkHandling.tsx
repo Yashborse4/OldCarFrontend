@@ -72,7 +72,7 @@ const withNetworkHandling = <P extends object>(
           setHasBeenOffline(false);
         }
       }
-    }, [autoRefreshOnReconnect, onRefresh, hasBeenOffline]);
+    }, [onRefresh, hasBeenOffline]);
 
     // Set up network refresh listener
     useNetworkRefresh(handleAutoRefresh);

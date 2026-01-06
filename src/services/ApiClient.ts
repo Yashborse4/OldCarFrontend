@@ -12,7 +12,7 @@ import NetInfo from '@react-native-community/netinfo';
 // API Configuration
 const API_CONFIG = {
 
-  baseURL: 'http://192.168.1.4:9000', // Use your server's IP address
+  baseURL: 'http://192.168.1.10:9000', // Use your server's IP address
   timeout: 15000, // Increased timeout for better mobile network handling
   headers: {
     'Content-Type': 'application/json',
@@ -47,6 +47,7 @@ export interface ApiErrorResponse {
   path: string;
   errorCode: string;
   fieldErrors?: { [key: string]: string };
+  data?: any;
 }
 
 export interface AuthTokens {
@@ -83,6 +84,7 @@ export interface UserData {
   email: string;
   role: string;
   location?: string;
+  phoneNumber?: string;
   // Role/verification flags used for permission matrix
   emailVerified?: boolean;
   verifiedDealer?: boolean;
@@ -95,15 +97,17 @@ export class ApiError extends Error {
   public path: string;
   public fieldErrors?: { [key: string]: string };
   public status: number;
+  public data?: any;
 
   constructor(response: ApiErrorResponse, status: number = 500) {
-    super(response.message);
+    super(response.details || response.message);
     this.name = 'ApiError';
     this.errorCode = response.errorCode;
     this.details = response.details;
     this.path = response.path;
     this.fieldErrors = response.fieldErrors;
     this.status = status;
+    this.data = response.data;
   }
 }
 
@@ -239,7 +243,6 @@ class ApiClient {
           '/api/auth/refresh-token',
           '/api/auth/forgot-password',
           '/api/auth/reset-password',
-          '/api/auth/validate-token',
         ];
         const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
 
@@ -452,20 +455,37 @@ class ApiClient {
   async register(userData: {
     username: string;
     email: string;
-    password: string;
+    password?: string;
+    role?: string;
   }): Promise<AuthTokens> {
     try {
-      const payload = {
+      const payload: {
+        username: string;
+        email: string;
+        password?: string;
+        role?: string;
+      } = {
         username: userData.username,
         email: userData.email,
-        password: userData.password,
       };
+
+      if (userData.password && userData.password.trim().length > 0) {
+        payload.password = userData.password;
+      }
+      if (userData.role) {
+        payload.role = userData.role;
+      }
       const response = await this.instance.post<ApiSuccessResponse<AuthTokens>>(
         '/api/auth/register',
         payload
       );
       const authData = response.data.data;
-      await this.saveAuthData(authData);
+
+      // For registration, backend does NOT issue tokens until email is verified.
+      // Only persist tokens if they are actually present.
+      if (authData.accessToken && authData.refreshToken) {
+        await this.saveAuthData(authData);
+      }
 
       console.log('Registration successful for user:', authData.username);
       return authData;
@@ -501,13 +521,29 @@ class ApiClient {
     }
   }
 
-  async verifyOtp(email: string, otp: string, purpose: string = 'EMAIL_VERIFICATION'): Promise<boolean> {
-    const response = await this.instance.post<ApiSuccessResponse<boolean>>('/api/auth/otp/verify', { email, otp, purpose });
-    return response.data.data;
+  async verifyOtp(email: string, otp: string, purpose: string = 'EMAIL_VERIFICATION'): Promise<AuthTokens> {
+    // Map purpose to correct endpoint
+    let endpoint = '/api/auth/email/verify/confirm';
+
+    if (purpose === 'LOGIN') {
+      endpoint = '/api/auth/login/otp/confirm';
+    }
+
+    const response = await this.instance.post<ApiSuccessResponse<AuthTokens>>(endpoint, { email, otp });
+    const authData = response.data.data;
+
+    // Save auth data for successful verification
+    await this.saveAuthData(authData);
+
+    return authData;
   }
 
   async forgotPassword(username: string): Promise<void> {
-    await this.instance.post('/api/auth/forgot-password', { username });
+    // Backend expects { username } for forgot password which triggers OTP send
+    await this.instance.post('/api/auth/otp/send', {
+      email: username, // Backend uses email field
+      purpose: 'PASSWORD_RESET'
+    });
   }
 
   async resetPassword(data: {
@@ -515,7 +551,8 @@ class ApiClient {
     otp: string;
     newPassword: string;
   }): Promise<void> {
-    await this.instance.post('/api/auth/reset-password', data);
+    // Backend /api/auth/password/reset expects { username, otp, newPassword }
+    await this.instance.post('/api/auth/password/reset', data);
   }
 
   async refreshAccessToken(refreshToken: string): Promise<AuthTokens> {
@@ -593,10 +630,10 @@ class ApiClient {
   // Car management methods
   async getCars(page = 0, size = 20, sort = 'createdAt,desc'): Promise<any> {
     try {
-      const response = await this.instance.get(`/api/v2/cars?page=${page}&size=${size}&sort=${sort}`);
-      // Backend returns ApiResponse<Page<CarResponseV2>>
+      const response = await this.instance.get(`/api/cars?page=${page}&size=${size}&sort=${sort}`);
+      // Backend returns ApiResponse<Page<CarResponse>>
       if (response.data && response.data.success && response.data.data) {
-        return response.data.data; // Return the Page<CarResponseV2>
+        return response.data.data; // Return the Page<CarResponse>
       }
       return response.data;
     } catch (error: any) {
@@ -607,10 +644,10 @@ class ApiClient {
 
   async getCarById(id: string | number): Promise<any> {
     try {
-      const response = await this.instance.get(`/api/v2/cars/${id}`);
-      // Backend returns ApiResponse<CarResponseV2>
+      const response = await this.instance.get(`/api/cars/${id}`);
+      // Backend returns ApiResponse<CarResponse>
       if (response.data && response.data.success && response.data.data) {
-        return response.data.data; // Return the CarResponseV2
+        return response.data.data; // Return the CarResponse
       }
       return response.data;
     } catch (error: any) {
@@ -621,10 +658,10 @@ class ApiClient {
 
   async createCar(carData: any): Promise<any> {
     try {
-      const response = await this.instance.post('/api/v2/cars', carData);
-      // Backend returns ApiResponse<CarResponseV2>
+      const response = await this.instance.post('/api/cars', carData);
+      // Backend returns ApiResponse<CarResponse>
       if (response.data && response.data.success && response.data.data) {
-        return response.data.data; // Return the created CarResponseV2
+        return response.data.data; // Return the created CarResponse
       }
       return response.data;
     } catch (error: any) {
@@ -635,10 +672,10 @@ class ApiClient {
 
   async updateCar(id: string | number, carData: any): Promise<any> {
     try {
-      const response = await this.instance.patch(`/api/v2/cars/${id}`, carData);
-      // Backend returns ApiResponse<CarResponseV2>
+      const response = await this.instance.patch(`/api/cars/${id}`, carData);
+      // Backend returns ApiResponse<CarResponse>
       if (response.data && response.data.success && response.data.data) {
-        return response.data.data; // Return the updated CarResponseV2
+        return response.data.data; // Return the updated CarResponse
       }
       return response.data;
     } catch (error: any) {
@@ -649,7 +686,7 @@ class ApiClient {
 
   async deleteCar(id: string | number, hard: boolean = false): Promise<void> {
     try {
-      await this.instance.delete(`/api/v2/cars/${id}?hard=${hard}`);
+      await this.instance.delete(`/api/cars/${id}?hard=${hard}`);
     } catch (error: any) {
       console.error('Error deleting car:', error);
       throw this.handleApiError(error, 'Failed to delete vehicle listing');
@@ -657,7 +694,7 @@ class ApiClient {
   }
 
   async updateCarStatus(id: number, status: string): Promise<any> {
-    const response = await this.instance.post(`/api/v2/cars/${id}/status`, {
+    const response = await this.instance.post(`/api/cars/${id}/status`, {
       status,
     });
     return response.data;
@@ -665,7 +702,7 @@ class ApiClient {
 
   async featureCar(id: number, featured: boolean = true): Promise<any> {
     const response = await this.instance.post(
-      `/api/v2/cars/${id}/feature?featured=${featured}`,
+      `/api/cars/${id}/feature?featured=${featured}`,
     );
     return response.data;
   }
@@ -711,7 +748,7 @@ class ApiClient {
 
       // Backend returns ApiResponse<Page<CarSearchHitDto>>
       if (response.data && response.data.success && response.data.data) {
-        return response.data.data; // Return the Page<CarResponseV2>
+        return response.data.data; // Return the Page<CarResponse>
       }
       return response.data;
     } catch (error: any) {
@@ -916,4 +953,4 @@ export { ApiClient };
 export default apiClient;
 
 
- 
+

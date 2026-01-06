@@ -1,6 +1,5 @@
 import { ApiClient, apiClient } from './ApiClient';
 
-// Vehicle interfaces
 export interface Vehicle {
   id: string;
   make: string;
@@ -23,6 +22,10 @@ export interface Vehicle {
   featured: boolean;
   createdAt: string;
   updatedAt: string;
+  // Extended properties
+  variant?: string;
+  fuelType?: string;
+  transmission?: string;
 }
 
 export interface VehicleSearchFilters {
@@ -51,6 +54,16 @@ export interface VehiclePerformance {
   lastActivity: string;
   topLocations: string[];
   dealerInterest: number;
+}
+
+export interface CarStatistics {
+  totalCars: number;
+  activeCars: number;
+  soldCars: number;
+  featuredCars: number;
+  inactiveCars: number;
+  newCarsLast7Days: number;
+  lastUpdated: string;
 }
 
 // Dealer Group related interfaces
@@ -86,6 +99,15 @@ export interface GroupInvitation {
   expiresAt: string;
 }
 
+// Dealer Dashboard Response
+export interface DealerDashboardResponse {
+  totalViews: number;
+  totalUniqueVisitors: number;
+  totalCarsAdded: number;
+  activeCars: number;
+  contactRequestsReceived: number;
+}
+
 class CarApiService {
   private apiClient: ApiClient;
 
@@ -100,6 +122,17 @@ class CarApiService {
       return response;
     } catch (error) {
       console.error('Error fetching vehicles:', error);
+      throw error;
+    }
+  }
+
+  async getPublicVehicles(page = 0, size = 20, sort = 'createdAt,desc'): Promise<{ content: Vehicle[], totalElements: number, totalPages: number, number: number }> {
+    try {
+      const url = `/api/cars/public?page=${page}&size=${size}&sort=${encodeURIComponent(sort)}`;
+      const response = await this.apiClient.get<{ data: { content: Vehicle[], totalElements: number, totalPages: number, number: number } }>(url);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching public vehicles:', error);
       throw error;
     }
   }
@@ -164,11 +197,15 @@ class CarApiService {
     }
   }
 
-  // Get vehicles by dealer
-  async getVehiclesByDealer(dealerId: string): Promise<Vehicle[]> {
+  // Get vehicles by dealer (public view)
+  async getVehiclesByDealer(dealerId: string, page: number = 0, size: number = 20, status?: string): Promise<{ content: Vehicle[], totalElements: number, totalPages: number }> {
     try {
-      const response = await this.apiClient.get<Vehicle[]>(`/api/v1/seller/${dealerId}/cars`);
-      return response.data;
+      let url = `/api/cars/seller/${dealerId}?page=${page}&size=${size}`;
+      if (status) {
+        url += `&status=${encodeURIComponent(status)}`;
+      }
+      const response = await this.apiClient.get<{ data: { content: Vehicle[], totalElements: number, totalPages: number } }>(url);
+      return response.data.data;
     } catch (error) {
       console.error('Error fetching dealer vehicles:', error);
       throw error;
@@ -178,12 +215,21 @@ class CarApiService {
   // Get vehicle performance analytics
   async getVehiclePerformance(vehicleId: string): Promise<VehiclePerformance> {
     try {
-      // This would be a custom endpoint - implement on backend
-      const response = await this.apiClient.get<VehiclePerformance>(`/api/v2/cars/${vehicleId}/analytics`);
-      return response.data;
+      const response = await this.apiClient.get<{ data: any }>(`/api/cars/${vehicleId}/analytics`);
+      const analytics = response.data.data;
+      return {
+        vehicleId: String(analytics.vehicleId ?? vehicleId),
+        views: Number(analytics.views ?? 0),
+        inquiries: Number(analytics.inquiries ?? 0),
+        shares: Number(analytics.shares ?? 0),
+        coListings: Number(analytics.coListings ?? 0),
+        avgTimeOnMarket: Number(analytics.avgTimeOnMarket ?? 0),
+        lastActivity: analytics.lastActivity ?? new Date().toISOString(),
+        topLocations: analytics.topLocations ?? [],
+        dealerInterest: Number(analytics.dealerInterest ?? 0),
+      };
     } catch (error) {
       console.error('Error fetching vehicle performance:', error);
-      // Return mock data for now
       return {
         vehicleId,
         views: Math.floor(Math.random() * 1000) + 100,
@@ -195,6 +241,16 @@ class CarApiService {
         topLocations: ['Mumbai', 'Delhi', 'Bangalore'],
         dealerInterest: Math.floor(Math.random() * 100) + 20
       };
+    }
+  }
+
+  async getAdminCarStatistics(): Promise<CarStatistics> {
+    try {
+      const response = await this.apiClient.get<{ data: CarStatistics }>('/api/cars/admin/analytics');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching admin car statistics:', error);
+      throw error;
     }
   }
 
@@ -212,7 +268,7 @@ class CarApiService {
   async coListVehicle(vehicleId: string, groupIds: string[]): Promise<Vehicle> {
     try {
       // This would need custom endpoint implementation
-      const response = await this.apiClient.post<Vehicle>(`/api/v2/cars/${vehicleId}/co-list`, { groupIds });
+      const response = await this.apiClient.post<Vehicle>(`/api/cars/${vehicleId}/co-list`, { groupIds });
       return response.data;
     } catch (error) {
       console.error('Error co-listing vehicle:', error);
@@ -223,7 +279,7 @@ class CarApiService {
   // Remove co-listing from groups
   async removeCoListing(vehicleId: string, groupIds: string[]): Promise<Vehicle> {
     try {
-      const response = await this.apiClient.delete<Vehicle>(`/api/v2/cars/${vehicleId}/co-list`, { data: { groupIds } });
+      const response = await this.apiClient.delete<Vehicle>(`/api/cars/${vehicleId}/co-list`, { data: { groupIds } });
       return response.data;
     } catch (error) {
       console.error('Error removing co-listing:', error);
@@ -234,7 +290,7 @@ class CarApiService {
   // Get co-listed vehicles for current dealer
   async getCoListedVehicles(): Promise<Vehicle[]> {
     try {
-      const response = await this.apiClient.get<Vehicle[]>('/api/v2/cars/co-listed');
+      const response = await this.apiClient.get<Vehicle[]>('/api/cars/co-listed');
       return response.data;
     } catch (error) {
       console.error('Error fetching co-listed vehicles:', error);
@@ -245,7 +301,7 @@ class CarApiService {
   // Track vehicle view
   async trackVehicleView(vehicleId: string): Promise<void> {
     try {
-      await this.apiClient.post(`/api/v2/cars/${vehicleId}/view`);
+      await this.apiClient.post(`/api/cars/${vehicleId}/view`);
     } catch (error) {
       console.error('Error tracking view:', error);
       // Don't throw error for tracking - it's non-critical
@@ -255,7 +311,7 @@ class CarApiService {
   // Track vehicle share
   async trackVehicleShare(vehicleId: string, platform: string): Promise<void> {
     try {
-      await this.apiClient.post(`/api/v2/cars/${vehicleId}/share`, { platform });
+      await this.apiClient.post(`/api/cars/${vehicleId}/share`, { platform });
     } catch (error) {
       console.error('Error tracking share:', error);
       // Don't throw error for tracking - it's non-critical
@@ -265,7 +321,7 @@ class CarApiService {
   // Get similar vehicles
   async getSimilarVehicles(vehicleId: string, limit: number = 5): Promise<Vehicle[]> {
     try {
-      const response = await this.apiClient.get<Vehicle[]>(`/api/v2/cars/${vehicleId}/similar?limit=${limit}`);
+      const response = await this.apiClient.get<Vehicle[]>(`/api/cars/${vehicleId}/similar?limit=${limit}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching similar vehicles:', error);
@@ -276,7 +332,7 @@ class CarApiService {
   // Dealer Groups API
   async getAllGroups(): Promise<DealerGroup[]> {
     try {
-      const response = await this.apiClient.get<DealerGroup[]>('/api/v2/groups');
+      const response = await this.apiClient.get<DealerGroup[]>('/api/groups');
       return response.data;
     } catch (error) {
       console.error('Error fetching groups:', error);
@@ -286,7 +342,7 @@ class CarApiService {
 
   async getGroupById(groupId: string): Promise<DealerGroup> {
     try {
-      const response = await this.apiClient.get<DealerGroup>(`/api/v2/groups/${groupId}`);
+      const response = await this.apiClient.get<DealerGroup>(`/api/groups/${groupId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching group:', error);
@@ -296,7 +352,7 @@ class CarApiService {
 
   async createGroup(groupData: Omit<DealerGroup, 'id' | 'createdAt' | 'members'>): Promise<DealerGroup> {
     try {
-      const response = await this.apiClient.post<DealerGroup>('/api/v2/groups', groupData);
+      const response = await this.apiClient.post<DealerGroup>('/api/groups', groupData);
       return response.data;
     } catch (error) {
       console.error('Error creating group:', error);
@@ -306,7 +362,7 @@ class CarApiService {
 
   async updateGroup(groupId: string, updates: Partial<DealerGroup>): Promise<DealerGroup> {
     try {
-      const response = await this.apiClient.patch<DealerGroup>(`/api/v2/groups/${groupId}`, updates);
+      const response = await this.apiClient.patch<DealerGroup>(`/api/groups/${groupId}`, updates);
       return response.data;
     } catch (error) {
       console.error('Error updating group:', error);
@@ -316,7 +372,7 @@ class CarApiService {
 
   async deleteGroup(groupId: string): Promise<void> {
     try {
-      await this.apiClient.delete(`/api/v2/groups/${groupId}`);
+      await this.apiClient.delete(`/api/groups/${groupId}`);
     } catch (error) {
       console.error('Error deleting group:', error);
       throw error;
@@ -325,7 +381,7 @@ class CarApiService {
 
   async inviteMember(groupId: string, dealerId: string): Promise<GroupInvitation> {
     try {
-      const response = await this.apiClient.post<GroupInvitation>(`/api/v2/groups/${groupId}/invite`, { dealerId });
+      const response = await this.apiClient.post<GroupInvitation>(`/api/groups/${groupId}/invite`, { dealerId });
       return response.data;
     } catch (error) {
       console.error('Error inviting member:', error);
@@ -335,7 +391,7 @@ class CarApiService {
 
   async removeMember(groupId: string, memberId: string): Promise<void> {
     try {
-      await this.apiClient.delete(`/api/v2/groups/${groupId}/members/${memberId}`);
+      await this.apiClient.delete(`/api/groups/${groupId}/members/${memberId}`);
     } catch (error) {
       console.error('Error removing member:', error);
       throw error;
@@ -344,7 +400,7 @@ class CarApiService {
 
   async acceptInvitation(invitationId: string): Promise<DealerGroup> {
     try {
-      const response = await this.apiClient.post<DealerGroup>(`/api/v2/invitations/${invitationId}/accept`);
+      const response = await this.apiClient.post<DealerGroup>(`/api/invitations/${invitationId}/accept`);
       return response.data;
     } catch (error) {
       console.error('Error accepting invitation:', error);
@@ -354,7 +410,7 @@ class CarApiService {
 
   async rejectInvitation(invitationId: string): Promise<void> {
     try {
-      await this.apiClient.post(`/api/v2/invitations/${invitationId}/reject`);
+      await this.apiClient.post(`/api/invitations/${invitationId}/reject`);
     } catch (error) {
       console.error('Error rejecting invitation:', error);
       throw error;
@@ -363,7 +419,7 @@ class CarApiService {
 
   async getMyInvitations(): Promise<GroupInvitation[]> {
     try {
-      const response = await this.apiClient.get<GroupInvitation[]>('/api/v2/invitations/my');
+      const response = await this.apiClient.get<GroupInvitation[]>('/api/invitations/my');
       return response.data;
     } catch (error) {
       console.error('Error fetching invitations:', error);
@@ -373,7 +429,7 @@ class CarApiService {
 
   async leaveGroup(groupId: string): Promise<void> {
     try {
-      await this.apiClient.post(`/api/v2/groups/${groupId}/leave`);
+      await this.apiClient.post(`/api/groups/${groupId}/leave`);
     } catch (error) {
       console.error('Error leaving group:', error);
       throw error;
@@ -383,7 +439,7 @@ class CarApiService {
   // Messaging API
   async getConversations(): Promise<any[]> {
     try {
-      const response = await this.apiClient.get<any[]>('/api/v2/messages/conversations');
+      const response = await this.apiClient.get<any[]>('/api/messages/conversations');
       return response.data;
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -393,7 +449,7 @@ class CarApiService {
 
   async getChatMessages(dealerId: string, page: number = 0, size: number = 50): Promise<any[]> {
     try {
-      const response = await this.apiClient.get<any[]>(`/api/v2/messages/${dealerId}?page=${page}&size=${size}`);
+      const response = await this.apiClient.get<any[]>(`/api/messages/${dealerId}?page=${page}&size=${size}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching chat messages:', error);
@@ -403,7 +459,7 @@ class CarApiService {
 
   async sendMessage(receiverId: string, message: string, type: string = 'text', attachments?: any[]): Promise<any> {
     try {
-      const response = await this.apiClient.post('/api/v2/messages/send', {
+      const response = await this.apiClient.post('/api/messages/send', {
         receiverId,
         message,
         type,
@@ -418,7 +474,7 @@ class CarApiService {
 
   async markMessageAsRead(messageId: string): Promise<void> {
     try {
-      await this.apiClient.post(`/api/v2/messages/${messageId}/read`);
+      await this.apiClient.post(`/api/messages/${messageId}/read`);
     } catch (error) {
       console.error('Error marking message as read:', error);
       // Non-critical error, don't throw
@@ -428,7 +484,7 @@ class CarApiService {
   // Notification API
   async getNotifications(page: number = 0, size: number = 20): Promise<any[]> {
     try {
-      const response = await this.apiClient.get<any[]>(`/api/v2/notifications?page=${page}&size=${size}`);
+      const response = await this.apiClient.get<any[]>(`/api/notifications?page=${page}&size=${size}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -438,7 +494,7 @@ class CarApiService {
 
   async markNotificationAsRead(notificationId: string): Promise<void> {
     try {
-      await this.apiClient.post(`/api/v2/notifications/${notificationId}/read`);
+      await this.apiClient.post(`/api/notifications/${notificationId}/read`);
     } catch (error) {
       console.error('Error marking notification as read:', error);
       // Non-critical error, don't throw
@@ -447,10 +503,48 @@ class CarApiService {
 
   async updateNotificationSettings(settings: any): Promise<any> {
     try {
-      const response = await this.apiClient.post('/api/v2/notifications/settings', settings);
+      const response = await this.apiClient.post('/api/notifications/settings', settings);
       return response.data;
     } catch (error) {
       console.error('Error updating notification settings:', error);
+      throw error;
+    }
+  }
+
+  // ==================== DEALER DASHBOARD API ====================
+
+  /**
+   * Get dealer dashboard statistics for current user
+   * GET /api/cars/dealer/dashboard
+   */
+  async getDealerDashboard(): Promise<DealerDashboardResponse> {
+    try {
+      const response = await this.apiClient.get<{ data: DealerDashboardResponse }>('/api/cars/dealer/dashboard');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching dealer dashboard:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get current dealer's car listings with optional status filter
+   * GET /api/cars/dealer/my-cars
+   */
+  async getMyCarListings(
+    page: number = 0,
+    size: number = 20,
+    status?: string
+  ): Promise<{ content: Vehicle[], totalElements: number, totalPages: number }> {
+    try {
+      let url = `/api/cars/dealer/my-cars?page=${page}&size=${size}`;
+      if (status) {
+        url += `&status=${encodeURIComponent(status)}`;
+      }
+      const response = await this.apiClient.get<{ data: { content: Vehicle[], totalElements: number, totalPages: number } }>(url);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching my car listings:', error);
       throw error;
     }
   }
@@ -459,6 +553,4 @@ class CarApiService {
 // Export singleton instance
 export const carApi = new CarApiService();
 export default carApi;
-
-
 

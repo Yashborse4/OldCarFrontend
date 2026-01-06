@@ -147,7 +147,7 @@ export class ChatApi {
    * Get user's chats
    */
   async getMyChats(page: number = 0, size: number = 20): Promise<any> {
-    const response = await apiClient.get<any>(`/api/v2/chat/rooms?page=${page}&size=${size}`);
+    const response = await apiClient.get<any>(`/api/chat/rooms?page=${page}&size=${size}`);
     return response.data;
   }
 
@@ -156,7 +156,7 @@ export class ChatApi {
    */
   async getChat(chatId: number): Promise<any> {
     const response = await apiClient.get<any>(
-      `/api/v2/chat/rooms/${chatId}`
+      `/api/chat/rooms/${chatId}`
     );
     return response.data;
   }
@@ -166,7 +166,7 @@ export class ChatApi {
    */
   async createPrivateChat(request: CreatePrivateChatRequest): Promise<any> {
     const response = await apiClient.post<any>(
-      '/api/v2/chat/private',
+      '/api/chat/private',
       request
     );
     return response.data;
@@ -177,7 +177,7 @@ export class ChatApi {
    */
   async createGroupChat(request: CreateChatRequest): Promise<any> {
     const response = await apiClient.post<any>(
-      '/api/v2/chat/group',
+      '/api/chat/group',
       request
     );
     return response.data;
@@ -188,7 +188,7 @@ export class ChatApi {
    */
   async addParticipants(chatId: number, request: AddParticipantRequest): Promise<void> {
     await apiClient.post(
-      `/api/v2/chat/rooms/${chatId}/participants`,
+      `/api/chat/rooms/${chatId}/participants`,
       request
     );
   }
@@ -198,7 +198,7 @@ export class ChatApi {
    */
   async removeParticipant(chatId: number, userId: number): Promise<void> {
     await apiClient.delete(
-      `/api/v2/chat/rooms/${chatId}/participants/${userId}`
+      `/api/chat/rooms/${chatId}/participants/${userId}`
     );
   }
 
@@ -206,7 +206,7 @@ export class ChatApi {
    * Leave chat
    */
   async leaveChat(chatId: number): Promise<void> {
-    await apiClient.post(`/api/v2/chat/rooms/${chatId}/leave`);
+    await apiClient.post(`/api/chat/rooms/${chatId}/leave`);
   }
 
   /**
@@ -214,7 +214,7 @@ export class ChatApi {
    */
   async getChatParticipants(chatId: number): Promise<any[]> {
     const response = await apiClient.get<any>(
-      `/api/v2/chat/rooms/${chatId}/participants`
+      `/api/chat/rooms/${chatId}/participants`
     );
     return response.data;
   }
@@ -231,7 +231,7 @@ export class ChatApi {
     page: number = 0, 
     size: number = 50
   ): Promise<any> {
-    const response = await apiClient.get<any>(`/api/v2/chat/rooms/${chatId}/messages?page=${page}&size=${size}`);
+    const response = await apiClient.get<any>(`/api/chat/rooms/${chatId}/messages?page=${page}&size=${size}`);
     return response.data;
   }
 
@@ -240,7 +240,7 @@ export class ChatApi {
    */
   async sendMessage(chatId: number, request: SendMessageRequest): Promise<any> {
     const response = await apiClient.post<any>(
-      `/api/v2/chat/rooms/${chatId}/messages`,
+      `/api/chat/rooms/${chatId}/messages`,
       request
     );
     return response.data;
@@ -251,7 +251,7 @@ export class ChatApi {
    */
   async editMessage(messageId: number, request: EditMessageRequest): Promise<any> {
     const response = await apiClient.put<any>(
-      `/api/v2/chat/messages/${messageId}`,
+      `/api/chat/messages/${messageId}`,
       request
     );
     return response.data;
@@ -261,7 +261,7 @@ export class ChatApi {
    * Delete message
    */
   async deleteMessage(messageId: number): Promise<void> {
-    await apiClient.delete(`/api/v2/chat/messages/${messageId}`);
+    await apiClient.delete(`/api/chat/messages/${messageId}`);
   }
 
   /**
@@ -274,7 +274,7 @@ export class ChatApi {
     size: number = 20
   ): Promise<any> {
     const response = await apiClient.get<any>(
-      `/api/v2/chat/rooms/${chatId}/search?query=${encodeURIComponent(query)}&page=${page}&size=${size}`
+      `/api/chat/rooms/${chatId}/search?query=${encodeURIComponent(query)}&page=${page}&size=${size}`
     );
     return response.data;
   }
@@ -283,7 +283,7 @@ export class ChatApi {
    * Get media messages in chat
    */
   async getMediaMessages(chatId: number, page: number = 0, size: number = 20): Promise<any> {
-    const response = await apiClient.get<any>(`/api/v2/chat/rooms/${chatId}/media?page=${page}&size=${size}`);
+    const response = await apiClient.get<any>(`/api/chat/rooms/${chatId}/media?page=${page}&size=${size}`);
     return response.data;
   }
 
@@ -296,21 +296,21 @@ export class ChatApi {
    */
   async markAsRead(chatId: number, messageIds?: number[]): Promise<void> {
     const body = messageIds ? { messageIds } : undefined;
-    await apiClient.post(`/api/v2/chat/rooms/${chatId}/messages/read`, body);
+    await apiClient.post(`/api/chat/rooms/${chatId}/messages/read`, body);
   }
 
   /**
    * Mark message as delivered
    */
   async markAsDelivered(messageId: number): Promise<void> {
-    await apiClient.post(`/api/v2/chat/messages/${messageId}/delivered`);
+    await apiClient.post(`/api/chat/messages/${messageId}/delivered`);
   }
 
   /**
    * Bulk mark messages as delivered
    */
   async bulkMarkAsDelivered(messageIds: number[]): Promise<void> {
-    await apiClient.post('/api/v2/chat/messages/bulk-delivered', {
+    await apiClient.post('/api/chat/messages/bulk-delivered', {
       messageIds
     });
   }
@@ -320,7 +320,7 @@ export class ChatApi {
    */
   async getDeliveryStats(messageId: number): Promise<any> {
     const response = await apiClient.get<any>(
-      `/api/v2/chat/messages/${messageId}/delivery-stats`
+      `/api/chat/messages/${messageId}/delivery-stats`
     );
     return response.data;
   }
@@ -329,7 +329,7 @@ export class ChatApi {
    * Get message status
    */
   async getMessageStatus(messageId: number): Promise<any> {
-    const response = await apiClient.get<any>(`/api/v2/chat/messages/${messageId}/status`);
+    const response = await apiClient.get<any>(`/api/chat/messages/${messageId}/status`);
     return response.data;
   }
 
@@ -342,7 +342,7 @@ export class ChatApi {
    */
   async getUnreadCount(): Promise<any> {
     const response = await apiClient.get<any>(
-      '/api/v2/chat/unread-count'
+      '/api/chat/unread-count'
     );
     return response.data;
   }
@@ -352,7 +352,7 @@ export class ChatApi {
    */
   async getUnreadCountByChat(): Promise<any> {
     const response = await apiClient.get<any>(
-      '/api/v2/chat/rooms/unread-count'
+      '/api/chat/rooms/unread-count'
     );
     return response.data;
   }
@@ -366,7 +366,7 @@ export class ChatApi {
    */
   async getOnlineUsers(chatId: number): Promise<any> {
     const response = await apiClient.get<any>(
-      `/api/v2/chat/${chatId}/online-users`
+      `/api/chat/${chatId}/online-users`
     );
     return response.data;
   }
@@ -375,7 +375,7 @@ export class ChatApi {
    * Update user status
    */
   async updateUserStatus(status: 'ONLINE' | 'AWAY' | 'BUSY' | 'OFFLINE', customStatus?: string): Promise<void> {
-    await apiClient.post('/api/v2/chat/user-status', {
+    await apiClient.post('/api/chat/user-status', {
       status,
       customStatus
     });
@@ -389,7 +389,7 @@ export class ChatApi {
    * Upload file for message
    */
   async uploadFile(chatId: number, file: FormData): Promise<any> {
-    const response = await apiClient.post<any>(`/api/v2/chat/rooms/${chatId}/messages/upload`, file, {
+    const response = await apiClient.post<any>(`/api/chat/rooms/${chatId}/messages/upload`, file, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -405,19 +405,18 @@ export class ChatApi {
    * Get dealer-only chats
    */
   async getDealerGroups(page: number = 0, size: number = 20): Promise<any> {
-    const response = await apiClient.get<any>(`/api/v2/chat/dealer-groups?page=${page}&size=${size}`);
+    const response = await apiClient.get<any>(`/api/chat/dealer-groups?page=${page}&size=${size}`);
     return response.data;
   }
 
   /**
    * Create car inquiry chat
    */
-  async createCarInquiryChat(carId: number, sellerId: number, message: string): Promise<any> {
+  async createCarInquiryChat(carId: number, message: string): Promise<any> {
     const response = await apiClient.post<any>(
-      '/api/v2/chat/car-inquiry',
+      '/api/chat/car-inquiry',
       {
         carId,
-        sellerId,
         message
       }
     );
@@ -429,7 +428,7 @@ export class ChatApi {
    */
   async getCarChats(carId: number): Promise<any> {
     const response = await apiClient.get<any>(
-      `/api/v2/chat/car/${carId}`
+      `/api/chat/car/${carId}`
     );
     return response.data;
   }
@@ -443,7 +442,7 @@ export class ChatApi {
    */
   async searchChats(query: string): Promise<any> {
     const response = await apiClient.get<any>(
-      `/api/v2/chat/search?query=${encodeURIComponent(query)}`
+      `/api/chat/search?query=${encodeURIComponent(query)}`
     );
     return response.data;
   }
@@ -453,7 +452,7 @@ export class ChatApi {
    */
   async getPopularChats(): Promise<any> {
     const response = await apiClient.get<any>(
-      '/api/v2/chat/popular'
+      '/api/chat/popular'
     );
     return response.data;
   }
@@ -466,7 +465,7 @@ export class ChatApi {
    * Get chat statistics
    */
   async getChatStatistics(chatId: number): Promise<any> {
-    const response = await apiClient.get<any>(`/api/v2/chat/${chatId}/statistics`);
+    const response = await apiClient.get<any>(`/api/chat/${chatId}/statistics`);
     return response.data;
   }
 }
