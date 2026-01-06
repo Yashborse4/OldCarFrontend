@@ -21,7 +21,7 @@ interface AuthContextType {
   register: (userData: {
     username: string;
     email: string;
-    password: string;
+    password?: string;
     role?: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
@@ -128,7 +128,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (userData: {
     username: string;
     email: string;
-    password: string;
+    password?: string;
+    role?: string;
   }) => {
     try {
       setIsLoading(true);
@@ -140,17 +141,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const authData = await apiClient.register(userData);
 
       console.log('✅ Registration successful for user:', authData.username);
-
-      setUser({
-        userId: authData.userId,
-        username: authData.username,
-        email: authData.email,
-        role: authData.role,
-        location: authData.location,
-        emailVerified: authData.emailVerified,
-        verifiedDealer: authData.verifiedDealer,
-      });
-      setIsAuthenticated(true);
     } catch (error) {
       console.error('❌ Registration failed:', error);
 
@@ -251,14 +241,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const refreshUserData = async () => {
     try {
-      if (isAuthenticated) {
-        const validation = await apiClient.validateToken();
-        if (validation.valid && validation.userDetails) {
-          setUser(validation.userDetails);
-        } else {
-          // Token expired, log out
-          await logout();
-        }
+      const validation = await apiClient.validateToken();
+      if (validation.valid && validation.userDetails) {
+        setUser(validation.userDetails);
+        setIsAuthenticated(true);
+      } else {
+        await logout();
       }
     } catch (error) {
       console.error('Failed to refresh user data:', error);
@@ -346,5 +334,3 @@ export const useAuth = (): AuthContextType => {
 };
 
 export default AuthContext;
-
-

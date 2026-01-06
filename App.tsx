@@ -12,7 +12,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, ActivityIndicator, StatusBar, useColorScheme as useDeviceColorScheme } from 'react-native';
 import AppNavigator from './src/navigation/AppNavigator';
-import { isUserAuthorized } from './src/services/auth';
+import { getAuthStatusWithRole } from './src/services/auth';
 import { RootStackParamList } from './src/navigation/types';
 import { AuthProvider } from './src/context/AuthContext';
 import { ChatProvider } from './src/context/ChatContext';
@@ -20,6 +20,7 @@ import { ToastProvider } from './src/components/ui/ToastManager';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { ApolloProvider } from '@apollo/client/react';
 import { client } from './src/services/graphql';
+import { AnalyticsService } from './src/services/AnalyticsService';
 
 function App() {
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
@@ -27,8 +28,23 @@ function App() {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const authorized = await isUserAuthorized();
-        setInitialRoute(authorized ? 'Dashboard' : 'Login');
+        // Initialize analytics
+        await AnalyticsService.initialize();
+        AnalyticsService.track('APP_OPEN');
+
+        const { isAuthorized, role } = await getAuthStatusWithRole();
+
+        if (!isAuthorized) {
+          setInitialRoute('Login');
+          return;
+        }
+
+        // Route to appropriate dashboard based on role
+        if (role === 'dealer') {
+          setInitialRoute('DealerDashboard');
+        } else {
+          setInitialRoute('Dashboard');
+        }
       } catch (error) {
         console.error('Auth status check failed:', error);
         setInitialRoute('Login');
@@ -36,6 +52,11 @@ function App() {
     };
 
     checkAuthStatus();
+
+    // Cleanup: end session when app unmounts
+    return () => {
+      AnalyticsService.endSession();
+    };
   }, []);
 
   if (!initialRoute) {
@@ -49,8 +70,8 @@ function App() {
   return (
     <SafeAreaProvider>
 
-      <ToastProvider>
-        <ThemeProvider>
+      <ThemeProvider>
+        <ToastProvider>
           <AuthProvider>
             <ChatProvider>
               <ApolloProvider client={client}>
@@ -58,8 +79,8 @@ function App() {
               </ApolloProvider>
             </ChatProvider>
           </AuthProvider>
-        </ThemeProvider>
-      </ToastProvider>
+        </ToastProvider>
+      </ThemeProvider>
 
     </SafeAreaProvider>
   );

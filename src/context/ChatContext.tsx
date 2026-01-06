@@ -359,8 +359,9 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       // Mark messages as read when opening conversation
       const conversation = state.conversations.find(conv => conv.id === conversationId);
       if (conversation && conversation.unreadCount > 0) {
+        const currentUserId = user?.userId?.toString();
         const unreadMessageIds = conversation.messages
-          .filter(msg => !msg.isRead && msg.senderId !== user?.userId)
+          .filter(msg => !msg.isRead && msg.senderId !== currentUserId)
           .map(msg => msg.id);
 
         if (unreadMessageIds.length > 0) {
@@ -395,7 +396,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         id: Date.now().toString(),
         text,
         timestamp: new Date(),
-        senderId: user?.userId || 'current_user',
+        senderId: user?.userId?.toString() || 'current_user',
         senderName: user?.username || 'You',
         type: 'text',
         isRead: false,
@@ -439,7 +440,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         id: Date.now().toString(),
         text: '',
         timestamp: new Date(),
-        senderId: user?.userId || 'current_user',
+        senderId: user?.userId?.toString() || 'current_user',
         senderName: user?.username || 'You',
         type: 'image',
         imageUrl: imageUri,
@@ -462,8 +463,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         id: Date.now().toString(),
         text: 'My Location',
         timestamp: new Date(),
-        senderId: user?.id || 'current_user',
-        senderName: user?.name || 'You',
+        senderId: (user?.userId ?? user?.id)?.toString() || 'current_user',
+        senderName: user?.username || user?.name || 'You',
         type: 'location',
         locationData: { latitude, longitude, address },
         isRead: false,
@@ -496,8 +497,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         id: Date.now().toString(),
         text: '',
         timestamp: new Date(),
-        senderId: user?.id || 'current_user',
-        senderName: user?.name || 'You',
+        senderId: (user?.userId ?? user?.id)?.toString() || 'current_user',
+        senderName: user?.username || user?.name || 'You',
         type: 'car_share',
         carData,
         isRead: false,
@@ -521,10 +522,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
   // Typing indicators
   const startTyping = (conversationId: string) => {
-    if (user?.id) {
+    if (user?.userId ?? user?.id) {
+      const currentUserId = (user.userId ?? user.id).toString();
       dispatch({
         type: 'SET_TYPING',
-        payload: { conversationId, userId: user.userId, isTyping: true }
+        payload: { conversationId, userId: currentUserId, isTyping: true }
       });
 
       // TODO: Send typing status via WebSocket
@@ -532,10 +534,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   };
 
   const stopTyping = (conversationId: string) => {
-    if (user?.userId) {
+    if (user?.userId ?? user?.id) {
+      const currentUserId = (user.userId ?? user.id).toString();
       dispatch({
         type: 'SET_TYPING',
-        payload: { conversationId, userId: user.userId, isTyping: false }
+        payload: { conversationId, userId: currentUserId, isTyping: false }
       });
 
       // TODO: Send typing status via WebSocket
