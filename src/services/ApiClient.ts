@@ -12,7 +12,7 @@ import NetInfo from '@react-native-community/netinfo';
 // API Configuration
 const API_CONFIG = {
 
-  baseURL: 'http://192.168.1.10:9000', // Use your server's IP address
+  baseURL: 'http://192.168.1.4:9000', // Use your server's IP address
   timeout: 15000, // Increased timeout for better mobile network handling
   headers: {
     'Content-Type': 'application/json',
@@ -46,6 +46,8 @@ export interface ApiErrorResponse {
   details: string;
   path: string;
   errorCode: string;
+  errorType?: string; // EMAIL_NOT_VERIFIED, DEALER_NOT_VERIFIED, etc.
+  redirectTo?: string; // Suggested redirect screen
   fieldErrors?: { [key: string]: string };
   data?: any;
 }
@@ -93,6 +95,8 @@ export interface UserData {
 // Custom error class for API errors
 export class ApiError extends Error {
   public errorCode: string;
+  public errorType?: string;
+  public redirectTo?: string;
   public details: string;
   public path: string;
   public fieldErrors?: { [key: string]: string };
@@ -100,14 +104,30 @@ export class ApiError extends Error {
   public data?: any;
 
   constructor(response: ApiErrorResponse, status: number = 500) {
-    super(response.details || response.message);
+    // Safely extract message without format string interpretation
+    const safeMessage = String(response?.details ?? response?.message ?? 'Unexpected error');
+    super(safeMessage);
     this.name = 'ApiError';
-    this.errorCode = response.errorCode;
-    this.details = response.details;
-    this.path = response.path;
-    this.fieldErrors = response.fieldErrors;
+    this.errorCode = response?.errorCode ?? 'UNKNOWN_ERROR';
+    this.errorType = response?.errorType;
+    this.redirectTo = response?.redirectTo;
+    this.details = String(response?.details ?? '');
+    this.path = String(response?.path ?? '');
+    this.fieldErrors = response?.fieldErrors;
     this.status = status;
-    this.data = response.data;
+    this.data = response?.data;
+  }
+
+  /** Check if error is due to pending verification (email or dealer) */
+  get isVerificationPending(): boolean {
+    return (
+      this.errorType === 'EMAIL_NOT_VERIFIED' ||
+      this.errorType === 'DEALER_NOT_VERIFIED' ||
+      this.errorType === 'EMAIL_PENDING' ||
+      this.errorType === 'DEALER_PENDING' ||
+      this.errorCode === 'EMAIL_NOT_VERIFIED' ||
+      this.errorCode === 'DEALER_NOT_VERIFIED'
+    );
   }
 }
 
@@ -233,26 +253,69 @@ class ApiClient {
   }
 
   private setupInterceptors() {
-    // Request interceptor - Add auth token to requests
+    // Request interceptor - Add auth token and validate authentication
     this.instance.interceptors.request.use(
       async (config: InternalAxiosRequestConfig) => {
-        // Skip adding JWT token for public auth endpoints (login, register)
+        // Skip auth validation for public auth endpoints (login, register, etc.)
         const publicEndpoints = [
           '/api/auth/login',
           '/api/auth/register',
           '/api/auth/refresh-token',
-          '/api/auth/forgot-password',
-          '/api/auth/reset-password',
+          '/api/auth/otp/send',
+          '/api/auth/email/verify/confirm',
+          '/api/auth/login/otp/confirm',
+          '/api/auth/password/reset',
         ];
         const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
 
         if (!isPublicEndpoint) {
           try {
+            // Check if user is authenticated by validating token exists
             const token = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-            if (token && config.headers) {
+            const userDataStr = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+
+            if (!token) {
+              // No token available, block the request
+              throw new ApiError({
+                message: 'Authentication required. Please log in to continue.',
+                errorType: 'AUTHENTICATION_REQUIRED',
+                timestamp: new Date().toISOString(),
+                details: 'Authentication required. Please log in to continue.',
+                path: '/api/auth/validate',
+                errorCode: 'NO_TOKEN',
+                redirectTo: 'Login'
+              }, 401);
+            }
+
+            // Check if email is verified (if user data is available)
+            if (userDataStr) {
+              try {
+                const userData = JSON.parse(userDataStr);
+                if (userData.emailVerified === false) {
+                  // Email not verified, block the request
+                  throw new ApiError({
+                    message: 'Email verification required. Please verify your email to continue.',
+                    errorType: 'EMAIL_NOT_VERIFIED',
+                    errorCode: 'EMAIL_VERIFICATION_REQUIRED',
+                    redirectTo: 'EmailVerificationScreen',
+                    details: `User ${userData.email} has not verified their email address.`,
+                    timestamp: new Date().toISOString(),
+                    path: '/api/auth/validate',
+                  }, 401);
+                }
+              } catch (parseError) {
+                console.warn('Failed to parse user data for email verification check:', parseError);
+              }
+            }
+
+            // Add authorization header
+            if (config.headers) {
               config.headers.Authorization = `Bearer ${token}`;
             }
           } catch (error) {
+            if (error instanceof ApiError) {
+              throw error;
+            }
             console.warn('Failed to get access token:', error);
           }
         }
@@ -287,6 +350,21 @@ class ApiClient {
 
         // Handle 401 errors and token refresh
         if (error.response?.status === 401 && !originalRequest._retry && !isRefreshEndpoint && !isLoginEndpoint) {
+          // Check if it's an email/dealer verification issue - NOT a token issue
+          const errorType = error.response?.data?.errorType || error.response?.data?.errorCode;
+          const isVerificationPending =
+            errorType === 'EMAIL_NOT_VERIFIED' ||
+            errorType === 'DEALER_NOT_VERIFIED' ||
+            errorType === 'EMAIL_PENDING' ||
+            errorType === 'DEALER_PENDING';
+
+          if (isVerificationPending) {
+            // Don't treat verification pending as auth failure
+            // Just throw the error with context - don't clear tokens
+            const apiError = new ApiError(error.response.data, error.response.status);
+            throw apiError;
+          }
+
           if (this.isRefreshing) {
             // Queue the request if token refresh is in progress
             return new Promise((resolve, reject) => {
@@ -331,9 +409,29 @@ class ApiClient {
           }
         }
 
-        // Handle other errors
+        // Handle other errors - Preserve backend error messages and structure
         if (error.response?.data) {
-          throw new ApiError(error.response.data, error.response.status);
+          // Preserve the original backend error structure and message
+          const backendError = error.response.data;
+
+          // Create ApiError with preserved backend data
+          const apiError = new ApiError(
+            {
+              timestamp: backendError.timestamp || new Date().toISOString(),
+              message: backendError.message || 'An error occurred',
+              details: backendError.details || error.message,
+              path: backendError.path || originalRequest?.url || '',
+              errorCode: backendError.errorCode || 'UNKNOWN_ERROR',
+              errorType: backendError.errorType,
+              redirectTo: backendError.redirectTo,
+              fieldErrors: backendError.fieldErrors,
+              // Preserve any additional backend error fields
+              ...backendError
+            },
+            error.response.status
+          );
+
+          throw apiError;
         } else if (error.request) {
           // Check if it's a network connectivity issue
           const isOnline = await this.checkNetworkConnectivity();
@@ -442,6 +540,24 @@ class ApiClient {
       );
 
       const authData = response.data.data;
+
+      // CRITICAL FIX: Check if email is verified before saving auth data
+      if (!authData.emailVerified) {
+        console.warn('Login attempted with unverified email for user:', authData.username);
+        // Don't save auth tokens when email is not verified
+        // This prevents the cascading failures mentioned in the analysis
+        throw new ApiError({
+          message: 'Email is not verified. A verification code has been sent to your email.',
+          timestamp: new Date().toISOString(),
+          details: 'Email verification required before login',
+          path: '/api/auth/login',
+          errorCode: 'EMAIL_NOT_VERIFIED',
+          errorType: 'EMAIL_NOT_VERIFIED',
+          redirectTo: 'EMAIL_VERIFICATION'
+
+        }, 401);
+      }
+
       await this.saveAuthData(authData);
 
       console.log('Login successful for user:', authData.username);
@@ -605,6 +721,18 @@ class ApiClient {
 
     if (error.response?.data) {
       const apiError = error.response.data;
+
+      // CRITICAL FIX: Handle Email Not Verified error specifically
+      if (error.response.status === 401 &&
+        (apiError.message?.includes('Email is not verified') ||
+          apiError.errorType === 'EMAIL_NOT_VERIFIED')) {
+        return new ApiError({
+          ...apiError,
+          message: apiError.message || 'Email is not verified. Please verify your email before logging in.',
+          errorType: 'EMAIL_NOT_VERIFIED',
+          redirectTo: 'EMAIL_VERIFICATION'
+        }, 401);
+      }
 
       // Handle field validation errors
       if (apiError.fieldErrors) {

@@ -3,6 +3,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from './ApiClient';
 
+// Auth status for partial authentication states
+export type AuthStatus = 'LOGGED_OUT' | 'EMAIL_PENDING' | 'DEALER_PENDING' | 'FULL_ACCESS';
+
 // Types for authentication
 export interface User {
     id: string;
@@ -13,6 +16,7 @@ export interface User {
     role: 'user' | 'dealer' | 'admin';
     emailVerified: boolean;
     phoneVerified: boolean;
+    verifiedDealer?: boolean; // For dealer verification status
     createdAt: string;
     updatedAt: string;
 }
@@ -75,7 +79,7 @@ class AuthService {
      */
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
         try {
-            const response = await apiClient.post<AuthResponse>('/auth/login', {
+            const response = await apiClient.post<AuthResponse>('/api/auth/login', {
                 usernameOrEmail: credentials.usernameOrEmail.trim().toLowerCase(),
                 password: credentials.password,
                 deviceInfo: await this.getDeviceInfo(),
@@ -99,7 +103,7 @@ class AuthService {
             // Client-side validation
             this.validateRegistrationCredentials(credentials);
 
-            const response = await apiClient.post<AuthResponse>('/auth/register', {
+            const response = await apiClient.post<AuthResponse>('/api/auth/register', {
                 ...credentials,
                 email: credentials.email.trim().toLowerCase(),
                 deviceInfo: await this.getDeviceInfo(),
@@ -124,7 +128,7 @@ class AuthService {
 
             if (refreshToken) {
                 // Notify server about logout to invalidate tokens
-                await apiClient.post('/auth/logout', { refreshToken }).catch(() => {
+                await apiClient.post('/api/auth/logout', { refreshToken }).catch(() => {
                     // Ignore logout API errors as we're clearing local data anyway
                 });
             }
@@ -140,7 +144,7 @@ class AuthService {
      */
     async forgotPassword(request: ForgotPasswordRequest): Promise<{ message: string }> {
         try {
-            const response = await apiClient.post<{ message: string }>('/auth/forgot-password', {
+            const response = await apiClient.post<{ message: string }>('/api/auth/forgot-password', {
                 email: request.email.trim().toLowerCase(),
             });
 
@@ -160,7 +164,7 @@ class AuthService {
                 throw new Error('Passwords do not match');
             }
 
-            const response = await apiClient.post<{ message: string }>('/auth/reset-password', {
+            const response = await apiClient.post<{ message: string }>('/api/auth/reset-password', {
                 token: request.token,
                 password: request.password,
             });
@@ -222,8 +226,9 @@ class AuthService {
             const now = Date.now();
             const expiryTime = parseInt(expiry, 10);
 
-            // If token expires in less than 2 minutes, refresh it
-            if (expiryTime - now < 2 * 60 * 1000) {
+            // If token expires in less than 1 week, refresh it proactively
+            const oneWeekInMs = 7 * 24 * 60 * 60 * 1000; // 604800000 ms
+            if (expiryTime - now < oneWeekInMs) {
                 try {
                     const newTokens = await this.refreshAccessToken();
                     return newTokens.accessToken;
@@ -260,12 +265,57 @@ class AuthService {
     }
 
     /**
+     * Get current auth status for partial authentication support
+     * Returns: LOGGED_OUT | EMAIL_PENDING | DEALER_PENDING | FULL_ACCESS
+     */
+    
+    async getAuthStatus(): Promise<AuthStatus> {
+        try {
+            const token = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+            if (!token) return 'LOGGED_OUT';
+
+            const user = await this.getCurrentUser();
+            if (!user) return 'LOGGED_OUT';
+
+            // Check email verification
+            if (!user.emailVerified) return 'EMAIL_PENDING';
+
+            // Check dealer verification (for dealer role)
+            if (user.role === 'dealer' && !user.verifiedDealer) return 'DEALER_PENDING';
+
+            return 'FULL_ACCESS';
+        } catch (error) {
+            console.error('Failed to get auth status:', error);
+            return 'LOGGED_OUT';
+        }
+    }
+
+    /**
+     * Check if user can perform action based on auth status
+     * Actions like publishing cars require FULL_ACCESS
+     * Dashboard and analytics are allowed for EMAIL_PENDING and DEALER_PENDING
+     */
+    async canPerformAction(action: 'publish' | 'dashboard' | 'analytics'): Promise<boolean> {
+        const status = await this.getAuthStatus();
+
+        switch (action) {
+            case 'publish':
+                return status === 'FULL_ACCESS';
+            case 'dashboard':
+            case 'analytics':
+                return status !== 'LOGGED_OUT';
+            default:
+                return status === 'FULL_ACCESS';
+        }
+    }
+
+    /**
      * Verify email
      */
     async verifyEmail(token: string): Promise<{ message: string }> {
         try {
-            const response = await apiClient.post<{ message: string }>('/auth/verify-email', {
-                token,
+            const response = await apiClient.post<{ message: string }>('/api/auth/verify-email', {
+                token: token,
             });
 
             // Update user data to reflect email verification
@@ -287,7 +337,7 @@ class AuthService {
      */
     async updateProfile(updates: Partial<User>): Promise<User> {
         try {
-            const response = await apiClient.patch<{ user: User }>('/auth/profile', updates);
+            const response = await apiClient.patch<{ user: User }>('/api/auth/profile', updates);
 
             // Update stored user data
             await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.data.user));
@@ -304,7 +354,7 @@ class AuthService {
      */
     async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
         try {
-            const response = await apiClient.post<{ message: string }>('/auth/change-password', {
+            const response = await apiClient.post<{ message: string }>('/api/auth/change-password', {
                 currentPassword,
                 newPassword,
             });
@@ -348,15 +398,17 @@ class AuthService {
             throw new Error('Refresh token expired');
         }
 
-        const response = await apiClient.post<{ tokens: AuthTokens }>('/auth/refresh', {
-            refreshToken,
-            deviceInfo: await this.getDeviceInfo(),
-        });
+        // Use apiClient.refreshAccessToken() which properly saves tokens
+        const authTokens = await apiClient.refreshAccessToken(refreshToken);
 
-        const tokens = response.data.tokens;
-        await this.storeTokens(tokens);
-
-        return tokens;
+        // Map to our AuthTokens format
+        return {
+            accessToken: authTokens.accessToken,
+            refreshToken: authTokens.refreshToken,
+            tokenType: 'Bearer',
+            expiresIn: authTokens.expiresIn,
+            refreshExpiresIn: authTokens.refreshExpiresIn,
+        };
     }
 
     private async storeAuthData(authData: AuthResponse): Promise<void> {
@@ -408,8 +460,10 @@ class AuthService {
             clearTimeout(this.refreshTokenTimeoutId);
         }
 
-        // Schedule refresh 2 minutes before token expires
-        const refreshTime = Math.max((expiresInSeconds - 120) * 1000, 60000); // At least 1 minute
+        // Schedule refresh 1 week (604800 seconds) before token expires
+        // This ensures the token is refreshed well before the 2-week expiration
+        const oneWeekInSeconds = 7 * 24 * 60 * 60; // 604800 seconds
+        const refreshTime = Math.max((expiresInSeconds - oneWeekInSeconds) * 1000, 60000); // At least 1 minute
 
         this.refreshTokenTimeoutId = setTimeout(() => {
             this.refreshAccessToken().catch((error) => {
