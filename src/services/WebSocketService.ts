@@ -6,9 +6,9 @@ import { Message, UserStatus, TypingIndicator, UnreadCount, DeliveryStats } from
 
 // WebSocket message types
 export interface WSMessage {
-  type: 'MESSAGE' | 'MESSAGE_EDITED' | 'MESSAGE_DELETED' | 'MESSAGE_STATUS_UPDATE' | 
-        'TYPING_INDICATOR' | 'USER_STATUS_CHANGE' | 'UNREAD_COUNT_UPDATE' | 
-        'ERROR' | 'CONNECTION_STATUS' | 'DELIVERY_RECEIPT' | 'READ_RECEIPT';
+  type: 'MESSAGE' | 'MESSAGE_EDITED' | 'MESSAGE_DELETED' | 'MESSAGE_STATUS_UPDATE' |
+  'TYPING_INDICATOR' | 'USER_STATUS_CHANGE' | 'UNREAD_COUNT_UPDATE' |
+  'ERROR' | 'CONNECTION_STATUS' | 'DELIVERY_RECEIPT' | 'READ_RECEIPT';
   data: any;
   chatId?: number;
   userId?: number;
@@ -58,11 +58,12 @@ class WebSocketService {
   };
 
   // Base URL for WebSocket connection
-  private readonly wsBaseUrl = __DEV__ 
+  private readonly wsBaseUrl = __DEV__
     ? 'http://localhost:9000' : 'https://your-production-api.com';
 
   constructor() {
-    this.initializeClient();
+    // Defer client initialization until first connection attempt
+    // This prevents WebSocket from being initialized before authentication
   }
 
   // =====================================
@@ -73,7 +74,7 @@ class WebSocketService {
     try {
       this.client = new Client({
         brokerURL: `${this.wsBaseUrl}/ws`,
-        
+
         // Use SockJS as fallback for better compatibility
         webSocketFactory: () => {
           return new SockJS(`${this.wsBaseUrl}/ws`);
@@ -104,7 +105,7 @@ class WebSocketService {
 
   private async getConnectHeaders(): Promise<Record<string, string>> {
     const headers: Record<string, string> = {};
-    
+
     try {
       const token = await AsyncStorage.getItem('@carworld_access_token');
       if (token) {
@@ -130,6 +131,26 @@ class WebSocketService {
       return;
     }
 
+    // Auth guard: Don't connect without a valid token
+    // Retry token check up to 3 times with increasing delays
+    let token = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      token = await AsyncStorage.getItem('@carworld_access_token');
+      if (token) {
+        break;
+      }
+
+      if (attempt < 3) {
+        console.log(`[WebSocket] Token not found, retrying in ${attempt * 100}ms (attempt ${attempt}/3)`);
+        await new Promise(resolve => setTimeout(resolve, attempt * 100));
+      }
+    }
+
+    if (!token) {
+      console.log('[WebSocket] Skipping connection - no auth token after 3 attempts');
+      return;
+    }
+
     this.isConnecting = true;
     this.notifyConnectionStatus();
 
@@ -152,8 +173,10 @@ class WebSocketService {
   }
 
   disconnect(): void {
-    console.log('Disconnecting WebSocket...');
-    
+    if (this.config.debug) {
+      console.log('[WebSocket] Disconnecting...');
+    }
+
     this.clearReconnectTimer();
     this.clearPingInterval();
     this.clearSubscriptions();
@@ -168,18 +191,90 @@ class WebSocketService {
     this.notifyConnectionStatus();
   }
 
+  /**
+   * Call this when access token is refreshed to update WebSocket connection
+   */
+  async onTokenRefresh(): Promise<void> {
+    if (this.isConnected && this.client) {
+      // Update headers with new token
+      this.client.connectHeaders = await this.getConnectHeaders();
+      console.log('[WebSocket] Token refreshed, headers updated');
+    } else {
+      // Try to reconnect with new token
+      this.reconnectAttempts = 0;
+      await this.connect();
+    }
+  }
+
+  /**
+   * Call this when authentication state changes
+   * Only connects if user is authenticated and email is verified
+   */
+  async onAuthStateChange(isAuthenticated: boolean, emailVerified?: boolean): Promise<void> {
+    if (this.config.debug) {
+      console.log(`[WebSocket] Auth state changed - authenticated: ${isAuthenticated}, emailVerified: ${emailVerified}`);
+    }
+
+    if (isAuthenticated && emailVerified !== false) {
+      // User is authenticated and email is verified (or verification status unknown)
+      if (this.config.debug) {
+        console.log('[WebSocket] User authenticated, connecting...');
+      }
+
+      // Add a small delay to ensure token is stored in AsyncStorage
+      // This prevents race condition where WebSocket tries to connect before token is available
+      setTimeout(async () => {
+        await this.connect();
+      }, 100);
+    } else if (!isAuthenticated) {
+      // User logged out or not authenticated - silently disconnect
+      this.onLogout();
+    } else if (emailVerified === false) {
+      // User authenticated but email not verified - silently disconnect
+      this.onLogout();
+    }
+  }
+
+  /**
+   * Call this on user logout to cleanup WebSocket
+   */
+  onLogout(): void {
+    this.disconnect();
+    this.client = null;
+  }
+
+  /**
+   * Initialize WebSocket connection after successful login
+   * This ensures WebSocket is only connected after auth is complete
+   */
+  async initializeAfterLogin(): Promise<void> {
+    console.log('[WebSocket] Initializing after successful login...');
+
+    // Wait a bit to ensure token is stored
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // Check if we have a token before attempting connection
+    const token = await AsyncStorage.getItem('@carworld_access_token');
+    if (token) {
+      console.log('[WebSocket] Token found, proceeding with connection');
+      await this.connect();
+    } else {
+      console.warn('[WebSocket] No token found after login, skipping connection');
+    }
+  }
+
   // =====================================
   // Event Handlers
   // =====================================
 
   private onConnect(frame: any): void {
     console.log('WebSocket connected:', frame);
-    
+
     this.isConnected = true;
     this.isConnecting = false;
     this.reconnectAttempts = 0;
     this.lastConnected = new Date();
-    
+
     this.clearReconnectTimer();
     this.startPingInterval();
     this.notifyConnectionStatus();
@@ -190,10 +285,10 @@ class WebSocketService {
 
   private onDisconnect(frame: any): void {
     console.log('WebSocket disconnected:', frame);
-    
+
     this.isConnected = false;
     this.isConnecting = false;
-    
+
     this.clearPingInterval();
     this.clearSubscriptions();
     this.notifyConnectionStatus();
@@ -206,10 +301,10 @@ class WebSocketService {
 
   private onStompError(error: any): void {
     console.error('WebSocket error:', error);
-    
+
     this.isConnecting = false;
     this.handleError(error);
-    
+
     if (!this.isConnected) {
       this.scheduleReconnect();
     }
@@ -454,7 +549,7 @@ class WebSocketService {
   private handleChatMessage(chatId: number, stompMessage: any): void {
     try {
       const data = JSON.parse(stompMessage.body);
-      
+
       const wsMessage: WSMessage = {
         type: 'MESSAGE',
         data,
@@ -471,7 +566,7 @@ class WebSocketService {
   private handleUserMessage(stompMessage: any): void {
     try {
       const data = JSON.parse(stompMessage.body);
-      
+
       const wsMessage: WSMessage = {
         type: data.type || 'MESSAGE',
         data,
@@ -487,7 +582,7 @@ class WebSocketService {
   private handleUserStatusUpdate(stompMessage: any): void {
     try {
       const data = JSON.parse(stompMessage.body);
-      
+
       const wsMessage: WSMessage = {
         type: 'USER_STATUS_CHANGE',
         data,
@@ -504,7 +599,7 @@ class WebSocketService {
   private handleTypingIndicator(chatId: number, stompMessage: any): void {
     try {
       const data = JSON.parse(stompMessage.body);
-      
+
       const wsMessage: WSMessage = {
         type: 'TYPING_INDICATOR',
         data,
@@ -622,7 +717,7 @@ class WebSocketService {
     this.clearReconnectTimer();
 
     const delay = this.config.reconnectDelay * Math.pow(2, this.reconnectAttempts); // Exponential backoff
-    
+
     console.log(`Scheduling reconnect attempt ${this.reconnectAttempts + 1} in ${delay}ms`);
 
     this.reconnectTimer = setTimeout(() => {
@@ -640,7 +735,7 @@ class WebSocketService {
 
   private startPingInterval(): void {
     this.clearPingInterval();
-    
+
     // Send ping every 30 seconds to keep connection alive
     this.pingInterval = setInterval(() => {
       if (this.isConnected && this.client) {

@@ -24,6 +24,7 @@ export type AnalyticsEventType =
 export type TargetType = 'CAR' | 'DEALER' | 'USER' | 'SCREEN' | 'SEARCH' | 'NOTIFICATION' | 'CHAT' | 'FUNNEL' | 'OTHER';
 
 interface AnalyticsEvent {
+    sessionId: string; // Required by backend
     eventType: AnalyticsEventType;
     targetType?: TargetType;
     targetId?: string;
@@ -52,6 +53,7 @@ const FLUSH_INTERVAL_MS = 30000; // 30 seconds
 const MIN_FLUSH_INTERVAL_MS = 5000; // Minimum 5 seconds between flushes
 const MAX_QUEUE_SIZE = 500; // Maximum events to store offline
 const RETRY_DELAY_MS = 10000; // 10 seconds retry delay
+const SESSION_AGGREGATION_INTERVAL_MS = 60000; // 1 minute for session aggregation
 
 /**
  * Analytics Service - Optimized for low-load batch insertion
@@ -78,6 +80,10 @@ class AnalyticsServiceClass {
     private appState: AppStateStatus = 'active';
     private isOnline: boolean = true;
     private recentEvents: Map<string, number> = new Map(); // For deduplication
+    
+    // Session aggregation data
+    private sessionAggregates: Map<string, number> = new Map();
+    private lastAggregationTime: number = 0;
 
     // =============== INITIALIZATION ===============
 
@@ -188,25 +194,30 @@ class AnalyticsServiceClass {
             console.debug('[Analytics] Not initialized, queuing:', eventType);
         }
 
-        // Deduplicate rapid identical events (within 500ms)
+        // Enhanced debouncing with 300-500ms window as requested
         const eventKey = `${eventType}_${targetType}_${targetId}`;
         const lastTime = this.recentEvents.get(eventKey);
         const now = Date.now();
 
-        if (lastTime && now - lastTime < 500) {
+        // Use 400ms as middle ground between 300-500ms requested
+        const DEBOUNCE_WINDOW = 400;
+        if (lastTime && now - lastTime < DEBOUNCE_WINDOW) {
+            console.debug(`[Analytics] Debounced duplicate event: ${eventKey}`);
             return; // Skip duplicate
         }
         this.recentEvents.set(eventKey, now);
 
         // Clean old dedup entries
         if (this.recentEvents.size > 100) {
-            const cutoff = now - 1000;
+            const cutoff = now - 2000; // Keep entries for 2 seconds
             for (const [key, time] of this.recentEvents) {
                 if (time < cutoff) this.recentEvents.delete(key);
             }
         }
 
+
         const event: AnalyticsEvent = {
+            sessionId: this.sessionId, // Include sessionId in each event
             eventType,
             targetType,
             targetId,
@@ -217,16 +228,20 @@ class AnalyticsServiceClass {
             clientTimestamp: new Date().toISOString(),
         };
 
-        this.eventQueue.push(event);
+        // Apply session aggregation
+        const aggregatedEvent = this.aggregateEvent(event);
+        if (aggregatedEvent) {
+            this.eventQueue.push(aggregatedEvent);
 
-        // Enforce max queue size
-        if (this.eventQueue.length > MAX_QUEUE_SIZE) {
-            this.eventQueue = this.eventQueue.slice(-MAX_QUEUE_SIZE);
-        }
+            // Enforce max queue size
+            if (this.eventQueue.length > MAX_QUEUE_SIZE) {
+                this.eventQueue = this.eventQueue.slice(-MAX_QUEUE_SIZE);
+            }
 
-        // Auto-flush if batch full
-        if (this.eventQueue.length >= BATCH_SIZE) {
-            this.flush();
+            // Auto-flush if batch full
+            if (this.eventQueue.length >= BATCH_SIZE) {
+                this.flush();
+            }
         }
     }
 
@@ -274,6 +289,59 @@ class AnalyticsServiceClass {
         this.track('ERROR', 'OTHER', errorCode, { message: errorMessage.substring(0, 200) });
     }
 
+    // =============== SESSION AGGREGATION ===============
+
+    /**
+     * Aggregate events within session to reduce server load
+     * This implements session-based batching as requested
+     */
+    private aggregateEvent(event: AnalyticsEvent): AnalyticsEvent | null {
+        const now = Date.now();
+        const aggregateKey = `${event.eventType}_${event.targetType}_${event.targetId}`;
+        
+        // Check if we should aggregate this event type
+        const shouldAggregate = [
+            'CAR_VIEW', 'CAR_IMAGES_VIEW', 'CAR_IMAGES_SWIPE',
+            'SEARCH_QUERY', 'SEARCH_SCROLL', 'SCREEN_VIEW'
+        ].includes(event.eventType);
+        
+        if (!shouldAggregate) {
+            return event; // Don't aggregate, send as-is
+        }
+        
+        // Aggregate within 1-minute windows
+        const timeWindow = Math.floor(now / SESSION_AGGREGATION_INTERVAL_MS);
+        const windowKey = `${aggregateKey}_${timeWindow}`;
+        
+        const existingCount = this.sessionAggregates.get(windowKey) || 0;
+        this.sessionAggregates.set(windowKey, existingCount + 1);
+        
+        // Clean old aggregates (older than 2 minutes)
+        const cutoffWindow = Math.floor((now - 120000) / SESSION_AGGREGATION_INTERVAL_MS);
+        for (const [key, count] of this.sessionAggregates) {
+            const keyWindow = parseInt(key.split('_').pop() || '0');
+            if (keyWindow < cutoffWindow) {
+                this.sessionAggregates.delete(key);
+            }
+        }
+        
+        // Only send the first event of each type per window, with count
+        if (existingCount === 0) {
+            return {
+                ...event,
+                metadata: {
+                    ...event.metadata,
+                    aggregated: true,
+                    count: 1
+                }
+            };
+        }
+        
+        // Skip subsequent events in the same window
+        console.debug(`[Analytics] Aggregated event: ${aggregateKey} (count: ${existingCount + 1})`);
+        return null;
+    }
+
     // =============== FLUSHING ===============
 
     async flush(): Promise<void> {
@@ -285,6 +353,15 @@ class AnalyticsServiceClass {
         if (now - this.lastFlushTime < MIN_FLUSH_INTERVAL_MS) return;
 
         if (this.eventQueue.length === 0) return;
+
+        // Auth guard: Skip flush if no access token (user not logged in)
+        const accessToken = await AsyncStorage.getItem('@carworld_access_token');
+        if (!accessToken) {
+            console.debug('[Analytics] Skipping flush - no auth token');
+            await this.persistQueue(); // Save for later
+            return;
+        }
+
         if (!this.isOnline) {
             await this.persistQueue();
             return;
@@ -389,6 +466,15 @@ class AnalyticsServiceClass {
 
     getQueueSize(): number {
         return this.eventQueue.length;
+    }
+
+    getStats(): { queueSize: number; sessionAggregates: number; recentEvents: number; sessionId: string } {
+        return {
+            queueSize: this.eventQueue.length,
+            sessionAggregates: this.sessionAggregates.size,
+            recentEvents: this.recentEvents.size,
+            sessionId: this.sessionId
+        };
     }
 }
 
