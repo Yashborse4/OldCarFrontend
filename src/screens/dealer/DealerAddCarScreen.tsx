@@ -31,19 +31,77 @@ interface Props {
   navigation: any;
 }
 
-// Car brands with icons
+// Brand logo imports
+const BRAND_LOGOS: Record<string, any> = {
+  maruti: require('../../../assets/brand/Suzuki.png'),
+  hyundai: require('../../../assets/brand/hyndai.png'),
+  tata: require('../../../assets/brand/tata.png'),
+  mahindra: require('../../../assets/brand/Mahindra-Logo-2012.png'),
+  honda: require('../../../assets/brand/Honda-Logo.png'),
+  toyota: require('../../../assets/brand/toyta.png'),
+  kia: require('../../../assets/brand/Kia.png'),
+  mg: require('../../../assets/brand/MG.png'),
+  skoda: require('../../../assets/brand/skoda.jpg'),
+  volkswagen: require('../../../assets/brand/VW.png'),
+  nissan: require('../../../assets/brand/nissan.png'),
+  jeep: require('../../../assets/brand/jeep.png'),
+  jaguar: require('../../../assets/brand/jaguar.png'),
+  volvo: require('../../../assets/brand/volvo.png'),
+  mitsubishi: require('../../../assets/brand/MITSUBISHI.png'),
+  chevrolet: require('../../../assets/brand/chevrolet.png'),
+  landrover: require('../../../assets/brand/land_rover.png'),
+  renault: require('../../../assets/brand/renault.png'),
+  // New brands
+  bmw: require('../../../assets/brand/bmw.png'),
+  audi: require('../../../assets/brand/audi.png'),
+  citroen: require('../../../assets/brand/citroen.png'),
+  datsun: require('../../../assets/brand/datsun.png'),
+  fiat: require('../../../assets/brand/fiat.png'),
+  force: require('../../../assets/brand/force.png'),
+  ford: require('../../../assets/brand/ford.png'),
+  lexus: require('../../../assets/brand/lexus.png'),
+  mercedes: require('../../../assets/brand/mercedes.png'),
+  mini: require('../../../assets/brand/mini.png'),
+  ferrari: require('../../../assets/brand/ferrari.png'),
+  tataev: require('../../../assets/brand/tataev.png'),
+};
+
+
+// Car brands with logos
 const CAR_BRANDS = [
-  { id: 'maruti', name: 'Maruti Suzuki', icon: '🚗' },
-  { id: 'hyundai', name: 'Hyundai', icon: '🚙' },
-  { id: 'tata', name: 'Tata', icon: '🚐' },
-  { id: 'mahindra', name: 'Mahindra', icon: '🚕' },
-  { id: 'honda', name: 'Honda', icon: '🏎️' },
-  { id: 'toyota', name: 'Toyota', icon: '🚘' },
-  { id: 'kia', name: 'Kia', icon: '🚖' },
-  { id: 'mg', name: 'MG', icon: '🏁' },
-  { id: 'skoda', name: 'Skoda', icon: '🚔' },
-  { id: 'volkswagen', name: 'Volkswagen', icon: '🚓' },
+  { id: 'maruti', name: 'Maruti Suzuki' },
+  { id: 'hyundai', name: 'Hyundai' },
+  { id: 'tata', name: 'Tata' },
+  { id: 'mahindra', name: 'Mahindra' },
+  { id: 'honda', name: 'Honda' },
+  { id: 'toyota', name: 'Toyota' },
+  { id: 'kia', name: 'Kia' },
+  { id: 'mg', name: 'MG' },
+  { id: 'skoda', name: 'Skoda' },
+  { id: 'volkswagen', name: 'Volkswagen' },
+  { id: 'nissan', name: 'Nissan' },
+  { id: 'jeep', name: 'Jeep' },
+  { id: 'jaguar', name: 'Jaguar' },
+  { id: 'volvo', name: 'Volvo' },
+  { id: 'mitsubishi', name: 'Mitsubishi' },
+  { id: 'chevrolet', name: 'Chevrolet' },
+  { id: 'landrover', name: 'Land Rover' },
+  { id: 'renault', name: 'Renault' },
+  // New brands
+  { id: 'bmw', name: 'BMW' },
+  { id: 'audi', name: 'Audi' },
+  { id: 'citroen', name: 'Citroën' },
+  { id: 'datsun', name: 'Datsun' },
+  { id: 'fiat', name: 'Fiat' },
+  { id: 'force', name: 'Force' },
+  { id: 'ford', name: 'Ford' },
+  { id: 'lexus', name: 'Lexus' },
+  { id: 'mercedes', name: 'Mercedes' },
+  { id: 'mini', name: 'Mini' },
+  { id: 'ferrari', name: 'Ferrari' },
+  { id: 'tataev', name: 'Tata EV' },
 ];
+
 
 const FUEL_TYPES = [
   { id: 'petrol', name: 'Petrol', icon: 'water-outline' },
@@ -139,7 +197,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
   const updateField = useCallback(<K extends keyof FormData>(field: K, value: FormData[K]) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
-      AsyncStorage.setItem(ADD_CAR_DRAFT_KEY, JSON.stringify(updated)).catch(() => {});
+      AsyncStorage.setItem(ADD_CAR_DRAFT_KEY, JSON.stringify(updated)).catch(() => { });
       return updated;
     });
   }, []);
@@ -193,7 +251,7 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
     try {
       // TODO: API call to submit car
       await new Promise<void>((resolve) => setTimeout(() => resolve(), 2000));
-      AsyncStorage.removeItem(ADD_CAR_DRAFT_KEY).catch(() => {});
+      AsyncStorage.removeItem(ADD_CAR_DRAFT_KEY).catch(() => { });
       Alert.alert(
         'Success! 🎉',
         'Your car listing has been submitted for review.',
@@ -254,7 +312,15 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
             ]}
             onPress={() => updateField('brand', brand.id)}
           >
-            <Text style={styles.brandEmoji}>{brand.icon}</Text>
+            {BRAND_LOGOS[brand.id] ? (
+              <Image
+                source={BRAND_LOGOS[brand.id]}
+                style={styles.brandLogo}
+                resizeMode="contain"
+              />
+            ) : (
+              <Ionicons name="car-sport-outline" size={32} color={colors.textSecondary} />
+            )}
             <Text style={[styles.brandName, { color: colors.text }]} numberOfLines={1}>
               {brand.name}
             </Text>
@@ -265,7 +331,43 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
             )}
           </TouchableOpacity>
         ))}
+
+        {/* Other Brand Option */}
+        <TouchableOpacity
+          style={[
+            styles.brandCard,
+            { backgroundColor: isDark ? colors.surface : '#FFFFFF', borderColor: colors.border },
+            formData.brand === 'other' && { borderColor: colors.primary, backgroundColor: isDark ? '#1F2937' : '#FEF3C7' }
+          ]}
+          onPress={() => updateField('brand', 'other')}
+        >
+          <View style={[styles.otherBrandIcon, { backgroundColor: isDark ? '#374151' : '#F3F4F6' }]}>
+            <Ionicons name="add" size={28} color={colors.primary} />
+          </View>
+          <Text style={[styles.brandName, { color: colors.text }]} numberOfLines={1}>
+            Other
+          </Text>
+          {formData.brand === 'other' && (
+            <View style={[styles.checkBadge, { backgroundColor: colors.primary }]}>
+              <Ionicons name="checkmark" size={12} color="#111827" />
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
+
+      {/* Custom Brand Name Input (when Other is selected) */}
+      {formData.brand === 'other' && (
+        <View style={styles.inputSection}>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>Brand Name *</Text>
+          <TextInput
+            style={[styles.textInput, { backgroundColor: isDark ? colors.surface : '#F3F4F6', color: colors.text, borderColor: colors.border }]}
+            value={formData.variant} // Using variant temporarily for custom brand
+            onChangeText={(text) => updateField('variant', text)}
+            placeholder="Enter brand name (e.g., Audi, BMW, Mercedes)"
+            placeholderTextColor={colors.textSecondary}
+          />
+        </View>
+      )}
 
       {/* Model Input */}
       {formData.brand && (
@@ -451,8 +553,8 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
                     backgroundColor: isSelected
                       ? colors.primary
                       : isDark
-                      ? colors.surface
-                      : '#F3F4F6',
+                        ? colors.surface
+                        : '#F3F4F6',
                     borderColor: isSelected ? colors.primary : colors.border,
                   },
                 ]}
@@ -648,21 +750,21 @@ const DealerAddCarScreen: React.FC<Props> = ({ navigation }) => {
           )}
         </View>
 
-      {/* Photo Upload */}
-      <View style={styles.inputSection}>
-        <Text style={[styles.inputLabel, { color: colors.text }]}>Car Photos</Text>
-        <View style={styles.photoGrid}>
-          {['Front View', 'Rear View', 'Interior', 'Dashboard', 'Engine'].map((label, index) => (
-            <TouchableOpacity
-              key={label}
-              style={[styles.photoBox, { backgroundColor: isDark ? colors.surface : '#F3F4F6', borderColor: colors.border }]}
-            >
-              <Ionicons name="camera-outline" size={28} color={colors.primary} />
-              <Text style={[styles.photoLabel, { color: colors.textSecondary }]}>{label}</Text>
-            </TouchableOpacity>
-          ))}
+        {/* Photo Upload */}
+        <View style={styles.inputSection}>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>Car Photos</Text>
+          <View style={styles.photoGrid}>
+            {['Front View', 'Rear View', 'Interior', 'Dashboard', 'Engine'].map((label, index) => (
+              <TouchableOpacity
+                key={label}
+                style={[styles.photoBox, { backgroundColor: isDark ? colors.surface : '#F3F4F6', borderColor: colors.border }]}
+              >
+                <Ionicons name="camera-outline" size={28} color={colors.primary} />
+                <Text style={[styles.photoLabel, { color: colors.textSecondary }]}>{label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
-      </View>
 
         {/* Description */}
         <View style={styles.inputSection}>
@@ -875,6 +977,19 @@ const styles = StyleSheet.create({
     borderRadius: scaleSize(8),
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  brandLogo: {
+    width: scaleSize(36),
+    height: scaleSize(36),
+    marginBottom: scaleSize(4),
+  },
+  otherBrandIcon: {
+    width: scaleSize(36),
+    height: scaleSize(36),
+    borderRadius: scaleSize(18),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: scaleSize(4),
   },
 
   // Input Section

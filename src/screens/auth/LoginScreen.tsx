@@ -95,7 +95,13 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       }
     } catch (error: any) {
       console.error('Send OTP error:', error);
-      const errorMessage = error.message || 'Failed to send OTP';
+      // Provide user-friendly error messages
+      let errorMessage = 'Failed to send OTP';
+      if (error.status === 404 || error.message?.includes('not found')) {
+        errorMessage = 'Account not found. Please register first.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
       if (notifyError) notifyError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -112,19 +118,24 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
     try {
       setIsLoading(true);
-      await apiClient.verifyOtp(formData.email.trim(), formData.otp.trim(), 'LOGIN');
+      const authTokens = await apiClient.verifyOtp(formData.email.trim(), formData.otp.trim(), 'LOGIN');
 
-      // Refresh user data to update context
-      if (refreshUserData) {
-        await refreshUserData();
-      }
+      // Save the authentication tokens and update context
+      if (authTokens && authTokens.accessToken) {
+        // The ApiClient automatically saves the auth data, so we just need to refresh the user context
+        if (refreshUserData) {
+          await refreshUserData();
+        }
 
-      if (notifyLoginSuccess) notifyLoginSuccess('Welcome back! 🎉');
+        if (notifyLoginSuccess) notifyLoginSuccess('Welcome back! 🎉');
 
-      if (navigation && navigation.replace) {
-        navigation.replace('Dashboard');
+        if (navigation && navigation.replace) {
+          navigation.replace('Dashboard');
+        } else {
+          console.warn('Navigation not available');
+        }
       } else {
-        console.warn('Navigation not available');
+        throw new Error('Invalid authentication response');
       }
     } catch (error: any) {
       console.error('Verify OTP error:', error);
