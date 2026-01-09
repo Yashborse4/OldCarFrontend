@@ -6,6 +6,8 @@ import React, {
   ReactNode,
 } from 'react';
 import { apiClient, ApiError, AuthTokens, UserData } from '../services/ApiClient';
+import { webSocketService } from '../services/WebSocketService';
+import { authService } from '../services/authService';
 
 interface AuthContextType {
   // State
@@ -31,6 +33,11 @@ interface AuthContextType {
     otp: string;
     newPassword: string;
   }) => Promise<void>;
+  
+  // OTP-based authentication methods
+  requestEmailVerification: (email: string) => Promise<void>;
+  verifyEmailOtp: (email: string, otp: string) => Promise<void>;
+  loginWithOtp: (email: string, otp: string) => Promise<void>;
 
   // Utility methods
   refreshUserData: () => Promise<void>;
@@ -60,6 +67,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     checkAuthStatus();
   }, []);
+
+  // Handle WebSocket connection based on auth state changes
+  useEffect(() => {
+    if (!isLoading) {
+      webSocketService.onAuthStateChange(isAuthenticated, user?.emailVerified);
+    }
+  }, [isAuthenticated, user?.emailVerified, isLoading]);
 
   const checkAuthStatus = async () => {
     try {
@@ -98,8 +112,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }) => {
     try {
       setIsLoading(true);
-      const authData = await apiClient.login(credentials);
+      const authData = await authService.loginWithPassword(credentials);
 
+      // CRITICAL FIX: Check if email is verified before proceeding
+      if (!authData.emailVerified) {
+        // Store user data for email verification flow but don't authenticate
+        setUser({
+          userId: authData.userId,
+          username: authData.username,
+          email: authData.email,
+          role: authData.role,
+          location: authData.location,
+          emailVerified: authData.emailVerified,
+          verifiedDealer: authData.verifiedDealer,
+        });
+        setIsAuthenticated(false); // Don't authenticate until email is verified
+        
+        // Throw specific error for email verification
+        const emailNotVerifiedError = new ApiError({
+          message: 'Email is not verified. Please verify your email before logging in.',
+          timestamp: new Date().toISOString(),
+          details: 'User attempted login with unverified email',
+          path: '/auth/login',
+          errorCode: 'EMAIL_NOT_VERIFIED',
+          errorType: 'EMAIL_NOT_VERIFIED',
+          redirectTo: 'EMAIL_VERIFICATION'
+        }, 401);
+        throw emailNotVerifiedError;
+      }
+
+      // Only proceed with authentication if email is verified
       setUser({
         userId: authData.userId,
         username: authData.username,
@@ -115,6 +157,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Login failed:', error);
       if (error instanceof ApiError) {
+        // Handle EMAIL_NOT_VERIFIED error specifically
+        if (error.errorType === 'EMAIL_NOT_VERIFIED') {
+          console.log('Email verification required for user:', credentials.usernameOrEmail);
+          // Don't clear user data here - it's needed for the verification flow
+        }
         // Toast notification removed
       } else {
         // Toast notification removed
@@ -237,6 +284,79 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // OTP-based authentication methods
+  const requestEmailVerification = async (email: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      await authService.requestEmailVerification({ email });
+    } catch (error) {
+      console.error('Failed to request email verification:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyEmailOtp = async (email: string, otp: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      const authData = await authService.verifyEmailOtp({ email, otp });
+      
+      // Update user state with verified email
+      setUser({
+        userId: authData.userId,
+        username: authData.username,
+        email: authData.email,
+        role: authData.role,
+        location: authData.location,
+        emailVerified: authData.emailVerified,
+        verifiedDealer: authData.verifiedDealer,
+      });
+      setIsAuthenticated(true);
+
+      // Initialize WebSocket connection after successful email verification
+      webSocketService.initializeAfterLogin().catch(error => {
+        console.error('Failed to initialize WebSocket after email verification:', error);
+        // Don't fail the verification if WebSocket initialization fails
+      });
+    } catch (error) {
+      console.error('Failed to verify email OTP:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithOtp = async (email: string, otp: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      const authData = await authService.loginWithOtp({ email, otp });
+      
+      // Set user state for successful OTP login
+      setUser({
+        userId: authData.userId,
+        username: authData.username,
+        email: authData.email,
+        role: authData.role,
+        location: authData.location,
+        emailVerified: authData.emailVerified,
+        verifiedDealer: authData.verifiedDealer,
+      });
+      setIsAuthenticated(true);
+
+      // Initialize WebSocket connection after successful OTP login
+      webSocketService.initializeAfterLogin().catch(error => {
+        console.error('Failed to initialize WebSocket after OTP login:', error);
+        // Don't fail the login if WebSocket initialization fails
+      });
+    } catch (error) {
+      console.error('Failed to login with OTP:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // First refreshUserData removed - duplicate
 
   const refreshUserData = async () => {
@@ -303,6 +423,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     forgotPassword,
     resetPassword,
+    
+    // OTP-based authentication methods
+    requestEmailVerification,
+    verifyEmailOtp,
+    loginWithOtp,
 
     // Utility methods
     refreshUserData,
