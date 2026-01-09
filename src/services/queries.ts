@@ -7,20 +7,18 @@ export const SEARCH_CARS_QUERY = gql`
         id
         brand
         model
-        variant
         year
         price
         mileage
         city
         condition
-        fuelType
-        transmission
-        verifiedDealer
         thumbnailUrl
         sellerType
         ownerName
+        verifiedDealer
         views
-        createdAt
+        fuelType
+        transmission
       }
       totalPages
       totalElements
