@@ -46,6 +46,7 @@ import DealerNetworkChatScreen from '../screens/dealer/DealerNetworkChatScreen';
 import DealerProfileScreen from '../screens/dealer/DealerProfileScreen';
 import DealerCarsListScreen from '../screens/dealer/DealerCarsListScreen';
 import DealerVerificationScreen from '../screens/dealer/DealerVerificationScreen';
+import EditCarScreen from '../screens/dealer/EditCarScreen';
 
 // Admin Screens
 import AdminDealerVerificationScreen from '../screens/admin/AdminDealerVerificationScreen';
@@ -233,6 +234,11 @@ const ProtectedDealerVerificationScreen = withAuthProtection(DealerVerificationS
   redirectTo: 'Login'
 });
 
+const ProtectedEditCarScreen = withAuthProtection(EditCarScreen, {
+  requireEmailVerification: true,
+  redirectTo: 'Login'
+});
+
 // Admin Protected Screens
 const ProtectedAdminDealerVerificationScreen = withAuthProtection(AdminDealerVerificationScreen, {
   requireEmailVerification: true,
@@ -275,6 +281,7 @@ const AppNavigator = ({ initialRouteName }: { initialRouteName: keyof RootStackP
       <Stack.Screen name="ManageCar" component={ProtectedManageCarScreen} />
       <Stack.Screen name="MyGarage" component={ProtectedMyGarageScreen} />
       <Stack.Screen name="CarList" component={ProtectedCarListScreen} />
+      <Stack.Screen name="EditCar" component={ProtectedEditCarScreen} />
 
       {/* Chat/Messaging Screens */}
       <Stack.Screen name="Messages" component={ProtectedMessagesScreen} />

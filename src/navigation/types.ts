@@ -77,6 +77,8 @@ export type RootStackParamList = {
   VehicleAnalytics: undefined;
   ManageCar: { car: Car };
   MyGarage: undefined;
+  CarList: { filter?: string; title?: string };
+  EditCar: { carId: string };
 
   // Chat/Messaging
   Messages: undefined;

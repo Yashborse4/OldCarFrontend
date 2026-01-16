@@ -12,7 +12,7 @@ import NetInfo from '@react-native-community/netinfo';
 // API Configuration
 const API_CONFIG = {
 
-  baseURL: 'http://192.168.1.4:9000', // Use your server's IP address
+  baseURL: 'http://192.168.1.11:9000', // Use your server's IP address
   timeout: 15000, // Increased timeout for better mobile network handling
   headers: {
     'Content-Type': 'application/json',
@@ -21,6 +21,11 @@ const API_CONFIG = {
     'Pragma': 'no-cache',
   },
 };
+
+// Import WebSocket service (lazy import or direct if no circular dep issue)
+// Note: We'll use a setter or import it directly. Since both are singletons,
+// we can import the instance.
+import { webSocketService } from './WebSocketService';
 
 // Storage keys for secure token management
 const STORAGE_KEYS = {
@@ -695,10 +700,15 @@ class ApiClient {
       return response.data.data;
     } catch (error: any) {
       console.error('Token validation failed:', error);
-      return {
-        valid: false,
-        userDetails: undefined
-      };
+      // Propagate error to allow caller to distinguish between 401 and Network Error
+      if (error instanceof ApiError || error instanceof NetworkError) {
+        throw error;
+      }
+      // If it's a 401, throw it so we know to logout
+      if (error.response && error.response.status === 401) {
+        throw new ApiError(error.response.data, 401);
+      }
+      throw error;
     }
   }
 
@@ -784,6 +794,18 @@ class ApiClient {
     }
   }
 
+  async getCarModelSuggestions(make: string, query: string): Promise<string[]> {
+    try {
+      const response = await this.instance.get<string[]>(`/api/cars/master/suggestions`, {
+        params: { make, query }
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching car model suggestions:', error);
+      return []; // Return empty list on error to avoid breaking UI
+    }
+  }
+
   async createCar(carData: any): Promise<any> {
     try {
       const response = await this.instance.post('/api/cars', carData);
@@ -848,6 +870,7 @@ class ApiClient {
     featured?: boolean;
     fuelType?: string;
     transmission?: string;
+    query?: string;
     page?: number;
     size?: number;
     sort?: string;
@@ -856,6 +879,7 @@ class ApiClient {
       const params = new URLSearchParams();
 
       // Map filters to backend search parameters
+      if (filters.query) params.append('q', filters.query);
       if (filters.make) params.append('brands', filters.make);
       if (filters.model) params.append('models', filters.model);
       if (filters.location) params.append('cities', filters.location);
@@ -871,6 +895,8 @@ class ApiClient {
       // Pagination
       if (filters.page !== undefined) params.append('page', filters.page.toString());
       if (filters.size !== undefined) params.append('size', filters.size.toString());
+      // Handle sort (currently backend hardcodes, but passing it for future)
+      if (filters.sort) params.append('sort', filters.sort);
 
       const response = await this.instance.get(`/api/search/cars?${params.toString()}`);
 
@@ -983,6 +1009,14 @@ class ApiClient {
           }),
         ],
       ]);
+
+      // CRITICAL FIX: Notify WebSocketService of new token
+      // This ensures WebSocket reconnects with the new token immediately
+      // preventing disconnect loops when the old token expires on the server
+      webSocketService.onTokenRefresh().catch(err =>
+        console.warn('Failed to update WebSocket token:', err)
+      );
+
       this.scheduleTokenRefresh(accessExpiryMs);
     } catch (error) {
       console.error('Failed to save auth data:', error);
@@ -993,6 +1027,10 @@ class ApiClient {
   private async clearAuthData(): Promise<void> {
     try {
       this.clearTokenRefreshTimer();
+
+      // Notify WebSocketService
+      webSocketService.onLogout();
+
       await AsyncStorage.multiRemove([
         STORAGE_KEYS.ACCESS_TOKEN,
         STORAGE_KEYS.REFRESH_TOKEN,
