@@ -130,7 +130,12 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         if (notifyLoginSuccess) notifyLoginSuccess('Welcome back! 🎉');
 
         if (navigation && navigation.replace) {
-          navigation.replace('Dashboard');
+          const role = authTokens.role ? authTokens.role.toUpperCase() : '';
+          if (role === 'DEALER') {
+            navigation.replace('DealerDashboard');
+          } else {
+            navigation.replace('Dashboard');
+          }
         } else {
           console.warn('Navigation not available');
         }
@@ -178,7 +183,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       setIsLoading(true);
       if (login) {
-        await login({
+        const result = await login({
           usernameOrEmail: formData.email.trim(),
           password: formData.password.trim()
         });
@@ -187,7 +192,12 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         if (notifyLoginSuccess) notifyLoginSuccess('Welcome back! 🎉');
 
         if (navigation && navigation.replace) {
-          navigation.replace('Dashboard');
+          const role = result && result.role ? result.role.toUpperCase() : '';
+          if (role === 'DEALER') {
+            navigation.replace('DealerDashboard');
+          } else {
+            navigation.replace('Dashboard');
+          }
         }
       } else {
         throw new Error('Login function not available');

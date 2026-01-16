@@ -19,7 +19,7 @@ interface AuthContextType {
   login: (credentials: {
     usernameOrEmail: string;
     password: string;
-  }) => Promise<void>;
+  }) => Promise<any>;
   register: (userData: {
     username: string;
     email: string;
@@ -33,7 +33,7 @@ interface AuthContextType {
     otp: string;
     newPassword: string;
   }) => Promise<void>;
-  
+
   // OTP-based authentication methods
   requestEmailVerification: (email: string) => Promise<void>;
   verifyEmailOtp: (email: string, otp: string) => Promise<void>;
@@ -81,16 +81,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const token = await apiClient.getStoredAccessToken();
 
       if (token) {
-        // Validate token and get user data
-        const validation = await apiClient.validateToken();
-        if (validation.valid && validation.userDetails) {
-          setUser(validation.userDetails);
-          setIsAuthenticated(true);
-        } else {
-          // Token invalid, clear auth data
-          await apiClient.logout();
-          setUser(null);
-          setIsAuthenticated(false);
+        try {
+          // Attempt to validate token with server
+          const validation = await apiClient.validateToken();
+          if (validation.valid && validation.userDetails) {
+            setUser(validation.userDetails);
+            setIsAuthenticated(true);
+          } else {
+            // Server explicitly said token is invalid (should have thrown, but just in case)
+            await apiClient.logout();
+            setUser(null);
+            setIsAuthenticated(false);
+          }
+        } catch (validationError: any) {
+          console.error('Token validation error:', validationError);
+
+          // CRITICAL FIX: Optimistic Authentication
+          // If error is NOT a 401 (Unauthorized), assume user is still logged in
+          // This handles network errors, server timeout, 500s, etc.
+          const isUnauthorized = validationError.status === 401 ||
+            (validationError.response && validationError.response.status === 401);
+
+          if (isUnauthorized) {
+            console.log('Session expired or invalid token - logging out');
+            await apiClient.logout();
+            setUser(null);
+            setIsAuthenticated(false);
+          } else {
+            console.log('Validating offline/cached session due to network/server error');
+            // Try to load cached user data
+            const storedUserData = await apiClient.getStoredUserData();
+            if (storedUserData) {
+              setUser(storedUserData);
+              setIsAuthenticated(true);
+              console.log('Restored session from cache');
+            } else {
+              // No cached user data, can't authenticate
+              setUser(null);
+              setIsAuthenticated(false);
+            }
+          }
         }
       } else {
         setUser(null);
@@ -100,7 +130,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error('Auth status check failed:', error);
       setUser(null);
       setIsAuthenticated(false);
-      await apiClient.logout();
     } finally {
       setIsLoading(false);
     }
@@ -127,7 +156,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           verifiedDealer: authData.verifiedDealer,
         });
         setIsAuthenticated(false); // Don't authenticate until email is verified
-        
+
         // Throw specific error for email verification
         const emailNotVerifiedError = new ApiError({
           message: 'Email is not verified. Please verify your email before logging in.',
@@ -154,6 +183,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(true);
 
       // Toast notification removed
+      return authData;
     } catch (error) {
       console.error('Login failed:', error);
       if (error instanceof ApiError) {
@@ -301,7 +331,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       const authData = await authService.verifyEmailOtp({ email, otp });
-      
+
       // Update user state with verified email
       setUser({
         userId: authData.userId,
@@ -331,7 +361,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       const authData = await authService.loginWithOtp({ email, otp });
-      
+
       // Set user state for successful OTP login
       setUser({
         userId: authData.userId,
@@ -423,7 +453,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     forgotPassword,
     resetPassword,
-    
+
     // OTP-based authentication methods
     requestEmailVerification,
     verifyEmailOtp,
