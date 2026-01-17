@@ -18,7 +18,8 @@ export interface Vehicle {
   views: number;
   inquiries: number;
   shares: number;
-  status: 'Available' | 'Sold' | 'Reserved' | 'Archived';
+  status: 'Available' | 'Sold' | 'Reserved' | 'Archived' | 'Deleted';
+  mediaStatus: 'NONE' | 'PENDING' | 'UPLOADING' | 'UPLOADED' | 'PROCESSING' | 'READY' | 'FAILED' | 'DELETED' | 'MEDIA_PENDING';
   featured: boolean;
   createdAt: string;
   updatedAt: string;
@@ -26,6 +27,8 @@ export interface Vehicle {
   variant?: string;
   fuelType?: string;
   transmission?: string;
+  imageUrl?: string;  // Primary image URL (first image)
+  videoUrl?: string;  // Video URL for the listing
 }
 
 export interface VehicleSearchFilters {
@@ -39,6 +42,7 @@ export interface VehicleSearchFilters {
   condition?: string;
   status?: string;
   featured?: boolean;
+  query?: string; // Search keyword
   page?: number;
   size?: number;
   sort?: string;
@@ -106,6 +110,25 @@ export interface DealerDashboardResponse {
   totalCarsAdded: number;
   activeCars: number;
   contactRequestsReceived: number;
+}
+
+export interface InitUploadRequest {
+  carId: number;
+  fileNames: string[];
+  contentTypes: string[];
+}
+
+export interface InitUploadResponse {
+  sessionId: string;
+  uploadUrls: string[];
+  filePaths: string[];
+}
+
+export interface CompleteUploadRequest {
+  carId: number;
+  sessionId: string;
+  success: boolean;
+  uploadedFilePaths: string[];
 }
 
 class CarApiService {
@@ -185,6 +208,28 @@ class CarApiService {
       console.error('Error updating vehicle status:', error);
       throw error;
     }
+  }
+
+  // Update car media status
+  async updateMediaStatus(id: string, status: 'NONE' | 'UPLOADING' | 'PROCESSING' | 'READY' | 'FAILED'): Promise<Vehicle> {
+    try {
+      // Use generic post if specific method not in ApiClient
+      const response = await this.apiClient.post<{ data: Vehicle }>(`/api/cars/${id}/media-status`, { status });
+      return response.data.data;
+    } catch (error) {
+      console.error('Error updating media status:', error);
+      throw error;
+    }
+  }
+
+  // Async Media V2 Endpoints
+  async initMediaUpload(data: InitUploadRequest): Promise<InitUploadResponse> {
+    const response = await this.apiClient.post<{ data: InitUploadResponse }>('/api/media/init-upload', data);
+    return response.data.data;
+  }
+
+  async completeMediaProcessing(data: CompleteUploadRequest): Promise<void> {
+    await this.apiClient.post<{ data: void }>('/api/media/complete', data);
   }
 
   // Search vehicles with filters
@@ -305,6 +350,18 @@ class CarApiService {
     } catch (error) {
       console.error('Error tracking view:', error);
       // Don't throw error for tracking - it's non-critical
+    }
+  }
+
+  // Track specific stats (video play, swipe, click)
+  async trackCarStat(id: string, type: 'video_play' | 'image_swipe' | 'contact_click') {
+    try {
+      await this.apiClient.post(`/api/cars/${id}/stats`, null, {
+        params: { type }
+      });
+    } catch (error) {
+      // Analytics errors should be silent
+      console.warn(`Failed to track ${type} for car ${id}`, error);
     }
   }
 
