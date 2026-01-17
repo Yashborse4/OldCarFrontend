@@ -16,6 +16,7 @@ import { getAuthStatusWithRole } from './src/services/auth';
 import { RootStackParamList } from './src/navigation/types';
 import { AuthProvider } from './src/context/AuthContext';
 import { ChatProvider } from './src/context/ChatContext';
+import { UploadQueueProvider } from './src/context/UploadQueueContext';
 import { ToastProvider } from './src/components/ui/ToastManager';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { ApolloProvider } from '@apollo/client/react';
@@ -73,11 +74,13 @@ function App() {
       <ThemeProvider>
         <ToastProvider>
           <AuthProvider>
-            <ChatProvider>
-              <ApolloProvider client={client}>
-                <AppContent initialRoute={initialRoute} />
-              </ApolloProvider>
-            </ChatProvider>
+            <UploadQueueProvider>
+              <ChatProvider>
+                <ApolloProvider client={client}>
+                  <AppContent initialRoute={initialRoute} />
+                </ApolloProvider>
+              </ChatProvider>
+            </UploadQueueProvider>
           </AuthProvider>
         </ToastProvider>
       </ThemeProvider>

@@ -70,6 +70,7 @@ class AnalyticsServiceClass {
     private sessionId: string = '';
     private sessionStart: number = 0;
     private eventQueue: AnalyticsEvent[] = [];
+    private pendingEvents: Array<[AnalyticsEventType, TargetType | undefined, string | undefined, Record<string, any> | undefined]> = [];
     private deviceContext: DeviceContext | null = null;
     private currentScreen: string = '';
     private previousScreen: string = '';
@@ -80,7 +81,9 @@ class AnalyticsServiceClass {
     private appState: AppStateStatus = 'active';
     private isOnline: boolean = true;
     private recentEvents: Map<string, number> = new Map(); // For deduplication
-    
+    private retryCount: number = 0; // For exponential backoff
+    private appStateTimer: ReturnType<typeof setTimeout> | null = null; // For debouncing app state
+
     // Session aggregation data
     private sessionAggregates: Map<string, number> = new Map();
     private lastAggregationTime: number = 0;
@@ -129,6 +132,16 @@ class AnalyticsServiceClass {
 
             this.isInitialized = true;
             console.log('[Analytics] Initialized. Session:', this.sessionId);
+
+            // Process pending events
+            if (this.pendingEvents.length > 0) {
+                console.log(`[Analytics] Processing ${this.pendingEvents.length} pending events`);
+                const pending = [...this.pendingEvents];
+                this.pendingEvents = [];
+                pending.forEach(([eventType, targetType, targetId, metadata]) => {
+                    this.track(eventType, targetType, targetId, metadata);
+                });
+            }
         } catch (error) {
             console.error('[Analytics] Init error:', error);
         }
@@ -172,14 +185,33 @@ class AnalyticsServiceClass {
     // =============== APP STATE ===============
 
     private handleAppStateChange = async (nextAppState: AppStateStatus) => {
-        if (this.appState === 'active' && nextAppState.match(/inactive|background/)) {
-            this.track('APP_BACKGROUND');
-            await this.flush();
-            await this.persistQueue();
-        } else if (this.appState.match(/inactive|background/) && nextAppState === 'active') {
-            this.track('APP_FOREGROUND');
+        // Clear any pending state change timer
+        if (this.appStateTimer) {
+            clearTimeout(this.appStateTimer);
+            this.appStateTimer = null;
         }
-        this.appState = nextAppState;
+
+        // Debounce state changes (1s delay)
+        this.appStateTimer = setTimeout(async () => {
+            if (this.appState === 'active' && nextAppState.match(/inactive|background/)) {
+                this.track('APP_BACKGROUND');
+
+                // Stop the periodic flush timer when in background to save resources/network
+                this.stopFlushTimer();
+
+                // One final flush before sleeping
+                await this.flush();
+                await this.persistQueue();
+            } else if (this.appState.match(/inactive|background/) && nextAppState === 'active') {
+                this.track('APP_FOREGROUND');
+
+                // Restart only if we have events or previously failed
+                if (this.eventQueue.length > 0) {
+                    this.startFlushTimer();
+                }
+            }
+            this.appState = nextAppState;
+        }, 1000);
     };
 
     // =============== TRACKING ===============
@@ -192,6 +224,8 @@ class AnalyticsServiceClass {
     ): void {
         if (!this.isInitialized) {
             console.debug('[Analytics] Not initialized, queuing:', eventType);
+            this.pendingEvents.push([eventType, targetType, targetId, metadata]);
+            return;
         }
 
         // Enhanced debouncing with 300-500ms window as requested
@@ -239,8 +273,12 @@ class AnalyticsServiceClass {
             }
 
             // Auto-flush if batch full
-            if (this.eventQueue.length >= BATCH_SIZE) {
+            // Auto-flush if batch full - ONLY if active or online
+            if (this.eventQueue.length >= BATCH_SIZE && this.appState === 'active') {
                 this.flush();
+            } else if (this.eventQueue.length === 1 && this.appState === 'active') {
+                // First event? Ensure timer is running
+                this.startFlushTimer();
             }
         }
     }
@@ -298,24 +336,24 @@ class AnalyticsServiceClass {
     private aggregateEvent(event: AnalyticsEvent): AnalyticsEvent | null {
         const now = Date.now();
         const aggregateKey = `${event.eventType}_${event.targetType}_${event.targetId}`;
-        
+
         // Check if we should aggregate this event type
         const shouldAggregate = [
             'CAR_VIEW', 'CAR_IMAGES_VIEW', 'CAR_IMAGES_SWIPE',
             'SEARCH_QUERY', 'SEARCH_SCROLL', 'SCREEN_VIEW'
         ].includes(event.eventType);
-        
+
         if (!shouldAggregate) {
             return event; // Don't aggregate, send as-is
         }
-        
+
         // Aggregate within 1-minute windows
         const timeWindow = Math.floor(now / SESSION_AGGREGATION_INTERVAL_MS);
         const windowKey = `${aggregateKey}_${timeWindow}`;
-        
+
         const existingCount = this.sessionAggregates.get(windowKey) || 0;
         this.sessionAggregates.set(windowKey, existingCount + 1);
-        
+
         // Clean old aggregates (older than 2 minutes)
         const cutoffWindow = Math.floor((now - 120000) / SESSION_AGGREGATION_INTERVAL_MS);
         for (const [key, count] of this.sessionAggregates) {
@@ -324,7 +362,7 @@ class AnalyticsServiceClass {
                 this.sessionAggregates.delete(key);
             }
         }
-        
+
         // Only send the first event of each type per window, with count
         if (existingCount === 0) {
             return {
@@ -336,7 +374,7 @@ class AnalyticsServiceClass {
                 }
             };
         }
-        
+
         // Skip subsequent events in the same window
         console.debug(`[Analytics] Aggregated event: ${aggregateKey} (count: ${existingCount + 1})`);
         return null;
@@ -370,8 +408,12 @@ class AnalyticsServiceClass {
         this.isFlushing = true;
         this.lastFlushTime = now;
 
-        const eventsToSend = [...this.eventQueue];
-        this.eventQueue = [];
+        this.isFlushing = true;
+        this.lastFlushTime = now;
+
+        // Strict batch sizing to prevent backend overload
+        const eventsToSend = this.eventQueue.slice(0, BATCH_SIZE);
+        this.eventQueue = this.eventQueue.slice(BATCH_SIZE);
 
         try {
             await apiClient.post('/api/analytics/events', {
@@ -382,8 +424,16 @@ class AnalyticsServiceClass {
 
             console.log('[Analytics] Flushed', eventsToSend.length, 'events');
 
+            // Reset retry count on success
+            this.retryCount = 0;
+
             // Clear persisted queue on success
             await AsyncStorage.removeItem(STORAGE_QUEUE_KEY);
+
+            // Chain flush if more events are pending
+            if (this.eventQueue.length > 0) {
+                setTimeout(() => this.flush(), 100);
+            }
         } catch (error: any) {
             console.warn('[Analytics] Flush failed:', error?.message);
 
@@ -391,10 +441,18 @@ class AnalyticsServiceClass {
             this.eventQueue = [...eventsToSend, ...this.eventQueue].slice(-MAX_QUEUE_SIZE);
             await this.persistQueue();
 
-            // Schedule retry
-            setTimeout(() => this.flush(), RETRY_DELAY_MS);
+            // Schedule retry with exponential backoff
+            this.retryCount++;
+            const backoffDelay = Math.min(RETRY_DELAY_MS * Math.pow(1.5, this.retryCount), 120000); // Max 2 min
+            console.log(`[Analytics] Flush failed (attempt ${this.retryCount}), retrying in ${backoffDelay}ms`);
+
+            setTimeout(() => this.flush(), backoffDelay);
         } finally {
             this.isFlushing = false;
+            // Success? Reset retry count
+            if (this.retryCount > 0 && this.eventQueue.length === 0) {
+                this.retryCount = 0;
+            }
         }
     }
 
@@ -431,7 +489,12 @@ class AnalyticsServiceClass {
             const stored = await AsyncStorage.getItem(STORAGE_QUEUE_KEY);
             if (stored) {
                 const events = JSON.parse(stored);
-                this.eventQueue = [...events, ...this.eventQueue].slice(-MAX_QUEUE_SIZE);
+                // Heal events with missing sessionId
+                const healedEvents = events.map((e: AnalyticsEvent) => ({
+                    ...e,
+                    sessionId: e.sessionId || this.sessionId
+                }));
+                this.eventQueue = [...healedEvents, ...this.eventQueue].slice(-MAX_QUEUE_SIZE);
                 console.log('[Analytics] Loaded', events.length, 'persisted events');
             }
         } catch (error) {
