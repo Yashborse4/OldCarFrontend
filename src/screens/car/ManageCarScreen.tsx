@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../../theme/ThemeContext';
+import { formatIndianNumber } from '../../utils/formatting';
 
 const { width, height } = Dimensions.get('window');
 
@@ -721,7 +722,7 @@ const ManageCarScreen: React.FC<Props> = ({ navigation, route }) => {
             <TextInput
               style={styles.priceInput}
               value={newPrice}
-              onChangeText={setNewPrice}
+              onChangeText={(text) => setNewPrice(formatIndianNumber(text))}
               placeholder="₹0"
               placeholderTextColor={colors.textSecondary}
               keyboardType="numeric"

@@ -90,13 +90,11 @@ const VehicleDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
       const chatRoom = await chatApi.createCarInquiryChat(numericCarId, initialMessage);
 
-      navigation.navigate('ChatConversation', {
-        conversation: chatRoom,
-        participantId: 'dealer',
-        participantName: VEHICLE_DATA.dealer,
-        participantType: 'dealer',
-        relatedCarId: String(carIdFromRoute),
-        relatedCarTitle: VEHICLE_DATA.title,
+      navigation.navigate('Chat', {
+        chatId: chatRoom.id,
+        name: VEHICLE_DATA.dealer,
+        type: 'CAR_INQUIRY',
+        carId: numericCarId,
       });
     } catch (error) {
       console.error('Failed to start chat:', error);

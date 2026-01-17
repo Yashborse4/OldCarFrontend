@@ -22,6 +22,7 @@ import { Button } from '../../components/ui/Button';
 import { VehicleCard } from '../../config/VehicleCard';
 import { carApi } from '../../services/CarApi';
 import { useLazyQuery } from '@apollo/client/react';
+import { formatIndianNumber, cleanNumberInput } from '../../utils/formatting';
 
 import { SEARCH_CARS_QUERY } from '../../services/queries';
 
@@ -273,8 +274,8 @@ const VehicleSearchScreen: React.FC = () => {
       models: currentFilters.model.length > 0 ? currentFilters.model : null,
       minYear: currentFilters.yearMin ? parseInt(currentFilters.yearMin) : null,
       maxYear: currentFilters.yearMax ? parseInt(currentFilters.yearMax) : null,
-      minPrice: currentFilters.priceMin ? parseFloat(currentFilters.priceMin) : null,
-      maxPrice: currentFilters.priceMax ? parseFloat(currentFilters.priceMax) : null,
+      minPrice: currentFilters.priceMin ? parseFloat(cleanNumberInput(currentFilters.priceMin)) : null,
+      maxPrice: currentFilters.priceMax ? parseFloat(cleanNumberInput(currentFilters.priceMax)) : null,
       cities: currentFilters.location.length > 0 ? currentFilters.location : null,
       fuelTypes: currentFilters.fuelType.length > 0 ? currentFilters.fuelType : null,
       transmissions: currentFilters.transmission.length > 0 ? currentFilters.transmission : null,
@@ -672,7 +673,7 @@ const VehicleSearchScreen: React.FC = () => {
                 <View style={styles.rangeInputs}>
                   <Input
                     value={filters.priceMin}
-                    onChangeText={(text) => updateFilter('priceMin', text)}
+                    onChangeText={(text) => updateFilter('priceMin', formatIndianNumber(text))}
                     placeholder="Min Price"
                     keyboardType="numeric"
                     containerStyle={styles.rangeInput}
@@ -680,7 +681,7 @@ const VehicleSearchScreen: React.FC = () => {
                   <Text style={styles.rangeSeparator}>to</Text>
                   <Input
                     value={filters.priceMax}
-                    onChangeText={(text) => updateFilter('priceMax', text)}
+                    onChangeText={(text) => updateFilter('priceMax', formatIndianNumber(text))}
                     placeholder="Max Price"
                     keyboardType="numeric"
                     containerStyle={styles.rangeInput}
@@ -692,7 +693,7 @@ const VehicleSearchScreen: React.FC = () => {
                 <Text style={styles.filterTitle}>Maximum Mileage</Text>
                 <Input
                   value={filters.mileageMax}
-                  onChangeText={(text) => updateFilter('mileageMax', text)}
+                  onChangeText={(text) => updateFilter('mileageMax', formatIndianNumber(text))}
                   placeholder="Max Mileage"
                   keyboardType="numeric"
                   containerStyle={styles.singleInput}
