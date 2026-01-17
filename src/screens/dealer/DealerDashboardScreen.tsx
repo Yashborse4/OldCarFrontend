@@ -11,9 +11,11 @@ import {
   FlatList,
   Image,
   TextInput,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { BottomNavigation } from '../../components/ui/BottomNavigation';
 import { Gradient } from '../../components/ui/Gradient';
@@ -97,7 +99,7 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
         { id: 'views', title: 'Total Views', value: dashboard.totalViews.toLocaleString(), icon: 'eye', color: '#3B82F6', gradient: ['#3B82F6', '#2563EB'] },
         { id: 'inquiries', title: 'Inquiries', value: dashboard.contactRequestsReceived, icon: 'chatbubble', color: '#F59E0B', gradient: ['#F59E0B', '#D97706'] },
       ]);
-      setCarListings(myCars.content);
+      setCarListings(myCars.content.filter(c => c.status !== 'Deleted'));
     } catch (err) {
       console.error('Error loading dashboard data:', err);
       setError('Failed to load dashboard. Pull to refresh.');
@@ -106,9 +108,11 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, []);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
+  useFocusEffect(
+    useCallback(() => {
+      loadDashboardData();
+    }, [loadDashboardData])
+  );
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -125,7 +129,30 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
   }, [navigation]);
 
   const handleCarPress = (car: Vehicle) => {
-    navigation.navigate('CarDetails', { carId: car.id });
+    navigation.navigate('EditCar', { carId: car.id });
+  };
+
+  const handleDeleteCar = (car: Vehicle) => {
+    Alert.alert(
+      'Delete Car',
+      `Are you sure you want to delete ${car.make} ${car.model}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await carApi.deleteVehicle(car.id);
+              loadDashboardData(); // Refresh data
+            } catch (error) {
+              console.error('Delete failed', error);
+              Alert.alert('Error', 'Failed to delete car');
+            }
+          }
+        }
+      ]
+    );
   };
 
   // ============= RENDER FUNCTIONS =============
@@ -395,24 +422,32 @@ const DealerDashboardScreen: React.FC<Props> = ({ navigation }) => {
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => navigation.navigate('EditCar', { carId: item.id })}
-              >
-                <Ionicons name="create-outline" size={scaleSize(20)} color={colors.primary} />
-              </TouchableOpacity>
-            </TouchableOpacity>
+              <View style={styles.actionRow}>
+                <TouchableOpacity
+                  style={[styles.editButton, { marginRight: 8 }]}
+                  onPress={() => navigation.navigate('EditCar', { carId: item.id })}
+                >
+                  <Ionicons name="create-outline" size={scaleSize(20)} color={colors.primary} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.editButton, { backgroundColor: isDark ? 'rgba(239,68,68,0.1)' : '#FEF2F2' }]}
+                  onPress={() => handleDeleteCar(item)}
+                >
+                  <Ionicons name="trash-outline" size={scaleSize(20)} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity >
           )}
           contentContainerStyle={styles.inventoryList}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
+            < View style={styles.emptyContainer} >
               <Ionicons name="car-outline" size={scaleSize(60)} color={colors.textSecondary} />
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No cars found</Text>
-            </View>
+            </View >
           }
         />
-      </View>
+      </View >
     );
   };
 
@@ -795,6 +830,12 @@ const styles = StyleSheet.create({
     padding: getResponsiveSpacing('sm'),
     borderRadius: getResponsiveBorderRadius('lg'),
     marginBottom: getResponsiveSpacing('sm'),
+  },
+  // Ensure styles support the new layout if needed, though replacing editButton usage handles most.
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: getResponsiveSpacing('sm'),
   },
   inventoryCarImage: {
     width: scaleSize(100),
