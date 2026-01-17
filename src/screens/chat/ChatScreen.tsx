@@ -11,49 +11,34 @@ import {
   KeyboardAvoidingView,
   Platform,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import { chatApi, ChatMessageDto } from '../../services/ChatApi';
+import { webSocketService, WSMessage } from '../../services/WebSocketService';
+import { useAuth } from '../../context/AuthContext';
+// import { carApi } from '../../services/CarApi'; // Uncomment when needed for vehicle selection
 
-// Temporary interfaces until proper types are available
-interface ChatMessage {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  message: string;
-  timestamp: string;
-  status: 'sent' | 'delivered' | 'read';
-  type: 'text' | 'vehicle' | 'quote';
-  attachments?: any[];
-}
-
+// Interface for Vehicle (can be imported from CarApi types later)
 interface Vehicle {
-  id: string;
+  id: number;
   make: string;
   model: string;
   year: number;
   price: number;
-  mileage: number;
-  location: string;
-  condition: string;
   images: string[];
-  specifications: any;
-  dealerId: string;
-  dealerName: string;
-  isCoListed: boolean;
-  coListedIn: string[];
-  views: number;
-  inquiries: number;
-  shares: number;
+  mileage: number;
+  condition: string;
 }
 
 const ChatScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const colors = {
     background: '#FAFBFC',
     surface: '#FFFFFF',
@@ -63,247 +48,102 @@ const ChatScreen: React.FC = () => {
     border: '#E2E8F0',
     success: '#48BB78',
   };
-  const { dealerId, dealerName } = route.params as { dealerId: string; dealerName: string };
-  
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  const { chatId, name, type, carId } = route.params as { chatId: number; name: string; type: string; carId?: number };
+
+  const [messages, setMessages] = useState<ChatMessageDto[]>([]);
   const [messageText, setMessageText] = useState('');
+  const [loading, setLoading] = useState(true);
   const [showAttachmentModal, setShowAttachmentModal] = useState(false);
   const [showVehicleModal, setShowVehicleModal] = useState(false);
-  const [userVehicles, setUserVehicles] = useState<Vehicle[]>([]);
+  const [userVehicles, setUserVehicles] = useState<Vehicle[]>([]); // To be populated from CarApi
   const flatListRef = useRef<FlatList>(null);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
-  // Mock data - replace with API calls later
-  const mockMessages = React.useMemo<ChatMessage[]>(() => [
-    {
-      id: '1',
-      senderId: dealerId,
-      receiverId: 'current-user',
-      message: 'Hi! I saw your BMW X5 listing. Very impressive vehicle!',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-      status: 'read',
-      type: 'text',
-    },
-    {
-      id: '2',
-      senderId: 'current-user',
-      receiverId: dealerId,
-      message: 'Thank you! It\'s in excellent condition. Are you interested for your inventory? ',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1.8).toISOString(),
-      status: 'read',
-      type: 'text',
-    },
-    {
-      id: '3',
-      senderId: dealerId,
-      receiverId: 'current-user',
-      message: 'Yes, definitely. Could you share more details about the maintenance history? ',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1.5).toISOString(),
-      status: 'delivered',
-      type: 'text',
-    },
-    {
-      id: '4',
-      senderId: 'current-user',
-      receiverId: dealerId,
-      message: 'Of course! Let me send you the complete vehicle details.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1.3).toISOString(),
-      status: 'delivered',
-      type: 'text',
-    },
-    {
-      id: '5',
-      senderId: 'current-user',
-      receiverId: dealerId,
-      message: '2023 BMW X5 - $75,000',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1.2).toISOString(),
-      status: 'delivered',
-      type: 'vehicle',
-      attachments: [{
-        vehicleId: 'vehicle-1',
-        make: 'BMW',
-        model: 'X5',
-        year: 2023,
-        price: 75000,
-        image: 'https://example.com/bmw-x5.jpg'
-      }],
-    },
-    {
-      id: '6',
-      senderId: dealerId,
-      receiverId: 'current-user',
-      message: 'Perfect! What\'s your best price for a dealer-to-dealer transaction? ',
-      timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-      status: 'delivered',
-      type: 'text',
-    },
-    {
-      id: '7',
-      senderId: 'current-user',
-      receiverId: dealerId,
-      message: 'Dealer price: $68,500 (Final offer)',
-      timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 minutes ago
-      status: 'delivered',
-      type: 'quote',
-      attachments: [{
-        originalPrice: 75000,
-        dealerPrice: 68500,
-        savings: 6500,
-        validUntil: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 days from now
-      }],
-    },
-    {
-      id: '8',
-      senderId: dealerId,
-      receiverId: 'current-user',
-      message: 'I have a customer interested in your BMW X5. Can we discuss pricing? ',
-      timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutes ago
-      status: 'read',
-      type: 'text',
-    },
-  ], [dealerId]);
-
-  const mockUserVehicles = React.useMemo<Vehicle[]>(() => [
-    {
-      id: 'v1',
-      make: 'BMW',
-      model: 'X5',
-      year: 2023,
-      price: 75000,
-      mileage: 15000,
-      location: 'New York',
-      condition: 'Excellent',
-      images: ['https://example.com/bmw1.jpg'],
-      specifications: {},
-      dealerId: 'current-user',
-      dealerName: 'Your Dealership',
-      isCoListed: false,
-      coListedIn: [],
-      views: 234,
-      inquiries: 12,
-      shares: 8,
-    },
-    {
-      id: 'v2',
-      make: 'Mercedes-Benz',
-      model: 'C-Class',
-      year: 2024,
-      price: 55000,
-      mileage: 5000,
-      location: 'New York',
-      condition: 'Like New',
-      images: ['https://example.com/merc1.jpg'],
-      specifications: {},
-      dealerId: 'current-user',
-      dealerName: 'Your Dealership',
-      isCoListed: false,
-      coListedIn: [],
-      views: 156,
-      inquiries: 8,
-      shares: 4,
-    },
-  ], []);
-
-  const scrollToBottom = React.useCallback(() => {
-    if (flatListRef.current && messages.length > 0) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
-  }, [messages]);
-
-  const loadMessages = useCallback(async () => {
+  // Load initial messages
+  const loadMessages = useCallback(async (refresh = false) => {
     try {
-      // Simulate API call
-      setTimeout(() => {
-        setMessages(mockMessages.reverse()); // Show latest at bottom
-        scrollToBottom();
-      }, 1000);
+      const currentPage = refresh ? 0 : page;
+      const response = await chatApi.getMessages(chatId, currentPage, 50);
+
+      if (refresh) {
+        setMessages(response.content.reverse()); // Stack from bottom
+      } else {
+        setMessages(prev => [...response.content.reverse(), ...prev]);
+      }
+
+      setHasMore(currentPage < response.totalPages - 1);
+      if (!refresh) setPage(currentPage + 1);
     } catch (error) {
       console.error('Error loading messages:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [dealerId, mockMessages, scrollToBottom]);
-
-  const loadUserVehicles = useCallback(async () => {
-    try {
-      // Simulate API call
-      setTimeout(() => {
-        setUserVehicles(mockUserVehicles);
-      }, 500);
-    } catch (error) {
-      console.error('Error loading user vehicles:', error);
-    }
-  }, [mockUserVehicles]);
+  }, [chatId, page]);
 
   useEffect(() => {
-    loadMessages();
-    loadUserVehicles();
-  }, [loadMessages, loadUserVehicles]);
+    loadMessages(true);
 
-  const sendMessage = async (messageType: 'text' | 'vehicle' | 'quote' = 'text', attachments?: any) => {
-    if (messageType === 'text' && !messageText.trim()) return;
+    // Initialize WebSocket connection if not connected
+    if (!webSocketService.connected) {
+      webSocketService.connect();
+    }
 
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      senderId: 'current-user',
-      receiverId: dealerId,
-      message: messageType === 'text' ? messageText.trim() : 
-               messageType === 'vehicle' ? `${attachments.year} ${attachments.make} ${attachments.model} - $${attachments.price.toLocaleString()}` :
-               `Quote: $${attachments.dealerPrice.toLocaleString()} (${attachments.savings > 0 ? 'Save $' : 'Final offer'})`,
-      timestamp: new Date().toISOString(),
-      status: 'sent',
-      type: messageType,
-      attachments: attachments ? [attachments] : undefined,
+    // Subscribe to this chat
+    webSocketService.subscribeToChat(chatId);
+
+    // Handle incoming messages
+    const handleWebSocketMessage = (wsMessage: WSMessage) => {
+      if (wsMessage.type === 'MESSAGE' && wsMessage.chatId === chatId) {
+        setMessages(prev => [...prev, wsMessage.data]);
+        scrollToBottom();
+      }
     };
-    // Simulate message delivery
+
+    webSocketService.onMessage(handleWebSocketMessage);
+
+    return () => {
+      // webSocketService.unsubscribeFromChat(chatId); // Optional: keep subscribed for notifications? Usually unsubscribe on unmount.
+      webSocketService.removeMessageHandler(handleWebSocketMessage);
+    };
+  }, [chatId]);
+
+  const scrollToBottom = () => {
     setTimeout(() => {
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === newMessage.id ? { ...msg, status: 'delivered' } : msg
-        )
-      );
-    }, 1000);
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 200);
+  };
+
+  const sendMessage = async (messageType: 'TEXT' | 'IMAGE' | 'FILE' | 'CAR_REFERENCE' | 'USER_REFERENCE' = 'TEXT', contentOrAttachment?: any) => {
+    if (messageType === 'TEXT' && !messageText.trim()) return;
+
+    try {
+      const content = messageType === 'TEXT' ? messageText : (typeof contentOrAttachment === 'string' ? contentOrAttachment : 'Attachment');
+
+      // Optimistic update could go here, but we wait for WS echo or API response
+      // Using API to send
+      const request = {
+        content: content,
+        messageType: messageType,
+        // fileUrl: ... if image
+      };
+
+      await chatApi.sendMessage(chatId, request);
+      setMessageText('');
+      scrollToBottom();
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      Alert.alert('Error', 'Failed to send message');
+    }
   };
 
   const handleSendVehicle = (vehicle: Vehicle) => {
-    const vehicleAttachment = {
-      vehicleId: vehicle.id,
-      make: vehicle.make,
-      model: vehicle.model,
-      year: vehicle.year,
-      price: vehicle.price,
-      image: vehicle.images[0] || null,
-    };
-    sendMessage('vehicle', vehicleAttachment);
-  };
-
-  const handleSendQuote = () => {
-    // This would typically open a quote creation modal
-    Alert.prompt(
-      'Send Quote',
-      'Enter your dealer price:',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Send',
-          onPress: (priceText: any) => {
-            if (priceText) {
-              const price = parseInt(priceText.replace(/[^\d]/g, ''));
-              if (price > 0) {
-                const quoteAttachment = {
-                  originalPrice: 75000, // This would come from context
-                  dealerPrice: price,
-                  savings: Math.max(0, 75000 - price),
-                  validUntil: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString(), // 7 days
-                };
-                sendMessage('quote', quoteAttachment);
-              }
-            }
-          },
-        },
-      ],
-      'plain-text',
-      '$75,000'
-    );
+    // TODO: Implement proper CAR_REFERENCE message structure
+    // For now sending as text with details or if backend supports 'CAR_REFERENCE' with metadata
+    const content = `Check out this car: ${vehicle.year} ${vehicle.make} ${vehicle.model} - $${vehicle.price}`;
+    sendMessage('TEXT', content);
+    setShowVehicleModal(false);
   };
 
   const formatTimestamp = (timestamp: string) => {
@@ -311,130 +151,225 @@ const ChatScreen: React.FC = () => {
     return messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const getStatusIcon = (status: ChatMessage['status']) => {
+  const getStatusIcon = (status: ChatMessageDto['deliveryStatus']) => {
     switch (status) {
-      case 'sent':
-        return <Ionicons name="done" size={12} color="#666" />;
-      case 'delivered':
-        return <Ionicons name="done-all" size={12} color="#666" />;
-      case 'read':
-        return <Ionicons name="done-all" size={12} color="#4ECDC4" />;
-      default:
-        return null;
+      case 'SENT': return <Ionicons name="done" size={12} color="#666" />;
+      case 'DELIVERED': return <Ionicons name="done-all" size={12} color="#666" />;
+      case 'READ': return <Ionicons name="done-all" size={12} color="#4ECDC4" />;
+      default: return null;
     }
   };
 
-  const renderMessage = ({ item, index }: { item: ChatMessage; index: number }) => {
-    const isOwnMessage = item.senderId === 'current-user';
-    const showTimestamp = index === 0 || 
-      new Date(item.timestamp).getTime() - new Date(messages[index - 1].timestamp).getTime() > 300000; // 5 minutes
+  const renderMessage = ({ item, index }: { item: ChatMessageDto; index: number }) => {
+    // Check sender.id vs user.id (need to ensure user object has id matched with backend)
+    // Assuming user.id is available from AuthContext and matches
+    const isOwnMessage = item.sender?.username === user?.username; // Safer to compare username if ID types differ (string vs number)
 
+    // Formatting logic...
     return (
-      <View style={styles.messageContainer}>
-        {showTimestamp && (
-          <Text style={styles.timestampText}>
-            {formatTimestamp(item.timestamp)}
-          </Text>
-        )}
-        
+      <View style={[styles.messageContainer, { alignItems: isOwnMessage ? 'flex-end' : 'flex-start' }]}>
         <View style={[
           styles.messageBubble,
           isOwnMessage ? styles.ownMessage : styles.otherMessage
         ]}>
-          {item.type === 'vehicle' && item.attachments?.[0] && (
-            <TouchableOpacity 
-              style={styles.vehicleAttachment}
-              onPress={() => (navigation as any).navigate('VehicleDetailScreen', {
-                vehicleId: item.attachments?.[0]?.vehicleId
-              })}
-            >
-              <View style={styles.vehicleImageContainer}>
-                {item.attachments[0].image ? (
-                  <Image source={{ uri: item.attachments[0].image }} style={styles.vehicleImage} />
-                ) : (
-                  <View style={styles.placeholderVehicleImage}>
-                    <Ionicons name="car" size={30} color="#ccc" />
-                  </View>
-                )}
-              </View>
-              <View style={styles.vehicleInfo}>
-                <Text style={styles.vehicleTitle}>
-                  {item.attachments[0].year} {item.attachments[0].make} {item.attachments[0].model}
-                </Text>
-                <Text style={styles.vehiclePrice}>
-                  ${item.attachments[0].price.toLocaleString()}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#666" />
-            </TouchableOpacity>
+          {!isOwnMessage && item.sender && (
+            <Text style={styles.senderName}>{item.sender.displayName}</Text>
           )}
-          
-          {item.type === 'quote' && item.attachments?.[0] && (
-            <View style={styles.quoteAttachment}>
-              <View style={styles.quoteHeader}>
-                <Ionicons name="local-offer" size={20} color="#4ECDC4" />
-                <Text style={styles.quoteTitle}>Dealer Quote</Text>
-              </View>
-              <Text style={styles.quotePrice}>
-                ${item.attachments[0].dealerPrice.toLocaleString()}
-              </Text>
-              {item.attachments[0].savings > 0 && (
-                <Text style={styles.quoteSavings}>
-                  Save ${item.attachments[0].savings.toLocaleString()}
-                </Text>
-              )}
-              <Text style={styles.quoteValid}>
-                Valid until {new Date(item.attachments[0].validUntil).toLocaleDateString()}
-              </Text>
-            </View>
-          )}
-          
           <Text style={[
             styles.messageText,
             isOwnMessage ? styles.ownMessageText : styles.otherMessageText
           ]}>
-            {item.message}
+            {item.content}
           </Text>
-          
-          {isOwnMessage && (
-            <View style={styles.messageStatus}>
-              {getStatusIcon(item.status)}
-            </View>
-          )}
+
+          <View style={styles.messageFooter}>
+            <Text style={[styles.timestampText, isOwnMessage ? { color: 'rgba(255,255,255,0.7)' } : {}]}>
+              {formatTimestamp(item.createdAt)}
+            </Text>
+            {isOwnMessage && getStatusIcon(item.deliveryStatus)}
+          </View>
         </View>
       </View>
     );
   };
 
-  const renderVehicleItem = ({ item }: { item: Vehicle }) => (
-    <TouchableOpacity
-      style={styles.vehicleSelectCard}
-      onPress={() => handleSendVehicle(item)}
-      activeOpacity={0.8}
-    >
-      <View style={styles.vehicleSelectImageContainer}>
-        {item.images.length > 0 ? (
-          <Image source={{ uri: item.images[0] }} style={styles.vehicleSelectImage} />
-        ) : (
-          <View style={styles.placeholderSelectImage}>
-            <Ionicons name="car" size={30} color="#ccc" />
-          </View>
-        )}
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#FAFBFC',
+    },
+    headerCard: {
+      marginHorizontal: 0,
+      borderRadius: 0,
+      borderBottomWidth: 1,
+      borderColor: '#E2E8F0',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 15,
+    },
+    backButton: {
+      padding: 4,
+    },
+    headerInfo: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    chatName: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: '#1A202C',
+    },
+    chatStatus: {
+      fontSize: 12,
+      color: '#48BB78',
+      marginTop: 2,
+    },
+    chatContainer: {
+      flex: 1,
+    },
+    messagesList: {
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+    },
+    messageContainer: {
+      marginBottom: 16,
+      width: '100%',
+    },
+    messageBubble: {
+      maxWidth: '80%',
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 20,
+      position: 'relative',
+    },
+    ownMessage: {
+      backgroundColor: '#FFD700',
+      borderBottomRightRadius: 4,
+    },
+    otherMessage: {
+      backgroundColor: '#FFFFFF',
+      borderBottomLeftRadius: 4,
+      borderWidth: 1,
+      borderColor: '#E2E8F0',
+    },
+    senderName: {
+      fontSize: 12,
+      color: '#A0AEC0',
+      marginBottom: 4,
+    },
+    messageText: {
+      fontSize: 16,
+      lineHeight: 20,
+    },
+    ownMessageText: {
+      color: '#FFFFFF',
+      fontWeight: '500',
+    },
+    otherMessageText: {
+      color: '#1A202C',
+    },
+    messageFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      marginTop: 4,
+      gap: 4
+    },
+    timestampText: {
+      fontSize: 10,
+      color: '#A0AEC0',
+    },
+    inputCard: {
+      marginHorizontal: 0,
+      borderRadius: 0,
+      borderTopWidth: 1,
+      borderColor: '#E2E8F0',
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+    },
+    attachButton: {
+      padding: 8,
+      marginRight: 8,
+      marginBottom: 8,
+    },
+    messageInput: {
+      flex: 1,
+      maxHeight: 100,
+      marginBottom: 0,
+      marginRight: 8,
+      borderWidth: 1,
+      borderColor: '#E2E8F0',
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      fontSize: 16,
+      color: '#1A202C',
+      backgroundColor: '#FAFBFC',
+      textAlignVertical: 'top',
+    },
+    sendButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: '#E2E8F0',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    sendButtonActive: {
+      backgroundColor: '#FFD700',
+    },
+    // Modal styles ...
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'flex-end',
+    },
+    attachmentModal: {
+      backgroundColor: '#FFF',
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: 20,
+    },
+    attachmentOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 15,
+      borderBottomWidth: 1,
+      borderBottomColor: '#EDF2F7',
+    },
+    attachmentOptionText: {
+      marginLeft: 15,
+      fontSize: 16,
+      color: '#2D3748',
+    },
+    cancelOption: {
+      marginTop: 15,
+      alignItems: 'center',
+      paddingVertical: 15,
+    },
+    cancelOptionText: {
+      color: '#E53E3E',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+  });
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
-      
-      <View style={styles.vehicleSelectInfo}>
-        <Text style={styles.vehicleSelectTitle}>
-          {item.year} {item.make} {item.model}
-        </Text>
-        <Text style={styles.vehicleSelectPrice}>
-          ${item.price.toLocaleString()}
-        </Text>
-        <Text style={styles.vehicleSelectDetails}>
-          {item.mileage.toLocaleString()} miles • {item.condition}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -443,19 +378,19 @@ const ChatScreen: React.FC = () => {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          
+
           <View style={styles.headerInfo}>
-            <Text style={styles.dealerName}>{dealerName}</Text>
-            <Text style={styles.onlineStatus}>Online now</Text>
+            <Text style={styles.chatName}>{name}</Text>
+            {type === 'GROUP' && <Text style={styles.chatStatus}>Group</Text>}
           </View>
-          
-          <TouchableOpacity style={styles.headerButton}>
-            <Ionicons name="call" size={24} color={colors.primary} />
+
+          <TouchableOpacity style={{ padding: 4 }}>
+            <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
       </Card>
 
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.chatContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
@@ -464,7 +399,7 @@ const ChatScreen: React.FC = () => {
           ref={flatListRef}
           data={messages}
           renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.messagesList}
           showsVerticalScrollIndicator={false}
           onContentSizeChange={scrollToBottom}
@@ -478,7 +413,7 @@ const ChatScreen: React.FC = () => {
             >
               <Ionicons name="add" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
-            
+
             <TextInput
               value={messageText}
               onChangeText={setMessageText}
@@ -486,24 +421,24 @@ const ChatScreen: React.FC = () => {
               placeholderTextColor={colors.textSecondary}
               multiline
               style={styles.messageInput}
-              onSubmitEditing={() => sendMessage('text')}
+              onSubmitEditing={() => sendMessage('TEXT')}
             />
-            
+
             <TouchableOpacity
               style={[styles.sendButton, messageText.trim() ? styles.sendButtonActive : null]}
-              onPress={() => sendMessage('text')}
+              onPress={() => sendMessage('TEXT')}
             >
-              <Ionicons 
-                name="send" 
-                size={20} 
-                color={messageText.trim() ? colors.surface : colors.textSecondary} 
+              <Ionicons
+                name="send"
+                size={20}
+                color={messageText.trim() ? colors.surface : colors.textSecondary}
               />
             </TouchableOpacity>
           </View>
         </Card>
       </KeyboardAvoidingView>
 
-      {/* Attachment Options Modal */}
+      {/* Attachment Modal */}
       <Modal
         visible={showAttachmentModal}
         transparent
@@ -516,36 +451,14 @@ const ChatScreen: React.FC = () => {
               style={styles.attachmentOption}
               onPress={() => {
                 setShowAttachmentModal(false);
-                setShowVehicleModal(true);
+                // setShowVehicleModal(true); // TODO: Implement vehicle fetching
+                Alert.alert('Coming Soon', 'Vehicle sharing will be enabled once Car API is integrated here.');
               }}
             >
               <Ionicons name="car" size={24} color="#4ECDC4" />
               <Text style={styles.attachmentOptionText}>Share Vehicle</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.attachmentOption}
-              onPress={() => {
-                setShowAttachmentModal(false);
-                // Handle image attachment
-                Alert.alert('Image', 'Image sharing will be implemented with camera/gallery access');
-              }}
-            >
-              <Ionicons name="image" size={24} color="#4ECDC4" />
-              <Text style={styles.attachmentOptionText}>Share Image</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.attachmentOption}
-              onPress={() => {
-                setShowAttachmentModal(false);
-                handleSendQuote();
-              }}
-            >
-              <Ionicons name="local-offer" size={24} color="#4ECDC4" />
-              <Text style={styles.attachmentOptionText}>Send Quote</Text>
-            </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={styles.cancelOption}
               onPress={() => setShowAttachmentModal(false)}
@@ -555,345 +468,8 @@ const ChatScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
-
-      {/* Vehicle Selection Modal */}
-      <Modal
-        visible={showVehicleModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowVehicleModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.vehicleModal}>
-            <View style={styles.vehicleModalHeader}>
-              <Text style={styles.vehicleModalTitle}>Select Vehicle to Share</Text>
-              <TouchableOpacity onPress={() => setShowVehicleModal(false)}>
-                <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
-            
-            <FlatList
-              data={userVehicles}
-              renderItem={renderVehicleItem}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-            />
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FAFBFC',
-  },
-  headerCard: {
-    marginHorizontal: 0,
-    borderRadius: 0,
-    borderBottomWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerInfo: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  dealerName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1A202C',
-  },
-  onlineStatus: {
-    fontSize: 12,
-    color: '#48BB78',
-    marginTop: 2,
-  },
-  headerButton: {
-    padding: 4,
-  },
-  chatContainer: {
-    flex: 1,
-  },
-  messagesList: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  messageContainer: {
-    marginBottom: 16,
-  },
-  timestampText: {
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  messageBubble: {
-    maxWidth: '80%',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    position: 'relative',
-  },
-  ownMessage: {
-    backgroundColor: '#FFD700',
-    alignSelf: 'flex-end',
-    borderBottomRightRadius: 4,
-  },
-  otherMessage: {
-    backgroundColor: '#FFFFFF',
-    alignSelf: 'flex-start',
-    borderBottomLeftRadius: 4,
-  },
-  messageText: {
-    fontSize: 16,
-    lineHeight: 20,
-  },
-  ownMessageText: {
-    color: '#FFFFFF',
-  },
-  otherMessageText: {
-    color: '#1A202C',
-  },
-  messageStatus: {
-    position: 'absolute',
-    bottom: 4,
-    right: 8,
-  },
-  vehicleAttachment: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
-    alignItems: 'center',
-  },
-  vehicleImageContainer: {
-    width: 50,
-    height: 40,
-    marginRight: 12,
-  },
-  vehicleImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 6,
-  },
-  placeholderVehicleImage: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  vehicleInfo: {
-    flex: 1,
-  },
-  vehicleTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  vehiclePrice: {
-    fontSize: 14,
-    color: '#4ECDC4',
-    fontWeight: '600',
-  },
-  quoteAttachment: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
-  },
-  quoteHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  quoteTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-    marginLeft: 6,
-  },
-  quotePrice: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#4ECDC4',
-    marginBottom: 4,
-  },
-  quoteSavings: {
-    fontSize: 12,
-    color: '#4CAF50',
-    fontWeight: '600',
-  },
-  quoteValid: {
-    fontSize: 11,
-    color: '#666',
-    marginTop: 4,
-  },
-  inputCard: {
-    marginHorizontal: 0,
-    borderRadius: 0,
-    borderTopWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  attachButton: {
-    padding: 8,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  messageInput: {
-    flex: 1,
-    maxHeight: 100,
-    marginBottom: 0,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    fontSize: 16,
-    color: '#1A202C',
-    backgroundColor: '#FAFBFC',
-    textAlignVertical: 'top',
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E2E8F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  sendButtonActive: {
-    backgroundColor: '#FFD700',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  attachmentModal: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingVertical: 20,
-  },
-  attachmentOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  attachmentOptionText: {
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 16,
-  },
-  cancelOption: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderColor: '#eee',
-    marginTop: 8,
-  },
-  cancelOptionText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-  },
-  vehicleModal: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '70%',
-    paddingVertical: 20,
-  },
-  vehicleModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  vehicleModalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  vehicleSelectCard: {
-    flexDirection: 'row',
-    backgroundColor: '#f8f9fa',
-    margin: 10,
-    marginHorizontal: 20,
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-  },
-  vehicleSelectImageContainer: {
-    width: 60,
-    height: 45,
-    marginRight: 12,
-  },
-  vehicleSelectImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 6,
-  },
-  placeholderSelectImage: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#e0e0e0',
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  vehicleSelectInfo: {
-    flex: 1,
-  },
-  vehicleSelectTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  vehicleSelectPrice: {
-    fontSize: 16,
-    color: '#4ECDC4',
-    fontWeight: '600',
-    marginVertical: 2,
-  },
-  vehicleSelectDetails: {
-    fontSize: 12,
-    color: '#666',
-  },
-});
-
 export default ChatScreen;
-
-
-

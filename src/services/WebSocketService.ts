@@ -2,7 +2,7 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import { Message, UserStatus, TypingIndicator, UnreadCount, DeliveryStats } from './ChatApi';
+import { ChatMessageDto, UserStatus, TypingIndicator, UnreadCount, DeliveryStats } from './ChatApi';
 
 // WebSocket message types
 export interface WSMessage {
@@ -48,6 +48,13 @@ class WebSocketService {
   private messageHandlers: MessageHandler[] = [];
   private connectionHandlers: ConnectionHandler[] = [];
   private errorHandlers: ErrorHandler[] = [];
+
+  // Resilience state
+  private subscribedChatIds: Set<number> = new Set();
+  private subscribedTypingChatIds: Set<number> = new Set();
+  private isSubscribedToUserMessages = false;
+  private isSubscribedToUserStatus = false;
+  private messageQueue: any[] = [];
 
   private readonly config: WebSocketConfig = {
     reconnectDelay: 5000, // 5 seconds
@@ -142,7 +149,7 @@ class WebSocketService {
 
       if (attempt < 3) {
         console.log(`[WebSocket] Token not found, retrying in ${attempt * 100}ms (attempt ${attempt}/3)`);
-        await new Promise(resolve => setTimeout(resolve, attempt * 100));
+        await new Promise(resolve => setTimeout(() => resolve(true), attempt * 100));
       }
     }
 
@@ -195,14 +202,35 @@ class WebSocketService {
    * Call this when access token is refreshed to update WebSocket connection
    */
   async onTokenRefresh(): Promise<void> {
+    console.log('[WebSocket] Token refresh signal received');
+
+    // Always get fresh headers
+    const headers = await this.getConnectHeaders();
+
+    if (this.client) {
+      this.client.connectHeaders = headers;
+    }
+
     if (this.isConnected && this.client) {
-      // Update headers with new token
-      this.client.connectHeaders = await this.getConnectHeaders();
-      console.log('[WebSocket] Token refreshed, headers updated');
-    } else {
-      // Try to reconnect with new token
+      console.log('[WebSocket] Connected, forcing reconnect with new token');
+      // We must disconnect and reconnect to send the new token in the CONNECT frame
+      // StompJS doesn't support updating headers mid-connection for the session
+      // But we can try to deactivate and activate? 
+      // Deactivate sends DISCONNECT. Activate sends CONNECT.
+
+      // Use disconnect/connect flow to ensure clean state
+      this.disconnect();
+
+      // Wait briefly for disconnect to process then reconnect
+      setTimeout(() => {
+        this.connect();
+      }, 500);
+
+    } else if (!this.isConnected && !this.isConnecting) {
+      // If we were disconnected (maybe due to 401), retry now
+      console.log('[WebSocket] Disconnected, attempting reconnect with new token');
       this.reconnectAttempts = 0;
-      await this.connect();
+      this.connect();
     }
   }
 
@@ -251,7 +279,7 @@ class WebSocketService {
     console.log('[WebSocket] Initializing after successful login...');
 
     // Wait a bit to ensure token is stored
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(() => resolve(true), 200));
 
     // Check if we have a token before attempting connection
     const token = await AsyncStorage.getItem('@carworld_access_token');
@@ -281,6 +309,9 @@ class WebSocketService {
 
     // Re-subscribe to all active subscriptions
     this.resubscribeAll();
+
+    // Process offline message queue
+    this.processMessageQueue();
   }
 
   private onDisconnect(frame: any): void {
@@ -315,8 +346,10 @@ class WebSocketService {
   // =====================================
 
   subscribeToChat(chatId: number): void {
+    this.subscribedChatIds.add(chatId);
+
     if (!this.isConnected || !this.client) {
-      console.warn('Cannot subscribe to chat: WebSocket not connected');
+      // Will be subscribed on connect
       return;
     }
 
@@ -347,13 +380,15 @@ class WebSocketService {
     if (subscription) {
       subscription.unsubscribe();
       this.subscriptions.delete(subscriptionKey);
-      console.log(`Unsubscribed from chat ${chatId}`);
     }
+    this.subscribedChatIds.delete(chatId);
+    console.log(`Unsubscribed from chat ${chatId}`);
   }
 
   subscribeToUserMessages(): void {
+    this.isSubscribedToUserMessages = true;
+
     if (!this.isConnected || !this.client) {
-      console.warn('Cannot subscribe to user messages: WebSocket not connected');
       return;
     }
 
@@ -377,8 +412,9 @@ class WebSocketService {
   }
 
   subscribeToUserStatus(): void {
+    this.isSubscribedToUserStatus = true;
+
     if (!this.isConnected || !this.client) {
-      console.warn('Cannot subscribe to user status: WebSocket not connected');
       return;
     }
 
@@ -402,8 +438,9 @@ class WebSocketService {
   }
 
   subscribeToTypingIndicators(chatId: number): void {
+    this.subscribedTypingChatIds.add(chatId);
+
     if (!this.isConnected || !this.client) {
-      console.warn('Cannot subscribe to typing indicators: WebSocket not connected');
       return;
     }
 
@@ -432,7 +469,8 @@ class WebSocketService {
 
   sendMessage(chatId: number, message: string, replyToId?: number): void {
     if (!this.isConnected || !this.client) {
-      console.warn('Cannot send message: WebSocket not connected');
+      console.log('WebSocket not connected, queuing message');
+      this.messageQueue.push({ type: 'SEND_MESSAGE', chatId, message, replyToId });
       return;
     }
 
@@ -770,9 +808,48 @@ class WebSocketService {
   }
 
   private resubscribeAll(): void {
-    // This would typically be called after reconnection
-    // to restore all active subscriptions
-    console.log('WebSocket reconnected - subscriptions will be restored by components');
+    console.log('Resubscribing to all topics...');
+
+    this.subscribedChatIds.forEach(chatId => {
+      // Force subscribe (we know we are connected if this is called from onConnect)
+      // Pass logic to bypass the isConnected check? 
+      // check isConnected is true already.
+      // But we need to bypass "already in Set" check? 
+      // The methods add to Set. That's fine.
+
+      // We need to bypass the "this.subscriptions.has" check if it was cleared.
+      // clearSubscriptions() cleared the map. So logic works.
+
+      // But we need to call the implementation directly or use the public method?
+      // Public methods add to Set again (idempotent for Set).
+      this.subscribeToChat(chatId);
+    });
+
+    this.subscribedTypingChatIds.forEach(chatId => {
+      this.subscribeToTypingIndicators(chatId);
+    });
+
+    if (this.isSubscribedToUserMessages) {
+      this.subscribeToUserMessages();
+    }
+
+    if (this.isSubscribedToUserStatus) {
+      this.subscribeToUserStatus();
+    }
+  }
+
+  private processMessageQueue(): void {
+    if (this.messageQueue.length === 0) return;
+
+    console.log(`Processing ${this.messageQueue.length} queued messages`);
+    const queue = [...this.messageQueue];
+    this.messageQueue = [];
+
+    queue.forEach(item => {
+      if (item.type === 'SEND_MESSAGE') {
+        this.sendMessage(item.chatId, item.message, item.replyToId);
+      }
+    });
   }
 
   // =====================================

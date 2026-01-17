@@ -1,72 +1,83 @@
 import apiClient from './ApiClient';
 
 // Chat-related types
-export interface Chat {
+export interface ChatRoomDto {
   id: number;
   name: string;
   description?: string;
-  type: 'PRIVATE' | 'GROUP' | 'DEALER_ONLY' | 'SELLER_ONLY' | 'SUPPORT' | 'CAR_INQUIRY';
+  type: 'PRIVATE' | 'GROUP' | 'CAR_INQUIRY';
   createdBy: {
     id: number;
     username: string;
+    displayName: string;
+    email: string;
   };
   isActive: boolean;
-  maxParticipants?: number;
   carId?: number;
   createdAt: string;
   updatedAt: string;
   lastActivityAt?: string;
   participantCount?: number;
   unreadCount?: number;
-  lastMessage?: Message;
+  lastMessage?: ChatMessageDto;
+  maxParticipants?: number;
+
+  // Inquiry specific fields
+  status?: string;
+  leadScore?: number;
+  buyerName?: string;
+  buyerPhone?: string;
+  carInfo?: {
+    id: number;
+    title: string;
+    price: number;
+    imageUrl?: string;
+  };
 }
 
-export interface Message {
+export interface ChatMessageDto {
   id: number;
-  chatId: number;
+  chatRoomId: number;
   sender?: {
     id: number;
     username: string;
+    displayName: string;
+    avatarUrl?: string; // Frontend addition
   };
-  content?: string;
+  content: string;
   messageType: 'TEXT' | 'IMAGE' | 'FILE' | 'SYSTEM' | 'VOICE' | 'LOCATION' | 'CAR_REFERENCE' | 'USER_REFERENCE';
+  isEdited: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  editedAt?: string;
   replyTo?: {
     id: number;
     content: string;
-    sender?: {
-      id: number;
-      username: string;
-    };
+    senderUsername: string;
+    messageType: string;
   };
-  isEdited: boolean;
-  isDeleted: boolean;
-  editedAt?: string;
-  deletedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  metadata?: string;
-  fileUrl?: string;
-  fileName?: string;
-  fileSize?: number;
-  mimeType?: string;
-  deliveryStatus?: 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
+  fileAttachment?: {
+    fileUrl: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+  };
+  deliveryStatus?: 'SENT' | 'DELIVERED' | 'READ';
 }
 
-export interface ChatParticipant {
+export interface ChatParticipantDto {
   id: number;
-  chatId: number;
   user: {
     id: number;
     username: string;
-    role: string;
+    email: string;
+    displayName: string;
   };
-  role: 'ADMIN' | 'MODERATOR' | 'MEMBER';
-  isActive: boolean;
+  role: 'ADMIN' | 'MEMBER';
   joinedAt: string;
-  leftAt?: string;
-  lastReadAt?: string;
-  notificationsEnabled: boolean;
-  isMuted: boolean;
+  lastActivityAt?: string;
+  isActive: boolean;
 }
 
 export interface UserStatus {
@@ -94,7 +105,7 @@ export interface CreatePrivateChatRequest {
 
 export interface SendMessageRequest {
   content?: string;
-  messageType?: 'TEXT' | 'IMAGE' | 'FILE' | 'VOICE' | 'LOCATION';
+  messageType?: 'TEXT' | 'IMAGE' | 'FILE' | 'VOICE' | 'LOCATION' | 'CAR_REFERENCE' | 'USER_REFERENCE';
   replyToId?: number;
   metadata?: string;
   fileUrl?: string;
@@ -128,21 +139,21 @@ export interface DeliveryStats {
   deliveredCount: number;
   readCount: number;
   failedCount: number;
-  readBy: {username: string; readAt: string}[];
-  deliveredTo: {username: string; deliveredAt: string}[];
+  readBy: { username: string; readAt: string }[];
+  deliveredTo: { username: string; deliveredAt: string }[];
 }
 
 export interface UnreadCount {
   totalUnread: number;
-  unreadByChat: {[chatId: string]: number};
+  unreadByChat: { [chatId: string]: number };
 }
 
 export class ChatApi {
-  
+
   // =====================================
   // Chat Management
   // =====================================
-  
+
   /**
    * Get user's chats
    */
@@ -227,8 +238,8 @@ export class ChatApi {
    * Get messages in chat with pagination
    */
   async getMessages(
-    chatId: number, 
-    page: number = 0, 
+    chatId: number,
+    page: number = 0,
     size: number = 50
   ): Promise<any> {
     const response = await apiClient.get<any>(`/api/chat/rooms/${chatId}/messages?page=${page}&size=${size}`);
@@ -268,9 +279,9 @@ export class ChatApi {
    * Search messages in chat
    */
   async searchMessages(
-    chatId: number, 
-    query: string, 
-    page: number = 0, 
+    chatId: number,
+    query: string,
+    page: number = 0,
     size: number = 20
   ): Promise<any> {
     const response = await apiClient.get<any>(
@@ -420,6 +431,7 @@ export class ChatApi {
         message
       }
     );
+    // Force update
     return response.data;
   }
 
@@ -430,6 +442,23 @@ export class ChatApi {
     const response = await apiClient.get<any>(
       `/api/chat/car/${carId}`
     );
+    return response.data;
+  }
+
+  /**
+   * Get dealer inquiries
+   */
+  async getDealerInquiries(status: string = 'ALL', page: number = 0, size: number = 20, query: string = ''): Promise<any> {
+    const queryParam = query ? `&query=${encodeURIComponent(query)}` : '';
+    const response = await apiClient.get<any>(`/api/chat/dealer/inquiries?status=${status}&page=${page}&size=${size}${queryParam}`);
+    return response.data;
+  }
+
+  /**
+   * Update inquiry status
+   */
+  async updateInquiryStatus(chatId: number, status: string): Promise<any> {
+    const response = await apiClient.patch<any>(`/api/chat/rooms/${chatId}/inquiry/status?status=${status}`);
     return response.data;
   }
 
@@ -473,5 +502,3 @@ export class ChatApi {
 // Export singleton instance
 export const chatApi = new ChatApi();
 export default chatApi;
-
-
